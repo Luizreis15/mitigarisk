@@ -1,0 +1,17 @@
+---
+description: Tenant, database, audit, and integration safety rules
+globs: "**/*.{sql,ts,tsx}"
+alwaysApply: false
+---
+
+# Data and integration safety
+
+- Every tenant-owned table includes `tenant_id` and enforced RLS policies.
+- Authorization is checked server-side; UI visibility is never authorization.
+- Service-role access is server-only, narrowly scoped, logged, and reviewed.
+- Migrations are forward-only, reviewed, and paired with rollback or remediation.
+- Audit evidence is append-only and records actor, action, target, timestamp, and correlation ID.
+- Sensitive fields are minimized, classified, encrypted, and excluded from logs.
+- Webhooks verify signatures, use idempotency keys, retry with backoff, and dead-letter failures.
+- Email sending is server-side and separates requested, delivered, bounced, and complained states.
+- Never expose provider credentials or raw personal data in errors or analytics.

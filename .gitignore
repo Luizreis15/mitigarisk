@@ -1,0 +1,32 @@
+# Dependencies and build output
+**/node_modules/
+**/.next/
+**/.vinext/
+**/dist/
+**/.wrangler/
+**/coverage/
+**/outputs/
+**/work/
+
+# Secrets — examples remain versioned
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+
+# Local metadata
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# Synced inputs remain outside repository history
+sources/
+
+# Generated design previews and large binaries live in Drive
+artifacts/**/.codex-finalizer/
+artifacts/**/rendered/
+artifacts/**/rendered-*/
+artifacts/**/*.pptx
+artifacts/**/*.pdf

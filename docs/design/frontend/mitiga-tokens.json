@@ -1,0 +1,70 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "meta": {
+    "name": "Mitiga Design Tokens",
+    "version": "0.1.0",
+    "status": "approval-candidate",
+    "updated": "2026-09-11"
+  },
+  "color": {
+    "brand": {
+      "ink": { "$value": "#172432", "$type": "color" },
+      "petrol": { "$value": "#244B5A", "$type": "color" },
+      "mineral": { "$value": "#4F7D72", "$type": "color" },
+      "violet": { "$value": "#6B6F8E", "$type": "color" }
+    },
+    "surface": {
+      "canvas": { "$value": "#F7F9F8", "$type": "color" },
+      "default": { "$value": "#FFFFFF", "$type": "color" },
+      "subtle": { "$value": "#EEF3F3", "$type": "color" }
+    },
+    "text": {
+      "primary": { "$value": "{color.brand.ink}", "$type": "color" },
+      "secondary": { "$value": "#3D4D57", "$type": "color" },
+      "muted": { "$value": "#687780", "$type": "color" }
+    },
+    "status": {
+      "info": { "$value": "#4B7086", "$type": "color" },
+      "success": { "$value": "#4F7D72", "$type": "color" },
+      "warning": { "$value": "#A68352", "$type": "color" },
+      "danger": { "$value": "#9B5E64", "$type": "color" }
+    }
+  },
+  "typography": {
+    "family": {
+      "ui": { "$value": "Avenir Next, Avenir, Helvetica Neue, Arial, sans-serif", "$type": "fontFamily" },
+      "data": { "$value": "SFMono-Regular, Consolas, Liberation Mono, monospace", "$type": "fontFamily" }
+    },
+    "weight": {
+      "regular": { "$value": 400, "$type": "fontWeight" },
+      "medium": { "$value": 500, "$type": "fontWeight" },
+      "demi": { "$value": 600, "$type": "fontWeight" }
+    }
+  },
+  "radius": {
+    "sm": { "$value": "8px", "$type": "dimension" },
+    "md": { "$value": "12px", "$type": "dimension" },
+    "lg": { "$value": "16px", "$type": "dimension" },
+    "xl": { "$value": "20px", "$type": "dimension" },
+    "pill": { "$value": "999px", "$type": "dimension" }
+  },
+  "space": {
+    "1": { "$value": "4px", "$type": "dimension" },
+    "2": { "$value": "8px", "$type": "dimension" },
+    "3": { "$value": "12px", "$type": "dimension" },
+    "4": { "$value": "16px", "$type": "dimension" },
+    "6": { "$value": "24px", "$type": "dimension" },
+    "8": { "$value": "32px", "$type": "dimension" },
+    "12": { "$value": "48px", "$type": "dimension" }
+  },
+  "layout": {
+    "sidebarWidth": { "$value": "264px", "$type": "dimension" },
+    "topbarHeight": { "$value": "72px", "$type": "dimension" },
+    "contentMaxWidth": { "$value": "1440px", "$type": "dimension" }
+  },
+  "motion": {
+    "fast": { "$value": "150ms", "$type": "duration" },
+    "standard": { "$value": "200ms", "$type": "duration" }
+  }
+}
+

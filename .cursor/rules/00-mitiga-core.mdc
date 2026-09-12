@@ -1,0 +1,18 @@
+---
+description: Core MITIGA product and delivery rules
+alwaysApply: true
+---
+
+# MITIGA core rules
+
+- Read `AGENTS.md` and the architecture and governance documents before coding.
+- Work from a bounded task contract with explicit acceptance criteria.
+- Keep `main` deployable; use a short-lived branch and squash merge.
+- The MVP is a modular monolith. New services require an ADR.
+- UI copy is pt-BR; code, API fields, commits, and technical identifiers are English.
+- Preserve the MITIGA design tokens and sober, low-contrast visual language.
+- Never commit or paste secrets. Use `.env.local` and the deployment secret store.
+- Every data path must enforce tenant isolation server-side.
+- Every risk outcome must retain policy version, reasons, inputs provenance, and actor.
+- Do not make unrelated changes or silently expand scope.
+- Run relevant checks and return the handoff template from the governance document.

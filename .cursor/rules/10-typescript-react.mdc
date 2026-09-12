@@ -1,0 +1,17 @@
+---
+description: TypeScript and React implementation standards
+globs: "apps/web/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript and React
+
+- Keep TypeScript strict; do not use `any` to bypass a contract.
+- Validate untrusted input at server boundaries and return typed domain errors.
+- Prefer Server Components; add client components only for real interaction.
+- Use installed shadcn primitives for controls, overlays, tables, and feedback.
+- Keep domain logic outside components and route handlers.
+- Represent money as integer minor units and timestamps as UTC ISO 8601.
+- Include loading, empty, error, unauthorized, and reduced-motion behavior.
+- Use semantic HTML, visible focus, accessible names, and 44px touch targets.
+- Test permissions and tenant boundaries, not only happy paths.
