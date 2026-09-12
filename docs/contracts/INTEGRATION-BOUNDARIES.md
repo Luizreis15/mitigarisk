@@ -24,6 +24,8 @@ The Cursor prototype may use `apps/web/lib/demo` as a replaceable adapter. Route
 
 Domain objects use explicit tenant, actor, correlation, policy-version, and evidence identifiers. Money is integer minor units. Time is UTC ISO 8601 at external boundaries. Risk decisions use stable reason codes; display strings remain a presentation concern.
 
+English message catalogs own display copy. Locale formatters consume explicit locale, IANA time zone, country, and ISO currency configuration. Domain and persistence layers never branch on translated labels.
+
 ## Supabase boundary
 
 Browser code may use only public configuration and user-scoped clients. Administrative clients are server-only, never cached across authorization contexts, and never imported by client components. RLS is mandatory defense in depth; server permission checks remain authoritative.
