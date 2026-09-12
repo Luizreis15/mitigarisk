@@ -25,3 +25,10 @@ Use squash merge. Codex performs the final integration review; a human approves 
 ## Definition of done
 
 A change is done only when it is scoped, reviewed, tested, documented where necessary, free of committed secrets, and safely reversible or accompanied by a rollback plan.
+
+Before handoff, run the repository gates that apply:
+
+```text
+./scripts/check-secrets.sh
+./scripts/verify-web.sh
+```
