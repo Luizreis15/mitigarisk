@@ -60,6 +60,12 @@ Use TLS in transit, provider-managed encryption at rest, field-level protection 
 
 External write endpoints require authentication, authorization, idempotency, schema validation, stable error codes, rate limits, and a correlation ID. Webhooks are signed, versioned, retried with backoff, and moved to a dead-letter state after the retry budget.
 
+## Language, locale, and international markets
+
+English is the authoritative product language. Runtime copy is externalized into typed catalogs and remains separate from stable reason codes, API errors, and audit actions. The provisional default locale is `en-US`, but tenant and user preferences control presentation.
+
+Store timestamps in UTC and display them in an explicit IANA time zone. Represent currencies with ISO 4217 codes and integer minor units. Country, legal entity identifiers, personal documents, addresses, phone numbers, regulatory sources, retention, and data residency are modeled through country or policy configuration rather than Brazilian assumptions.
+
 ## Environments and delivery
 
 Use development, preview, staging, and production. Pull requests produce isolated previews; `main` may deploy to staging automatically. Production promotion is explicit and uses the same tested artifact. Database changes follow expand/migrate/contract when compatibility is required.
