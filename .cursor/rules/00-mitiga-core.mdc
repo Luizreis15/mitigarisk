@@ -9,7 +9,8 @@ alwaysApply: true
 - Work from a bounded task contract with explicit acceptance criteria.
 - Keep `main` deployable; use a short-lived branch and squash merge.
 - The MVP is a modular monolith. New services require an ADR.
-- UI copy is pt-BR; code, API fields, commits, and technical identifiers are English.
+- English is the source language for UI copy, email, reports, code, API fields, commits, and technical identifiers.
+- Follow ADR 0002 and externalize user-facing strings into typed message catalogs.
 - Preserve the MITIGA design tokens and sober, low-contrast visual language.
 - Never commit or paste secrets. Use `.env.local` and the deployment secret store.
 - Every data path must enforce tenant isolation server-side.

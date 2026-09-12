@@ -13,3 +13,5 @@ For every contribution:
 5. Provide a handoff using the template in the multi-agent workflow.
 
 Never place secrets in code, prompts, fixtures, logs, screenshots, or commits. Ask for a secret variable name and expected capability, not the secret value.
+
+English is the product source language. Follow ADR 0002 and keep domain contracts independent of Brazilian document, address, currency, time-zone, and regulatory assumptions.

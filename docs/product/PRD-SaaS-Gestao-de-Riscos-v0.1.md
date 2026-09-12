@@ -1,5 +1,7 @@
 # PRD — SaaS de Gestão, Avaliação e Monitoramento de Riscos
 
+> **Language decision update — 12 September 2026:** ADR 0002 supersedes the Portuguese-first assumption in this discovery document. MITIGA is English-first and market-neutral. This PRD remains historical source material and must be rewritten for the international product; it must not be translated literally.
+
 **Nome do produto:** a definir  
 **Versão:** 0.1  
 **Status:** descoberta e definição inicial  

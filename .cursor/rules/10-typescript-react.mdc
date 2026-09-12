@@ -12,6 +12,7 @@ alwaysApply: false
 - Use installed shadcn primitives for controls, overlays, tables, and feedback.
 - Keep domain logic outside components and route handlers.
 - Represent money as integer minor units and timestamps as UTC ISO 8601.
+- Use typed locale utilities for display; never hardcode country-specific date, currency, address, phone, or identity formats.
 - Include loading, empty, error, unauthorized, and reduced-motion behavior.
 - Use semantic HTML, visible focus, accessible names, and 44px touch targets.
 - Test permissions and tenant boundaries, not only happy paths.
