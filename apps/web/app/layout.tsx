@@ -1,19 +1,12 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+
+import { PrototypeProviders } from '@/components/prototype/providers';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 export const metadata: Metadata = {
-  title: 'Untitled site',
+  title: 'MITIGA — protótipo de gestão de riscos',
+  description:
+    'Protótipo navegável das visões Login, Empresa, Super admin e Operador.',
 };
 
 export default function RootLayout({
@@ -22,11 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="pt-BR">
+      <body>
+        <PrototypeProviders>{children}</PrototypeProviders>
       </body>
     </html>
   );
