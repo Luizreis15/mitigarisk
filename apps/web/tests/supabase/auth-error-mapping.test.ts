@@ -1,10 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mapPasswordResetRequestError, mapSignInError } from "../../lib/supabase/auth.ts";
+import {
+  authErrorPresentationCode,
+  mapPasswordResetRequestError,
+  mapSignInError,
+} from "../../lib/supabase/auth.ts";
 import {
   AuthRateLimitedError,
   EmailNotConfirmedError,
   InvalidCredentialsError,
+  InvalidEmailError,
   UnknownAuthError,
 } from "../../lib/domain/auth-session.ts";
 
@@ -64,4 +69,15 @@ void test("mapPasswordResetRequestError never reveals whether the email exists",
     () => mapPasswordResetRequestError({ code: "unexpected_failure", message: "boom" }),
     UnknownAuthError,
   );
+});
+
+void test("authErrorPresentationCode returns the typed error's stable name", () => {
+  assert.equal(authErrorPresentationCode(new InvalidCredentialsError()), "InvalidCredentialsError");
+  assert.equal(authErrorPresentationCode(new InvalidEmailError()), "InvalidEmailError");
+});
+
+void test("authErrorPresentationCode falls back to UnknownAuthError for anything else", () => {
+  assert.equal(authErrorPresentationCode(new Error("boom")), "UnknownAuthError");
+  assert.equal(authErrorPresentationCode("not even an error"), "UnknownAuthError");
+  assert.equal(authErrorPresentationCode(null), "UnknownAuthError");
 });
