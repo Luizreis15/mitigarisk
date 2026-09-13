@@ -55,6 +55,7 @@ export const messages = {
     skipToContent: 'Skip to content',
     primary: 'Primary navigation',
     mobileRoutes: 'Primary routes',
+    entities: 'Entities',
     openMenu: 'Open menu',
     searchLabel: 'Search demonstration data',
     searchPlaceholder: 'Search a fictional reference',
@@ -150,6 +151,7 @@ export const messages = {
     open: 'Open',
     toastCaseTitle: 'Case opened in the demonstration',
     openAdministration: 'Open company administration',
+    openEntities: 'Open entity records',
     dimensions: {
       identity: 'Identity',
       fraud: 'Fraud',
@@ -365,6 +367,10 @@ export const messages = {
       'denied-members': 'Missing member administration capability',
       'loading-admin': 'Company admin loading state',
       'error-admin': 'Company admin error state',
+      'empty-entities': 'Empty entity records',
+      'denied-evaluate': 'Missing evaluation capability',
+      'loading-entities': 'Entity records loading state',
+      'error-entities': 'Entity records error state',
     },
   },
   onboarding: {
@@ -444,6 +450,108 @@ export const messages = {
       'Company administration appears after a tenant exists. This empty state does not create members or send invitations.',
     ctaOnboarding: 'Start company setup',
     ctaWorkspaces: 'Choose another workspace',
+  },
+  entityIntake: {
+    kicker: 'Entity intake',
+    listTitle: 'Entity records',
+    listIntro:
+      'Prepare a fictional Northstar client or partner record, then start an evaluation intake. Nothing here writes to a tenant store.',
+    recordTitle: 'Entity record',
+    missingTitle: 'Entity not in this prototype',
+    missingBody:
+      'This identifier is not in the local Northstar fixtures. No customer directory was queried.',
+    startIntake: 'Start evaluation intake',
+    openRecord: 'Open entity record',
+    identity: 'Identity and reference',
+    relationship: 'Relationship',
+    signals: 'Operational signals',
+    facts: 'Declared facts',
+    completeness: 'Data completeness',
+    provenance: 'Provenance',
+    recorded: 'Recorded (UTC)',
+    updated: 'Last local update (UTC)',
+    contactEmail: 'Demonstration contact',
+    tenantScope: 'Tenant scope',
+    policyChoice: 'Policy version',
+    policyHint:
+      'Only local published policy versions can be selected. Policy, locale, currency, and time zone are presentation and configuration choices. They are not authorization.',
+    presentationHint:
+      'Locale, currency, and time zone below configure how this screen is shown. They do not grant access and are not a jurisdiction decision.',
+    conceptsTitle: 'Keep these concepts separate',
+    factsConcept: 'Facts are what the company entered for this entity.',
+    qualityConcept:
+      'Completeness describes whether those facts are enough to evaluate. It is not a score.',
+    recommendationConcept:
+      'A score and recommendation appear only after an evaluation result exists. They are not entered here.',
+    decisionConcept:
+      'A human decision is recorded later on a case. This intake does not approve, reject, or persist an outcome.',
+    intakeTitle: 'Evaluation intake',
+    intakeIntro:
+      'Declare facts against a Northstar entity and a published policy version. No engine runs and no score is shown on this screen.',
+    entityLabel: 'Entity record',
+    displayName: 'Display name',
+    reference: 'External reference',
+    channel: 'Operating channel',
+    activityBand: 'Declared activity band',
+    declaredFacts: 'Declared facts',
+    required: 'Required',
+    review: 'Review intake',
+    backToEdit: 'Back to facts',
+    submit: 'Acknowledge local submission',
+    reviewTitle: 'Review before acknowledgement',
+    reviewIntro:
+      'Check the facts, completeness, selected policy, and that no score or human decision is being recorded.',
+    ackTitle: 'Intake was not saved',
+    ackBody:
+      'This prototype did not save the entity, send an evaluation, call the scoring engine, or write an audit event.',
+    toastTitle: 'Intake not persisted',
+    toastBody: 'No evaluation was created and no score was calculated.',
+    exampleResult: 'Open a separate demonstration result',
+    exampleResultHint:
+      'The linked evaluation is an existing fixture. It was not produced from the facts on this form.',
+    validationTitle: 'Complete the required fields',
+    validationName: 'Enter a display name.',
+    validationReference: 'Enter an external reference.',
+    validationFacts: 'Enter declared facts (at least a short description).',
+    validationPolicy: 'Choose a published policy version.',
+    validationEntity: 'Choose an entity record.',
+    loadingLabel: 'Loading entity records',
+    loadingTitle: 'Loading entity records',
+    loadingBody: 'Local fixtures are being prepared. No directory API is called.',
+    errorTitle: 'Entity records could not load',
+    errorBody:
+      'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
+    retry: 'Retry local view',
+    deniedTitle: 'Evaluation intake is not available',
+    deniedBody:
+      'Starting an evaluation needs the company.evaluate capability. In a live product the backend checks this. Hiding this screen is not authorization.',
+    emptyTitle: 'No entity records in this demonstration',
+    emptyBody:
+      'When the company is live, client and partner records appear here. This empty state does not create an entity.',
+    relationships: {
+      customer: 'Customer',
+      partner: 'Partner',
+      supplier: 'Supplier',
+    },
+    channels: {
+      web: 'Web',
+      api: 'API',
+      assisted: 'Assisted',
+    },
+    activityBands: {
+      low: 'Low',
+      moderate: 'Moderate',
+      elevated: 'Elevated',
+    },
+    provenanceValues: {
+      customer_declaration: 'Customer declaration',
+      staff_entry: 'Staff entry',
+    },
+    policyLifecycle: {
+      published: 'Published',
+      archived: 'Archived · not selectable',
+      draft: 'Draft · not selectable',
+    },
   },
   flow: {
     recommendationTitle: 'Score is a recommendation',

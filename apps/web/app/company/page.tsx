@@ -142,6 +142,13 @@ function CompanyContent() {
                   >
                     {messages.company.createEvaluation}
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
+                    render={<Link href="/entities" />}
+                  >
+                    {messages.company.openEntities}
+                  </Button>
                   {capabilities?.includes('policy.view') ? (
                     <Button
                       variant="outline"

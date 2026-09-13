@@ -100,6 +100,10 @@ export const prototypeScenarios: PrototypeScenario[] = [
   { id: 'denied-members', href: '/company/admin/members?state=denied' },
   { id: 'loading-admin', href: '/company/admin?state=loading' },
   { id: 'error-admin', href: '/company/admin?state=error' },
+  { id: 'empty-entities', href: '/entities?state=empty' },
+  { id: 'denied-evaluate', href: '/evaluations/new?state=denied' },
+  { id: 'loading-entities', href: '/entities?state=loading' },
+  { id: 'error-entities', href: '/entities?state=error' },
 ];
 
 export function membershipById(id: string) {
