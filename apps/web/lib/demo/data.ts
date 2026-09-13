@@ -114,7 +114,7 @@ export const demoAlerts: DemoAlert[] = [
   },
   {
     id: 'al_2170',
-    title: 'Usage near the Growth franchise',
+    title: 'Usage nearing the Growth plan limit',
     severity: 'info',
     tenant: currentTenant.name,
     subject: 'Growth plan',
@@ -166,7 +166,7 @@ export const demoCases: DemoCase[] = [
   },
   {
     id: 'cs_274',
-    subject: 'EXT-7602 — closed with accept',
+    subject: 'EXT-7602 — closed: accepted',
     tenant: currentTenant.name,
     status: 'closed',
     slaDueAt: '2026-09-11T19:00:00.000Z',

@@ -170,7 +170,7 @@ export const messages = {
     adjustPlan: 'Adjust plan',
     toastPlanTitle: 'Plan unchanged',
     toastPlanBody: 'Plan changes are local feedback only.',
-    franchiseUsage: 'Franchise usage',
+    franchiseUsage: 'Plan usage',
     usage: 'Usage',
     billed: 'Billed this period {amount}',
     suspend: 'Suspend tenant',
