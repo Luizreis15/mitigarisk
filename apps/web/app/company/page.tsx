@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -126,9 +127,7 @@ function CompanyContent() {
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Button
                     className="h-11 bg-white text-[#203442] hover:bg-white/90"
-                    onClick={() =>
-                      notify(messages.company.toastEvalTitle, messages.company.toastEvalBody)
-                    }
+                    render={<Link href="/evaluations/new" />}
                   >
                     {messages.company.createEvaluation}
                   </Button>
@@ -193,6 +192,7 @@ function CompanyContent() {
                       <TableHead>{messages.company.status}</TableHead>
                       <TableHead>{messages.company.policy}</TableHead>
                       <TableHead>{messages.company.when}</TableHead>
+                      <TableHead>{messages.company.open}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -217,6 +217,15 @@ function CompanyContent() {
                         <TableCell>
                           {formatDateTime(item.evaluatedAt, presentation)}
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            className="h-11"
+                            render={<Link href={`/evaluations/${item.id}`} />}
+                          >
+                            {messages.company.openEvaluation}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -239,6 +248,13 @@ function CompanyContent() {
                       {item.policyVersion} · {formatDateTime(item.evaluatedAt, presentation)}
                     </p>
                     <p className="mt-2 text-sm">{item.recommendation}</p>
+                    <Button
+                      variant="outline"
+                      className="mt-3 h-11"
+                      render={<Link href={`/evaluations/${item.id}`} />}
+                    >
+                      {messages.company.openEvaluation}
+                    </Button>
                   </article>
                 ))}
               </div>
@@ -301,7 +317,7 @@ function CompanyContent() {
                   <Button
                     variant="secondary"
                     className="h-11"
-                    onClick={() => notify(messages.company.toastCaseTitle, item.id)}
+                    render={<Link href={`/cases/${item.id}`} />}
                   >
                     {messages.company.open}
                   </Button>
