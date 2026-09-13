@@ -56,4 +56,46 @@ recommended reviewer.
 
 ## Handoff notes (Cursor)
 
-_To be completed by Cursor._
+```text
+Outcome:
+The product chrome now uses apps/web/public/mitiga-symbol.png as the only primary MITIGA symbol. The temporary SVG/component drawing was removed. Wordmark text treatment is unchanged aside from slightly tighter gap. Favicon/apple metadata point at the same local PNG.
+
+Branch and commit:
+feat/cursor-apply-approved-brand-mark
+- e2d3dc8 feat(web): use the approved MITIGA symbol in product chrome
+- (this file) docs(task): record TASK-011 Cursor handoff
+
+Files changed:
+apps/web/components/prototype/mitiga-mark.tsx
+apps/web/app/layout.tsx
+apps/web/lib/i18n/messages.ts
+apps/web/public/favicon.svg (deleted)
+apps/web/public/mitiga-mark.svg (deleted)
+this task file.
+
+Decisions and assumptions:
+- MitigaMark is shared by login, AppShell (sidebar, compact, mobile sheet), and WorkspaceChrome, so one component change covers those surfaces.
+- The PNG is served unoptimized to avoid re-encoding the approved asset. Display size is 40px (32px compact) with object-contain on the native 1:1 ratio and transparent background.
+- No gradient, shadow, opacity, mask, or color filter is applied to the image. text-white on wrappers still only affects the wordmark.
+- Compact marks use catalog alt text; full marks use empty alt because the visible MITIGA wordmark is present.
+- Favicon alignment uses metadata.icons against the existing PNG rather than generating a new icon file.
+
+Checks run and exact results:
+- ./scripts/check-secrets.sh: Secret check passed.
+- ./scripts/verify-web.sh: Web verification passed.
+  - oxlint (shadcn ignore patterns): pass, exit 0
+  - npm run build: pass; existing routes remain listed
+
+Security/tenant/audit impact:
+Brand asset only. No secrets, credentials, network/CDN logo URLs, auth, or tenant-data changes.
+
+Migration and rollback notes:
+No migrations. Rollback is revert of this branch. Do not merge until Codex review.
+
+Known limitations:
+- Browser visual check of light/dark surfaces was not exercised in this environment; verification is lint + production build.
+- The PNG is large (1254px); it is displayed small. unoptimized serves the original file.
+
+Recommended reviewer:
+Codex merge owner; design/product check that the folded-ribbon mark is the only visible MITIGA symbol and is not recolored on dark sidebars.
+```

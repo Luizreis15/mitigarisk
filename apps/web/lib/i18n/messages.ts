@@ -1,5 +1,6 @@
 export const messages = {
   brand: 'MITIGA',
+  brandMarkAlt: 'MITIGA symbol',
   meta: {
     title: 'MITIGA — risk management prototype',
     description:
