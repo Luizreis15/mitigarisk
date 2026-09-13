@@ -21,6 +21,20 @@ export type TimelineAction =
   | 'evidence.requested'
   | 'decision.recorded'
   | 'case.escalated';
+export type CasePriority = 'low' | 'normal' | 'high' | 'urgent';
+export type EvidenceState = 'none' | 'requested' | 'partial' | 'complete';
+export type NextActionId =
+  | 'claim'
+  | 'review_evidence'
+  | 'request_information'
+  | 'record_decision'
+  | 'await_analyst'
+  | 'none';
+export type WorkbenchView =
+  | 'open'
+  | 'needs_information'
+  | 'escalated'
+  | 'closed';
 
 export type DemoEvaluation = {
   id: string;
@@ -51,6 +65,7 @@ export type DemoAlert = {
 export type DemoCase = {
   id: string;
   evaluationId: string | null;
+  reference: string;
   subject: string;
   tenant: string;
   status: CaseStatus;
@@ -59,6 +74,12 @@ export type DemoCase = {
   evidenceCount: number;
   lastNote: string;
   correlationId: string;
+  priority: CasePriority;
+  lastActivityAt: string;
+  evidenceState: EvidenceState;
+  nextAction: NextActionId;
+  riskBand: RiskBand | null;
+  recordedDecision: HumanDecision | null;
 };
 
 export type DemoTimelineEvent = {

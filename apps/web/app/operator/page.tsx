@@ -35,6 +35,7 @@ import type { CaseStatus } from '@/lib/demo/types';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { memberships } from '@/lib/demo/session';
 import { formatDateTime, formatNumber } from '@/lib/i18n/presentation';
+import { caseHrefFromQueue } from '@/lib/demo/workbench';
 
 export default function OperatorPage() {
   return (
@@ -105,6 +106,16 @@ function OperatorContent() {
                   tenant: currentTenant.name,
                 })}
           </p>
+          {empty ? null : (
+            <div className="mt-5">
+              <Button
+                className="h-11 bg-white text-[#203442] hover:bg-white/90"
+                render={<Link href="/cases" />}
+              >
+                {messages.operator.openWorkbench}
+              </Button>
+            </div>
+          )}
         </section>
 
         {empty ? (
@@ -140,7 +151,10 @@ function OperatorContent() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button className="h-11" render={<Link href={`/cases/${item.id}`} />}>
+                  <Button
+                    className="h-11"
+                    render={<Link href={caseHrefFromQueue(item)} />}
+                  >
                     {messages.operator.openCase}
                   </Button>
                   <Button
@@ -215,7 +229,7 @@ function OperatorContent() {
                   <Button
                     variant="outline"
                     className="h-11"
-                    render={<Link href={`/cases/${item.id}`} />}
+                    render={<Link href={caseHrefFromQueue(item)} />}
                   >
                     {messages.operator.history}
                   </Button>
