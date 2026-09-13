@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,16 +25,30 @@ import {
 } from '@/components/ui/sheet';
 import { AppShell } from '@/components/prototype/app-shell';
 import { EmptyFilterState } from '@/components/prototype/empty-filter-state';
+import { EmptyWorkspace } from '@/components/prototype/empty-workspace';
 import { CaseStatusBadge } from '@/components/prototype/status-badge';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
 import { currentTenant, demoCases, demoEvaluations, presentation } from '@/lib/demo/data';
 import { caseStatusLabels } from '@/lib/demo/labels';
 import type { CaseStatus } from '@/lib/demo/types';
 import { interpolate, messages } from '@/lib/i18n/messages';
+import { memberships } from '@/lib/demo/session';
 import { formatDateTime, formatNumber } from '@/lib/i18n/presentation';
 
 export default function OperatorPage() {
+  return (
+    <Suspense>
+      <OperatorContent />
+    </Suspense>
+  );
+}
+
+function OperatorContent() {
   const notify = usePrototypeFeedback();
+  const params = useSearchParams();
+  const empty = params.get('state') === 'empty';
+  const capabilities = memberships.find((item) => item.id === 'mem_helix_operator')
+    ?.capabilities;
   const [status, setStatus] = useState<CaseStatus | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const queue = useMemo(
@@ -65,7 +80,11 @@ export default function OperatorPage() {
   );
 
   return (
-    <AppShell view="operator" onOpenFilters={() => setFiltersOpen(true)}>
+    <AppShell
+      view="operator"
+      onOpenFilters={empty ? undefined : () => setFiltersOpen(true)}
+      capabilities={capabilities}
+    >
       <div className="grid gap-6">
         <section
           id="queue"
@@ -78,13 +97,19 @@ export default function OperatorPage() {
             {messages.operator.title}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-            {interpolate(messages.operator.intro, {
-              actor: currentTenant.operator,
-              tenant: currentTenant.name,
-            })}
+            {empty
+              ? messages.emptyWorkspace.operatorBody
+              : interpolate(messages.operator.intro, {
+                  actor: currentTenant.operator,
+                  tenant: currentTenant.name,
+                })}
           </p>
         </section>
 
+        {empty ? (
+          <EmptyWorkspace view="operator" />
+        ) : (
+          <>
         <div className="hidden lg:block">{filters}</div>
 
         {queue.length === 0 ? (
@@ -217,6 +242,8 @@ export default function OperatorPage() {
             </CardContent>
           </Card>
         </section>
+          </>
+        )}
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>

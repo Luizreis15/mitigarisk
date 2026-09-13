@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/sheet';
 import { currentTenant, presentation } from '@/lib/demo/data';
 import { roleLabels, rolePaths } from '@/lib/demo/labels';
-import type { DemoRole } from '@/lib/demo/types';
+import type { Capability, DemoRole } from '@/lib/demo/types';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
@@ -77,10 +77,12 @@ export function AppShell({
   view,
   children,
   onOpenFilters,
+  capabilities,
 }: {
   view: DemoRole;
   children: ReactNode;
   onOpenFilters?: () => void;
+  capabilities?: Capability[];
 }) {
   const items = navigation[view];
   const [query, setQuery] = useState('');
@@ -228,7 +230,7 @@ export function AppShell({
               </Button>
             ) : null}
 
-            <RoleSwitcher current={view} />
+            <RoleSwitcher current={view} capabilities={capabilities} />
           </header>
 
           <div className="border-b border-border bg-[#eef4f2] px-4 py-2 text-sm text-[#3d4d57] sm:px-6">
@@ -278,7 +280,25 @@ export function AppShell({
   );
 }
 
-function RoleSwitcher({ current }: { current: DemoRole }) {
+function RoleSwitcher({
+  current,
+  capabilities,
+}: {
+  current: DemoRole;
+  capabilities?: Capability[];
+}) {
+  const required: Record<DemoRole, Capability> = {
+    company: 'company.view',
+    operator: 'operator.queue',
+    'super-admin': 'platform.admin',
+  };
+  const roles = (Object.keys(rolePaths) as DemoRole[]).filter(
+    (role) =>
+      role === current ||
+      !capabilities ||
+      capabilities.includes(required[role]),
+  );
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -291,7 +311,7 @@ function RoleSwitcher({ current }: { current: DemoRole }) {
       <DropdownMenuContent align="end" className="min-w-56">
         <DropdownMenuLabel>{messages.nav.switchView}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
+        {roles.map((role) => (
           <DropdownMenuItem
             key={role}
             render={<Link href={rolePaths[role]} />}
@@ -301,6 +321,9 @@ function RoleSwitcher({ current }: { current: DemoRole }) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/tenants" />}>
+          {messages.nav.workspaces}
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/" />}>
           {messages.nav.backToLogin}
         </DropdownMenuItem>

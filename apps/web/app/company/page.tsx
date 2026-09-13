@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { AppShell } from '@/components/prototype/app-shell';
 import { EmptyFilterState } from '@/components/prototype/empty-filter-state';
+import { EmptyWorkspace } from '@/components/prototype/empty-workspace';
 import { ScoreMeter } from '@/components/prototype/score-meter';
 import {
   QualityStatus,
@@ -49,11 +51,24 @@ import {
 } from '@/lib/demo/data';
 import { riskBandLabels } from '@/lib/demo/labels';
 import type { RiskBand } from '@/lib/demo/types';
+import { memberships } from '@/lib/demo/session';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { formatDateTime, formatNumber, formatScore } from '@/lib/i18n/presentation';
 
 export default function CompanyPage() {
+  return (
+    <Suspense>
+      <CompanyContent />
+    </Suspense>
+  );
+}
+
+function CompanyContent() {
   const notify = usePrototypeFeedback();
+  const params = useSearchParams();
+  const empty = params.get('state') === 'empty';
+  const capabilities = memberships.find((item) => item.id === 'mem_helix_company')
+    ?.capabilities;
   const [band, setBand] = useState<RiskBand | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtered = useMemo(
@@ -80,7 +95,11 @@ export default function CompanyPage() {
   );
 
   return (
-    <AppShell view="company" onOpenFilters={() => setFiltersOpen(true)}>
+    <AppShell
+      view="company"
+      onOpenFilters={empty ? undefined : () => setFiltersOpen(true)}
+      capabilities={capabilities}
+    >
       <div className="grid gap-6">
         <section
           id="overview"
@@ -95,35 +114,40 @@ export default function CompanyPage() {
                 {currentTenant.name}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-                {interpolate(messages.company.summary, {
-                  score: formatScore(64),
-                  policy: currentTenant.policyVersion,
-                  actor: currentTenant.actor,
-                })}
+                {empty
+                  ? messages.emptyWorkspace.companyBody
+                  : interpolate(messages.company.summary, {
+                      score: formatScore(64),
+                      policy: currentTenant.policyVersion,
+                      actor: currentTenant.actor,
+                    })}
               </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Button
-                  className="h-11 bg-white text-[#203442] hover:bg-white/90"
-                  onClick={() =>
-                    notify(messages.company.toastEvalTitle, messages.company.toastEvalBody)
-                  }
-                >
-                  {messages.company.createEvaluation}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
-                  onClick={() =>
-                    notify(
-                      messages.company.toastExportTitle,
-                      messages.company.toastExportBody,
-                    )
-                  }
-                >
-                  {messages.company.exportSummary}
-                </Button>
-              </div>
+              {empty ? null : (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Button
+                    className="h-11 bg-white text-[#203442] hover:bg-white/90"
+                    onClick={() =>
+                      notify(messages.company.toastEvalTitle, messages.company.toastEvalBody)
+                    }
+                  >
+                    {messages.company.createEvaluation}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
+                    onClick={() =>
+                      notify(
+                        messages.company.toastExportTitle,
+                        messages.company.toastExportBody,
+                      )
+                    }
+                  >
+                    {messages.company.exportSummary}
+                  </Button>
+                </div>
+              )}
             </div>
+            {empty ? null : (
             <div className="space-y-4 rounded-xl bg-white/10 p-4">
               {demoDimensions.map((dimension) => (
                 <ScoreMeter
@@ -134,9 +158,14 @@ export default function CompanyPage() {
                 />
               ))}
             </div>
+            )}
           </div>
         </section>
 
+        {empty ? (
+          <EmptyWorkspace view="company" />
+        ) : (
+          <>
         <div className="hidden lg:block">{filters}</div>
 
         <section id="evaluations" className="scroll-mt-28 space-y-3">
@@ -281,6 +310,8 @@ export default function CompanyPage() {
             </CardContent>
           </Card>
         </section>
+          </>
+        )}
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>

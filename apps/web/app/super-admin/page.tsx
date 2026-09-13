@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { TriangleAlertIcon } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/table';
 import { AppShell } from '@/components/prototype/app-shell';
 import { EmptyFilterState } from '@/components/prototype/empty-filter-state';
+import { EmptyWorkspace } from '@/components/prototype/empty-workspace';
 import { ScoreMeter } from '@/components/prototype/score-meter';
 import { HealthStatus } from '@/components/prototype/status-badge';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
@@ -41,6 +43,7 @@ import { demoAuditEvents, demoTenants, presentation } from '@/lib/demo/data';
 import { healthLabels } from '@/lib/demo/labels';
 import type { TenantHealth } from '@/lib/demo/types';
 import { interpolate, messages } from '@/lib/i18n/messages';
+import { memberships } from '@/lib/demo/session';
 import {
   formatCurrencyFromMinorUnits,
   formatDateTime,
@@ -48,7 +51,19 @@ import {
 } from '@/lib/i18n/presentation';
 
 export default function SuperAdminPage() {
+  return (
+    <Suspense>
+      <SuperAdminContent />
+    </Suspense>
+  );
+}
+
+function SuperAdminContent() {
   const notify = usePrototypeFeedback();
+  const params = useSearchParams();
+  const empty = params.get('state') === 'empty';
+  const capabilities = memberships.find((item) => item.id === 'mem_platform')
+    ?.capabilities;
   const [health, setHealth] = useState<TenantHealth | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const tenants = useMemo(
@@ -76,7 +91,11 @@ export default function SuperAdminPage() {
   );
 
   return (
-    <AppShell view="super-admin" onOpenFilters={() => setFiltersOpen(true)}>
+    <AppShell
+      view="super-admin"
+      onOpenFilters={empty ? undefined : () => setFiltersOpen(true)}
+      capabilities={capabilities}
+    >
       <div className="grid gap-6">
         <section
           id="tenants"
@@ -89,10 +108,14 @@ export default function SuperAdminPage() {
             {messages.admin.title}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-            {messages.admin.intro}
+            {empty ? messages.emptyWorkspace.adminBody : messages.admin.intro}
           </p>
         </section>
 
+        {empty ? (
+          <EmptyWorkspace view="super-admin" />
+        ) : (
+          <>
         <Alert className="border-[#ead9b8] bg-[#f4ead8]">
           <TriangleAlertIcon />
           <AlertTitle>{messages.admin.destructiveTitle}</AlertTitle>
@@ -243,6 +266,8 @@ export default function SuperAdminPage() {
             </CardContent>
           </Card>
         </section>
+          </>
+        )}
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
