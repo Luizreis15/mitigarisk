@@ -14,3 +14,5 @@ export const caseStatusLabels = messages.status.case;
 export const qualityLabels = messages.status.quality;
 export const healthLabels = messages.status.health;
 export const severityLabels = messages.status.severity;
+export const humanDecisionLabels = messages.flow.decision.actions;
+export const timelineActionLabels = messages.flow.timeline.actions;

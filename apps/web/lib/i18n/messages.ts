@@ -121,7 +121,8 @@ export const messages = {
     kicker: 'Consolidated exposure',
     summary:
       'Consolidated score {score} on policy {policy}. The contracting company keeps the final decision. Demonstration actor: {actor}.',
-    createEvaluation: 'Create evaluation',
+    createEvaluation: 'Start evaluation',
+    openEvaluation: 'Open evaluation',
     exportSummary: 'Export summary',
     toastEvalTitle: 'Evaluation simulated',
     toastEvalBody: 'No real calculation ran in this prototype.',
@@ -198,6 +199,7 @@ export const messages = {
     toastEscalateBody: 'A fictional analyst was notified.',
     toastCompleteTitle: 'Completion simulated',
     toastCompleteBody: 'No real case was closed.',
+    openCase: 'Open case',
     assignedTitle: 'Assigned cases',
     assignedHint: 'Items assigned to {actor} in this demonstration.',
     history: 'View history',
@@ -324,6 +326,92 @@ export const messages = {
       'Platform health and audit appear after the first company is provisioned. Support access stays empty until justified.',
     ctaOnboarding: 'Start company setup',
     ctaWorkspaces: 'Choose another workspace',
+  },
+  flow: {
+    recommendationTitle: 'Score is a recommendation',
+    recommendationBody:
+      'The contracting company records the final business decision. A published policy version never becomes an automatic accept or reject on its own.',
+    qualityDistinct:
+      'Data quality describes input completeness. It is not the risk score and does not replace reason codes.',
+    reasonCodesHint:
+      'Reason codes are stable technical identifiers. They stay separate from the numeric score.',
+    missingEvaluationTitle: 'Evaluation not in this prototype',
+    missingEvaluationBody:
+      'This identifier is not in the local fixtures. No tenant records were queried.',
+    missingCaseTitle: 'Case not in this prototype',
+    missingCaseBody:
+      'This identifier is not in the local fixtures. No operations queue was queried.',
+    backCompany: 'Back to company workspace',
+    backOperator: 'Back to operator queue',
+    evaluation: {
+      kicker: 'Risk evaluation',
+      newTitle: 'Start an evaluation',
+      newIntro:
+        'Inputs stay on this device. No scoring engine, provider, or tenant write runs.',
+      subjectLabel: 'Subject',
+      referenceLabel: 'External reference',
+      subjectPlaceholder: 'Customer onboarding 5001',
+      referencePlaceholder: 'EXT-9400',
+      submit: 'Run demonstration evaluation',
+      toastTitle: 'Evaluation simulated',
+      toastBody:
+        'No calculation ran. Opening a fixture that already includes score, quality, and reasons.',
+      resultKicker: 'Explainable result',
+      scoreLabel: 'Risk score',
+      bandLabel: 'Risk band',
+      qualityLabel: 'Data quality',
+      reasonsLabel: 'Reason codes',
+      policyLabel: 'Policy version',
+      actorLabel: 'Actor',
+      correlationLabel: 'Correlation',
+      whenLabel: 'Completed',
+      recommendationLabel: 'Recommendation',
+      provenanceHint:
+        'This result keeps policy version, reason codes, quality, actor, and correlation for audit.',
+      openCase: 'Open linked case',
+      createCase: 'Create case from evaluation',
+      toastCaseTitle: 'Case stayed local',
+      toastCaseBody: 'No case record was written. Opening a fixture for the next step.',
+    },
+    case: {
+      kicker: 'Operations case',
+      linkedEvaluation: 'Linked evaluation',
+      slaLabel: 'SLA due',
+      assigneeLabel: 'Assignee',
+      evidenceTitle: 'Evidence',
+      evidenceHint:
+        'Requesting evidence does not upload a file or send a message. Quality gaps stay distinct from score.',
+      requestEvidence: 'Request evidence',
+      toastEvidenceTitle: 'Evidence request simulated',
+      toastEvidenceBody: 'No file was uploaded and no notification was sent.',
+      decisionTitle: 'Human decision',
+      decisionHint:
+        'These actions only add local feedback. They never persist a business decision.',
+      toastDecisionTitle: 'Decision not persisted',
+      toastDecisionBody:
+        '“{decision}” was shown only in this prototype. No case outcome was written.',
+      timelineTitle: 'Audit-style timeline',
+      timelineHint:
+        'Demonstration evidence: action token, actor, time, and correlation. Nothing is append-only here.',
+    },
+    decision: {
+      actions: {
+        approve: 'Approve',
+        reject: 'Reject',
+        escalate: 'Escalate',
+        request_more_info: 'Request more information',
+      },
+    },
+    timeline: {
+      actions: {
+        'evaluation.completed': 'Evaluation completed',
+        'case.opened': 'Case opened',
+        'evidence.requested': 'Evidence requested',
+        'decision.recorded': 'Human decision recorded locally',
+        'case.escalated': 'Case escalated',
+      },
+      token: 'Action {action}',
+    },
   },
 } as const;
 

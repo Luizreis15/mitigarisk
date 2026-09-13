@@ -2,6 +2,7 @@
 
 import { useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -139,7 +140,11 @@ function OperatorContent() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Button className="h-11" render={<Link href={`/cases/${item.id}`} />}>
+                    {messages.operator.openCase}
+                  </Button>
                   <Button
+                    variant="outline"
                     className="h-11"
                     onClick={() => notify(messages.operator.toastClaimTitle, item.id)}
                   >
@@ -210,7 +215,7 @@ function OperatorContent() {
                   <Button
                     variant="outline"
                     className="h-11"
-                    onClick={() => notify(messages.operator.toastHistoryTitle, item.lastNote)}
+                    render={<Link href={`/cases/${item.id}`} />}
                   >
                     {messages.operator.history}
                   </Button>
@@ -237,6 +242,13 @@ function OperatorContent() {
                     })}
                   </p>
                   <p className="mt-1 text-sm">{item.recommendation}</p>
+                  <Button
+                    variant="ghost"
+                    className="mt-3 h-11"
+                    render={<Link href={`/evaluations/${item.id}`} />}
+                  >
+                    {messages.company.openEvaluation}
+                  </Button>
                 </div>
               ))}
             </CardContent>

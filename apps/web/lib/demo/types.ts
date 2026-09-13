@@ -10,6 +10,17 @@ export type CaseStatus =
 export type AlertSeverity = 'info' | 'warning' | 'danger';
 export type TenantHealth = 'healthy' | 'degraded' | 'incident';
 export type DataQuality = 'complete' | 'partial' | 'insufficient';
+export type HumanDecision =
+  | 'approve'
+  | 'reject'
+  | 'escalate'
+  | 'request_more_info';
+export type TimelineAction =
+  | 'evaluation.completed'
+  | 'case.opened'
+  | 'evidence.requested'
+  | 'decision.recorded'
+  | 'case.escalated';
 
 export type DemoEvaluation = {
   id: string;
@@ -22,6 +33,7 @@ export type DemoEvaluation = {
   policyVersion: string;
   reasons: string[];
   actor: string;
+  correlationId: string;
   evaluatedAt: string;
   recommendation: string;
 };
@@ -38,6 +50,7 @@ export type DemoAlert = {
 
 export type DemoCase = {
   id: string;
+  evaluationId: string | null;
   subject: string;
   tenant: string;
   status: CaseStatus;
@@ -45,6 +58,16 @@ export type DemoCase = {
   assignee: string;
   evidenceCount: number;
   lastNote: string;
+  correlationId: string;
+};
+
+export type DemoTimelineEvent = {
+  id: string;
+  caseId: string;
+  action: TimelineAction;
+  actor: string;
+  at: string;
+  correlationId: string;
 };
 
 export type DemoTenant = {
