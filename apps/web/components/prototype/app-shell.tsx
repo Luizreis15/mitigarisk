@@ -392,6 +392,11 @@ function RoleSwitcher({
             {messages.nav.policies}
           </DropdownMenuItem>
         ) : null}
+        {capabilities?.includes('company.view') ? (
+          <DropdownMenuItem render={<Link href="/entities" />}>
+            {messages.nav.entities}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href="/" />}>
           {messages.nav.backToLogin}
         </DropdownMenuItem>

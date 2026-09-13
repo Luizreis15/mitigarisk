@@ -144,7 +144,11 @@ export type PrototypeScenarioId =
   | 'empty-members'
   | 'denied-members'
   | 'loading-admin'
-  | 'error-admin';
+  | 'error-admin'
+  | 'empty-entities'
+  | 'denied-evaluate'
+  | 'loading-entities'
+  | 'error-entities';
 
 export type PrototypeScenario = {
   id: PrototypeScenarioId;
