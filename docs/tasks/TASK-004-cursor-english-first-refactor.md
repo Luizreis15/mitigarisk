@@ -39,3 +39,56 @@ Convert the approved visual prototype into an English-first, market-neutral prod
 ## Expected handoff
 
 Commit on a new `feat/cursor-english-first` branch. Do not merge. Return the standard handoff and exact verification results.
+
+## Handoff notes (Cursor)
+
+Screenshots:
+
+- `apps/web/public/prototype/login-desktop.png`
+- `apps/web/public/prototype/login-mobile.png`
+- `apps/web/public/prototype/company-desktop.png`
+- `apps/web/public/prototype/company-mobile.png`
+- `apps/web/public/prototype/super-admin-desktop.png`
+- `apps/web/public/prototype/super-admin-mobile.png`
+- `apps/web/public/prototype/operator-desktop.png`
+- `apps/web/public/prototype/operator-mobile.png`
+
+```text
+Outcome:
+English-first, market-neutral frontend prototype on feat/cursor-english-first. Routes are /, /company, /super-admin, and /operator. Design language is unchanged.
+
+Branch and commit:
+feat/cursor-english-first (see Conventional Commits on this branch)
+
+Files changed:
+apps/web/app/**, apps/web/components/prototype/**, apps/web/lib/demo/**, apps/web/lib/i18n/**, apps/web/public/prototype/**, this task file. Removed /empresa and /operador.
+
+Decisions and assumptions:
+- ADR 0002 is source of truth: English catalog is the product copy, not a translation layer over Portuguese.
+- Default presentation is locale en-US, timeZone UTC, currency USD, amounts as integer minor units. The boundary is PresentationConfig; no country-specific identity, address, or tax formats were added.
+- Demo tenants are fictional international digital businesses (Helix Commerce Ltd., Nimbus Payments Inc., Cedar Marketplaces, Atlas Digital Services). Names are invented and globally plausible.
+- Display messages are never used as identifiers; reason codes and audit actions stay English technical tokens.
+- USD is a temporary default, not a US-only product claim.
+
+Checks run and exact results:
+- ./scripts/check-secrets.sh: Secret check passed.
+- apps/web lint (oxlint with shadcn ignore patterns): pass, exit 0
+- apps/web `npm run build`: pass; routes /, /company, /super-admin, /operator
+- wrangler preview :8788: HTTP 200 on all four routes; new desktop and mobile screenshots captured
+
+Security/tenant/audit impact:
+Fictional data only. No secrets, provider SDKs, or network calls. Prototype banners remain. Locale/currency/time-zone are presentation settings, not authorization. Audit fixtures still carry actor, target, UTC timestamp, and correlation id.
+
+Migration and rollback notes:
+No migrations. Rollback is revert of this branch. Portuguese routes are removed and should not be restored as product URLs.
+
+Known limitations:
+- Search still uses local toast feedback and does not filter tables.
+- Only English exists in the catalog; no second locale was added (out of scope).
+- Native <meter> rendering remains OS-dependent.
+- Role switcher is prototype navigation, not access control.
+
+Recommended reviewer:
+Codex merge owner; independent check that no Portuguese copy remains in runtime files.
+```
+
