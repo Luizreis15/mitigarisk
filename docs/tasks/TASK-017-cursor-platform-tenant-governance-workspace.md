@@ -71,3 +71,73 @@ Create `feat/cursor-platform-tenant-governance-workspace` from
 deploy. Include outcome, commits, changed files, checks, security/tenant/audit
 impact, migration/rollback notes, limitations, screenshots if available, and a
 recommended reviewer.
+
+## Handoff notes (Cursor)
+
+Outcome:
+English-first Platform Super Admin tenant-governance workspace: a directory
+and detail route for fictional tenants (including Northstar) covering
+lifecycle, platform visibility, membership counts, policy posture,
+configuration readiness, and audit signals. The UI does not show entity,
+evaluation, case, or evidence contents, and local confirmations never claim a
+saved change, email, or support grant.
+
+Branch and commit:
+`feat/cursor-platform-tenant-governance-workspace` from
+`origin/preview/vercel-adapter` (`077922c`). Commits: `c815090` feat(web);
+this commit docs(task).
+
+Files changed:
+- `apps/web/app/super-admin/tenants/page.tsx`
+- `apps/web/app/super-admin/tenants/[id]/page.tsx`
+- `apps/web/app/super-admin/page.tsx`
+- `apps/web/components/prototype/app-shell.tsx`
+- `apps/web/components/prototype/platform-boundary-notice.tsx`
+- `apps/web/components/prototype/platform-governance-state.tsx`
+- `apps/web/lib/demo/platform-governance.ts`
+- `apps/web/lib/demo/session.ts`
+- `apps/web/lib/demo/types.ts`
+- `apps/web/lib/i18n/messages.ts`
+- `docs/tasks/TASK-017-cursor-platform-tenant-governance-workspace.md`
+
+Decisions and assumptions:
+- Governance lives at `/super-admin/tenants` and `/super-admin/tenants/:id`,
+  linked from the existing Super Admin workspace. Search and lifecycle filters
+  are URL state.
+- Tenant lifecycle (draft/active/suspended) is distinct from telemetry health
+  and from risk score. Membership health is counts only.
+- Provision, suspend, reactivate, and support-access are confirmation + toast
+  only; fixtures are not mutated. Support copy states no impersonation session
+  is created.
+- Platform / Company / Operator boundaries are explained on the directory and
+  detail screens. UI hiding is not authorization (`platform.admin`).
+- Canonical brand mark was not changed.
+
+Checks run and exact results:
+- `./scripts/check-secrets.sh` — Secret check passed.
+- `./scripts/verify-web.sh` — oxlint clean; `vinext build` succeeded; Web
+  verification passed. Routes include `/super-admin/tenants` and
+  `/super-admin/tenants/:id`.
+- `npm run verify:vercel` (`apps/web`) — Vercel Build Output API v3
+  verification passed.
+
+Security/tenant/audit impact:
+- No Supabase, API, persistence, email, impersonation, or logging changes.
+  Fixtures are fictional and market-neutral (no UUIDs or real customer data).
+  Cross-tenant operational records are not displayed. Tenant isolation is
+  visual only.
+
+Migration and rollback notes:
+- No migrations. Rollback is revert of this branch. No deploy was made.
+
+Known limitations:
+- Existing Super Admin usage meters still use plan-consumption presentation
+  from earlier fixtures; the new governance views do not treat score as tenant
+  health.
+- Screenshots were not captured. Interactive browser click-through of dialogs
+  was not available in this agent session.
+
+Recommended reviewer:
+Codex (merge owner), with an independent check that governance copy never
+implies persistence, email, support impersonation, or access to tenant
+operational records.
