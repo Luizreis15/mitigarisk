@@ -324,6 +324,9 @@ function RoleSwitcher({
         <DropdownMenuItem render={<Link href="/tenants" />}>
           {messages.nav.workspaces}
         </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/cases" />}>
+          {messages.nav.workbench}
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/" />}>
           {messages.nav.backToLogin}
         </DropdownMenuItem>

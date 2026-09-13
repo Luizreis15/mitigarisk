@@ -16,3 +16,7 @@ export const healthLabels = messages.status.health;
 export const severityLabels = messages.status.severity;
 export const humanDecisionLabels = messages.flow.decision.actions;
 export const timelineActionLabels = messages.flow.timeline.actions;
+export const workbenchViewLabels = messages.workbench.views;
+export const priorityLabels = messages.workbench.priorityValues;
+export const evidenceStateLabels = messages.workbench.evidenceValues;
+export const nextActionLabels = messages.workbench.nextActionValues;

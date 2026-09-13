@@ -55,6 +55,7 @@ import type { RiskBand } from '@/lib/demo/types';
 import { memberships } from '@/lib/demo/session';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { formatDateTime, formatNumber, formatScore } from '@/lib/i18n/presentation';
+import { caseHrefFromQueue } from '@/lib/demo/workbench';
 
 export default function CompanyPage() {
   return (
@@ -303,6 +304,13 @@ function CompanyContent() {
                   tenant: currentTenant.name,
                 })}
               </CardDescription>
+              <Button
+                variant="outline"
+                className="h-11 w-fit"
+                render={<Link href="/cases" />}
+              >
+                {messages.operator.openWorkbench}
+              </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {openCases.map((item) => (
@@ -317,7 +325,7 @@ function CompanyContent() {
                   <Button
                     variant="secondary"
                     className="h-11"
-                    render={<Link href={`/cases/${item.id}`} />}
+                    render={<Link href={caseHrefFromQueue(item)} />}
                   >
                     {messages.company.open}
                   </Button>

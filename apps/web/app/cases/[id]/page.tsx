@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,12 @@ import { RecommendationNotice } from '@/components/prototype/recommendation-noti
 import { CaseStatusBadge } from '@/components/prototype/status-badge';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
 import { currentTenant, presentation } from '@/lib/demo/data';
-import { humanDecisionLabels } from '@/lib/demo/labels';
+import {
+  evidenceStateLabels,
+  humanDecisionLabels,
+  nextActionLabels,
+  priorityLabels,
+} from '@/lib/demo/labels';
 import {
   getCase,
   getEvaluation,
@@ -34,6 +39,7 @@ import {
 } from '@/lib/demo/flow';
 import { memberships } from '@/lib/demo/session';
 import type { DemoTimelineEvent, HumanDecision, TimelineAction } from '@/lib/demo/types';
+import { parseWorkbenchQuery, workbenchHref } from '@/lib/demo/workbench';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { formatDateTime, formatNumber } from '@/lib/i18n/presentation';
 
@@ -42,12 +48,23 @@ function decisionAction(decision: HumanDecision): TimelineAction {
 }
 
 export default function CaseDetailPage() {
+  return (
+    <Suspense>
+      <CaseDetailContent />
+    </Suspense>
+  );
+}
+
+function CaseDetailContent() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const notify = usePrototypeFeedback();
   const capabilities = memberships.find((item) => item.id === 'mem_helix_operator')
     ?.capabilities;
   const item = getCase(params.id);
   const evaluation = item?.evaluationId ? getEvaluation(item.evaluationId) : undefined;
+  const workbenchQuery = parseWorkbenchQuery(searchParams);
+  const workbenchReturn = workbenchHref(workbenchQuery);
   const fixtureEvents = useMemo(
     () => (item ? timelineForCase(item.id) : []),
     [item],
@@ -81,8 +98,8 @@ export default function CaseDetailPage() {
             <EmptyDescription>{messages.flow.missingCaseBody}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button className="h-11" render={<Link href="/operator" />}>
-              {messages.flow.backOperator}
+            <Button className="h-11" render={<Link href={workbenchReturn} />}>
+              {messages.workbench.backToWorkbench}
             </Button>
           </EmptyContent>
         </Empty>
@@ -112,8 +129,46 @@ export default function CaseDetailPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{messages.flow.case.assigneeLabel}</CardTitle>
+                <CardTitle className="text-base">{messages.workbench.owner}</CardTitle>
                 <CardDescription>{item.assignee}</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{messages.workbench.priority}</CardTitle>
+                <CardDescription>{priorityLabels[item.priority]}</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{messages.workbench.lastActivity}</CardTitle>
+                <CardDescription>
+                  {formatDateTime(item.lastActivityAt, presentation)}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{messages.workbench.evidenceState}</CardTitle>
+                <CardDescription>
+                  {evidenceStateLabels[item.evidenceState]}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{messages.workbench.nextAction}</CardTitle>
+                <CardDescription>{nextActionLabels[item.nextAction]}</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{messages.workbench.decision}</CardTitle>
+                <CardDescription>
+                  {item.recordedDecision
+                    ? humanDecisionLabels[item.recordedDecision]
+                    : messages.workbench.noDecision}
+                </CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -205,6 +260,9 @@ export default function CaseDetailPage() {
           </Card>
 
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="h-11" render={<Link href={workbenchReturn} />}>
+              {messages.workbench.backToWorkbench}
+            </Button>
             <Button variant="outline" className="h-11" render={<Link href="/operator" />}>
               {messages.flow.backOperator}
             </Button>

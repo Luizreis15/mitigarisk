@@ -23,10 +23,12 @@ import { EvaluationResult } from '@/components/prototype/evaluation-result';
 import { RecommendationNotice } from '@/components/prototype/recommendation-notice';
 import {
   caseIdForEvaluation,
+  getCase,
   getEvaluation,
   isNewlyOpenedCase,
 } from '@/lib/demo/flow';
 import { memberships } from '@/lib/demo/session';
+import { caseHrefFromQueue } from '@/lib/demo/workbench';
 import { messages } from '@/lib/i18n/messages';
 
 export default function EvaluationDetailPage() {
@@ -35,6 +37,7 @@ export default function EvaluationDetailPage() {
     ?.capabilities;
   const evaluation = getEvaluation(params.id);
   const linkedCaseId = evaluation ? caseIdForEvaluation(evaluation.id) : undefined;
+  const linkedCase = linkedCaseId ? getCase(linkedCaseId) : undefined;
 
   return (
     <AppShell view="company" capabilities={capabilities}>
@@ -77,7 +80,15 @@ export default function EvaluationDetailPage() {
                 {linkedCaseId ? (
                   <Button
                     className="h-11"
-                    render={<Link href={`/cases/${linkedCaseId}`} />}
+                    render={
+                      <Link
+                        href={
+                          linkedCase
+                            ? caseHrefFromQueue(linkedCase)
+                            : `/cases/${linkedCaseId}`
+                        }
+                      />
+                    }
                   >
                     {isNewlyOpenedCase(linkedCaseId)
                       ? messages.flow.evaluation.createCase
