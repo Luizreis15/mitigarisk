@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  AuthSessionError,
   AuthRateLimitedError,
   EmailNotConfirmedError,
   InvalidCredentialsError,
@@ -96,4 +97,17 @@ export async function requestPasswordReset(
 
   const { error } = await client.auth.resetPasswordForEmail(input.email, options);
   if (error) mapPasswordResetRequestError(error);
+}
+
+/**
+ * Stable, serializable presentation code for a thrown auth error, safe to
+ * return from a Server Action to a client component (a thrown class
+ * instance itself does not survive that boundary) and to key UI copy off
+ * of (apps/web/lib/i18n/messages.ts, `login.errors`/`passwordReset.errors`).
+ * Never includes the underlying message, which may echo back
+ * caller-supplied input.
+ */
+export function authErrorPresentationCode(error: unknown): string {
+  if (error instanceof AuthSessionError) return error.name;
+  return "UnknownAuthError";
 }
