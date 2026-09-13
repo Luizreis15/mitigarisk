@@ -57,4 +57,47 @@ recommended reviewer.
 
 ## Handoff notes (Cursor)
 
-_To be completed by Cursor._
+```text
+Outcome:
+English-first case operations workbench on feat/cursor-case-operations-workbench. /cases shows Open, Needs information, Escalated, and Closed queues with local search and filters. Case detail returns to the same view via query parameters. Score, evidence, queue state, and human decision stay separate.
+
+Branch and commit:
+feat/cursor-case-operations-workbench
+- 9ed0ddb feat(web): add operator case workbench with local queue filters
+- (this file) docs(task): record TASK-008 Cursor handoff
+
+Files changed:
+apps/web/app/cases/page.tsx, apps/web/app/cases/[id]/page.tsx
+apps/web/app/company/page.tsx, apps/web/app/operator/page.tsx, apps/web/app/evaluations/[id]/page.tsx
+apps/web/components/prototype/app-shell.tsx, apps/web/components/prototype/workbench-case-card.tsx
+apps/web/lib/demo/types.ts, apps/web/lib/demo/data.ts, apps/web/lib/demo/workbench.ts, apps/web/lib/demo/labels.ts
+apps/web/lib/i18n/messages.ts, this task file.
+
+Decisions and assumptions:
+- Bounded context: Cases operations UI, with Evaluation/Audit only as linked presentation. No domain, RLS, or Supabase files changed.
+- Queue views map Open = open|in_review, Needs information = waiting_evidence, Escalated = escalated, Closed = closed.
+- Search (reference/subject/id), risk band, and status are URL query state only. Copy states that nothing is queried remotely. No localStorage or sessionStorage.
+- Fixture source of truth is not mutated: claim/evidence/decision controls on detail still toast and append in-memory timeline only.
+- Empty queue is previewed with ?state=empty. No-results appears when the selected view has fixtures but filters match none.
+- Last activity uses existing UTC ISO timestamps and en-US/UTC presentation.
+
+Checks run and exact results:
+- ./scripts/check-secrets.sh: Secret check passed.
+- ./scripts/verify-web.sh: Web verification passed.
+  - oxlint (shadcn ignore patterns): pass, exit 0
+  - npm run build: pass; routes include /cases, /cases/:id, /company, /operator, /evaluations/:id
+
+Security/tenant/audit impact:
+Fictional Helix Commerce cases only. No secrets, credentials, network calls, or browser persistence. Workbench filters are not authorization. Tenant isolation is not enforced server-side in this prototype.
+
+Migration and rollback notes:
+No migrations. Rollback is revert of this branch. Do not merge until Codex review.
+
+Known limitations:
+- Search updates the URL on each keystroke; there is no remote index.
+- In-memory timeline rows on case detail still reset on refresh.
+- Browser interaction was not exercised in this environment; verification is lint + production build.
+
+Recommended reviewer:
+Codex merge owner; Claude Code to confirm filters stay local and that the UI does not treat score as a final decision.
+```
