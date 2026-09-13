@@ -16,3 +16,4 @@ export * from "./evaluation-data-quality";
 export * from "./evaluation-reasons";
 export * from "./evaluation-engine";
 export * from "./auth-session";
+export * from "./workspace-access";
