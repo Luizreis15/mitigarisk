@@ -148,7 +148,11 @@ export type PrototypeScenarioId =
   | 'empty-entities'
   | 'denied-evaluate'
   | 'loading-entities'
-  | 'error-entities';
+  | 'error-entities'
+  | 'empty-governance'
+  | 'denied-governance'
+  | 'loading-governance'
+  | 'error-governance';
 
 export type PrototypeScenario = {
   id: PrototypeScenarioId;
