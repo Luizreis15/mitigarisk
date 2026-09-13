@@ -1,9 +1,12 @@
+import Link from 'next/link';
+
 import {
   QualityStatus,
   RiskStatus,
 } from '@/components/prototype/status-badge';
 import type { DemoEvaluation } from '@/lib/demo/types';
 import { presentation } from '@/lib/demo/data';
+import { getPolicy } from '@/lib/demo/policy-workbench';
 import { messages } from '@/lib/i18n/messages';
 import { formatDateTime, formatNumber } from '@/lib/i18n/presentation';
 
@@ -48,7 +51,18 @@ export function EvaluationResult({ evaluation }: { evaluation: DemoEvaluation })
         <dt className="text-xs tracking-[0.08em] text-muted-foreground uppercase">
           {messages.flow.evaluation.policyLabel}
         </dt>
-        <dd className="mt-1 font-mono text-sm">{evaluation.policyVersion}</dd>
+        <dd className="mt-1">
+          {getPolicy(evaluation.policyVersion) ? (
+            <Link
+              className="font-mono text-sm underline-offset-4 hover:underline"
+              href={`/policies/${evaluation.policyVersion}`}
+            >
+              {evaluation.policyVersion}
+            </Link>
+          ) : (
+            <span className="font-mono text-sm">{evaluation.policyVersion}</span>
+          )}
+        </dd>
       </div>
       <div>
         <dt className="text-xs tracking-[0.08em] text-muted-foreground uppercase">

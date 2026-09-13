@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import {
   caseStatusLabels,
   healthLabels,
+  policyLifecycleLabels,
   qualityLabels,
   riskBandLabels,
   severityLabels,
@@ -20,6 +21,7 @@ import type {
   AlertSeverity,
   CaseStatus,
   DataQuality,
+  PolicyLifecycle,
   RiskBand,
   TenantHealth,
 } from '@/lib/demo/types';
@@ -148,6 +150,31 @@ export function SeverityStatus({ severity }: { severity: AlertSeverity }) {
       label={severityLabels[severity]}
       icon={<InfoIcon aria-hidden="true" />}
       tone={severity}
+    />
+  );
+}
+
+export function PolicyLifecycleStatus({ lifecycle }: { lifecycle: PolicyLifecycle }) {
+  const tone: keyof typeof toneClass =
+    lifecycle === 'published'
+      ? 'success'
+      : lifecycle === 'draft'
+        ? 'warning'
+        : 'info';
+
+  return (
+    <StatusFrame
+      label={policyLifecycleLabels[lifecycle]}
+      icon={
+        lifecycle === 'published' ? (
+          <CheckCircle2Icon aria-hidden="true" />
+        ) : lifecycle === 'draft' ? (
+          <CircleDashedIcon aria-hidden="true" />
+        ) : (
+          <InfoIcon aria-hidden="true" />
+        )
+      }
+      tone={tone}
     />
   );
 }

@@ -59,6 +59,7 @@ export const messages = {
     switchView: 'Switch prototype view',
     workspaces: 'Workspaces',
     workbench: 'Case workbench',
+    policies: 'Risk policies',
     backToLogin: 'Back to login',
     riskFieldHint: 'Risk field is active in this demonstration environment.',
     viewPolicy: 'View {view} · policy {policy}',
@@ -227,6 +228,7 @@ export const messages = {
       'company.evaluate': 'Create evaluations',
       'operator.queue': 'Work the operations queue',
       'platform.admin': 'Administer the platform',
+      'policy.view': 'View risk policy versions',
     },
   },
   tenants: {
@@ -476,6 +478,80 @@ export const messages = {
     },
     backToWorkbench: 'Back to workbench',
     emptyQueueLink: 'Preview empty workbench',
+  },
+  policy: {
+    kicker: 'Risk policy',
+    title: 'Policy workbench',
+    intro:
+      'Inspect versioned policies that inform recommendations. A published version is immutable. Configuration is never a customer decision.',
+    filterHonesty:
+      'Search and filters stay on this screen. Nothing is queried remotely.',
+    searchLabel: 'Search name or version',
+    searchPlaceholder: 'Helix onboarding or pol-2026.09.11-v4',
+    lifecycleLabel: 'Lifecycle',
+    allLifecycles: 'All lifecycle states',
+    clearFilters: 'Clear local filters',
+    emptyTitle: 'No policies in this prototype',
+    emptyBody:
+      'No fictional policy versions are listed. Lifecycle state is not a human decision.',
+    noResultsTitle: 'No policies match these filters',
+    noResultsBody:
+      'The local fixtures are unchanged. Adjust search or lifecycle on this screen.',
+    countLabel: '{count} local policy versions',
+    openPolicy: 'Inspect version',
+    backToList: 'Back to policy workbench',
+    emptyLink: 'Preview empty policy list',
+    missingTitle: 'Policy version not in this prototype',
+    missingBody:
+      'This identifier is not in the local fixtures. No policy store was queried.',
+    identity: 'Policy identity',
+    version: 'Version',
+    lifecycle: 'Lifecycle',
+    owner: 'Owner',
+    effective: 'Effective period',
+    effectiveOpen: '{from} onward',
+    effectiveRange: '{from} – {to}',
+    notEffective: 'Not in effect',
+    lastActivity: 'Last activity (UTC)',
+    factorsTitle: 'Factors and weights',
+    factorsHint:
+      'Weights describe relative contribution. They are not a risk score, quality state, or human decision.',
+    weight: 'Weight {value}',
+    thresholdsTitle: 'Score thresholds',
+    thresholdsHint:
+      'Thresholds map a numeric score to a recommendation path. They do not record a contracting-company decision.',
+    thresholdRange: '{min}–{max}',
+    recommendationPath: 'Recommendation path',
+    scoreBand: 'Score band',
+    scoreRange: 'Score range',
+    historyTitle: 'Immutable history',
+    historyHint:
+      'Demonstration evidence only. Published and archived versions cannot be edited here.',
+    publishedImmutable:
+      'This published version is immutable. Changes would create a new version in a real product. This prototype does not publish or edit policies.',
+    draftNotice:
+      'Draft. Factors and thresholds could still change before publication. This prototype does not save edits.',
+    archivedNotice:
+      'Archived and superseded. This version is immutable and is not used for new evaluations.',
+    supersededBy: 'Superseded by {id}',
+    lifecycleValues: {
+      draft: 'Draft',
+      published: 'Published · immutable',
+      archived: 'Archived · superseded',
+    },
+    paths: {
+      accept_path: 'Follow acceptance path',
+      review: 'Send to human review',
+      additional_evidence: 'Request additional evidence',
+    },
+    historyActions: {
+      'policy.created': 'Version created',
+      'policy.published': 'Version published',
+      'policy.archived': 'Version archived',
+    },
+    token: 'Action {action}',
+    openFromCompany: 'Open policy workbench',
+    inspectLinked: 'Inspect this policy version',
   },
 } as const;
 
