@@ -74,3 +74,74 @@ Create `feat/cursor-entity-intake-evaluation-workflow` from
 deploy. Include outcome, commits, changed files, checks, security/tenant/audit
 impact, migration/rollback notes, limitations, screenshots if available, and a
 recommended reviewer.
+
+## Handoff notes (Cursor)
+
+Outcome:
+English-first Company workflow for fictional Northstar entity records and a
+structured evaluation intake. Facts, completeness, recommendation, and human
+decision stay visually distinct. The intake never shows a score and the
+acknowledgement states that nothing was saved or sent.
+
+Branch and commit:
+`feat/cursor-entity-intake-evaluation-workflow` from `origin/preview/vercel-adapter`
+(`bbbb7d3`). Commits: `25e8ace` feat(web); this commit docs(task).
+
+Files changed:
+- `apps/web/app/entities/page.tsx`
+- `apps/web/app/entities/[id]/page.tsx`
+- `apps/web/app/evaluations/new/page.tsx`
+- `apps/web/app/company/page.tsx`
+- `apps/web/components/prototype/app-shell.tsx`
+- `apps/web/components/prototype/concept-separation-notice.tsx`
+- `apps/web/components/prototype/entity-intake-state.tsx`
+- `apps/web/lib/demo/entity-intake.ts`
+- `apps/web/lib/demo/session.ts`
+- `apps/web/lib/demo/types.ts`
+- `apps/web/lib/i18n/messages.ts`
+- `docs/tasks/TASK-016-cursor-entity-intake-evaluation-workflow.md`
+
+Decisions and assumptions:
+- Entity records live at `/entities` and `/entities/:id` using Northstar
+  fixtures only (identity/reference, relationship, operational signals,
+  declared facts, completeness, provenance, UTC timestamps).
+- `/evaluations/new` is the intake route (retained). It collects facts,
+  validates required fields, reviews completeness, then acknowledges a local
+  non-write. No score is rendered on that screen.
+- Policy choice is limited to a local published Northstar policy-version
+  fixture. Locale, currency, and time zone are labelled as presentation, not
+  authorization.
+- A later human decision is described as a case step; the intake does not
+  offer approve/reject. Example evaluation detail links are existing fixtures,
+  not engine output from the form.
+- Denied copy states backend capability checks in a real environment; UI
+  visibility is not authorization (`company.evaluate`).
+- Canonical brand mark was not changed.
+
+Checks run and exact results:
+- `./scripts/check-secrets.sh` — Secret check passed.
+- `./scripts/verify-web.sh` — oxlint clean; `vinext build` succeeded; Web
+  verification passed. Routes include `/entities` and `/entities/:id`.
+- `npm run verify:vercel` (`apps/web`) — Vercel Build Output API v3
+  verification passed (config.json v3, Node.js function with handler,
+  static/_next client bundle).
+
+Security/tenant/audit impact:
+- No Supabase usage in this change, no API calls, no persistence, no engine
+  invocation, no emails, no uploads. Fixtures use `@demo.mitiga.local` and
+  technical tokens, not UUIDs or real customer data. Tenant scope is visual
+  only.
+
+Migration and rollback notes:
+- No migrations. Rollback is revert of this branch. No deploy was made.
+
+Known limitations:
+- Completeness is derived locally from form fields, not TASK-009.
+- Example results after acknowledgement are separate fixtures (`ev_10510`,
+  `ev_10477`, `ev_10461`).
+- Screenshots were not captured. Interactive browser click-through was not
+  available in this agent session.
+
+Recommended reviewer:
+Codex (merge owner), with an independent check that intake copy never implies
+a write, score, or human decision.
