@@ -23,7 +23,8 @@ function isCapability(value: string | null): value is Capability {
     value === 'company.view' ||
     value === 'company.evaluate' ||
     value === 'operator.queue' ||
-    value === 'platform.admin'
+    value === 'platform.admin' ||
+    value === 'policy.view'
   );
 }
 

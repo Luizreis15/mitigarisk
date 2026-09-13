@@ -29,6 +29,7 @@ import {
 } from '@/lib/demo/flow';
 import { memberships } from '@/lib/demo/session';
 import { caseHrefFromQueue } from '@/lib/demo/workbench';
+import { getPolicy } from '@/lib/demo/policy-workbench';
 import { messages } from '@/lib/i18n/messages';
 
 export default function EvaluationDetailPage() {
@@ -93,6 +94,15 @@ export default function EvaluationDetailPage() {
                     {isNewlyOpenedCase(linkedCaseId)
                       ? messages.flow.evaluation.createCase
                       : messages.flow.evaluation.openCase}
+                  </Button>
+                ) : null}
+                {getPolicy(evaluation.policyVersion) ? (
+                  <Button
+                    variant="secondary"
+                    className="h-11"
+                    render={<Link href={`/policies/${evaluation.policyVersion}`} />}
+                  >
+                    {messages.policy.inspectLinked}
                   </Button>
                 ) : null}
                 <Button

@@ -39,6 +39,7 @@ import {
 import { currentTenant, presentation } from '@/lib/demo/data';
 import { roleLabels, rolePaths } from '@/lib/demo/labels';
 import type { Capability, DemoRole } from '@/lib/demo/types';
+import { canViewPolicies } from '@/lib/demo/policy-workbench';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
@@ -327,6 +328,11 @@ function RoleSwitcher({
         <DropdownMenuItem render={<Link href="/cases" />}>
           {messages.nav.workbench}
         </DropdownMenuItem>
+        {canViewPolicies(capabilities) ? (
+          <DropdownMenuItem render={<Link href="/policies" />}>
+            {messages.nav.policies}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href="/" />}>
           {messages.nav.backToLogin}
         </DropdownMenuItem>

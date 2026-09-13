@@ -132,6 +132,15 @@ function CompanyContent() {
                   >
                     {messages.company.createEvaluation}
                   </Button>
+                  {capabilities?.includes('policy.view') ? (
+                    <Button
+                      variant="outline"
+                      className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
+                      render={<Link href="/policies" />}
+                    >
+                      {messages.policy.openFromCompany}
+                    </Button>
+                  ) : null}
                   <Button
                     variant="outline"
                     className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
@@ -213,7 +222,12 @@ function CompanyContent() {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-xs">
-                          {item.policyVersion}
+                          <Link
+                            className="underline-offset-4 hover:underline"
+                            href={`/policies/${item.policyVersion}`}
+                          >
+                            {item.policyVersion}
+                          </Link>
                         </TableCell>
                         <TableCell>
                           {formatDateTime(item.evaluatedAt, presentation)}
@@ -246,7 +260,14 @@ function CompanyContent() {
                       <QualityStatus quality={item.quality} />
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground">
-                      {item.policyVersion} · {formatDateTime(item.evaluatedAt, presentation)}
+                      <Link
+                        className="underline-offset-4 hover:underline"
+                        href={`/policies/${item.policyVersion}`}
+                      >
+                        {item.policyVersion}
+                      </Link>
+                      {' · '}
+                      {formatDateTime(item.evaluatedAt, presentation)}
                     </p>
                     <p className="mt-2 text-sm">{item.recommendation}</p>
                     <Button

@@ -106,7 +106,8 @@ export type Capability =
   | 'company.view'
   | 'company.evaluate'
   | 'operator.queue'
-  | 'platform.admin';
+  | 'platform.admin'
+  | 'policy.view';
 
 export type MembershipStatus = 'active' | 'invited' | 'onboarding';
 
@@ -141,4 +142,51 @@ export type PrototypeScenarioId =
 export type PrototypeScenario = {
   id: PrototypeScenarioId;
   href: string;
+};
+
+export type PolicyLifecycle = 'draft' | 'published' | 'archived';
+export type PolicyFactorKey = 'identity' | 'fraud' | 'regulatory' | 'financial';
+export type PolicyRecommendationPath =
+  | 'accept_path'
+  | 'review'
+  | 'additional_evidence';
+export type PolicyHistoryAction =
+  | 'policy.created'
+  | 'policy.published'
+  | 'policy.archived';
+
+export type DemoPolicyFactor = {
+  key: PolicyFactorKey;
+  weight: number;
+};
+
+export type DemoPolicyThreshold = {
+  minScore: number;
+  maxScore: number;
+  scoreBand: RiskBand;
+  recommendationPath: PolicyRecommendationPath;
+};
+
+export type DemoPolicyHistoryEvent = {
+  id: string;
+  policyId: string;
+  action: PolicyHistoryAction;
+  actor: string;
+  at: string;
+  correlationId: string;
+};
+
+export type DemoPolicy = {
+  id: string;
+  name: string;
+  versionNumber: number;
+  lifecycle: PolicyLifecycle;
+  owner: string;
+  tenant: string;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+  lastActivityAt: string;
+  supersededBy: string | null;
+  factors: DemoPolicyFactor[];
+  thresholds: DemoPolicyThreshold[];
 };

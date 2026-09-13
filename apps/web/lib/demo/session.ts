@@ -23,7 +23,7 @@ export const memberships: MembershipViewModel[] = [
     environment: 'Staging',
     role: 'company',
     status: 'active',
-    capabilities: ['company.view', 'company.evaluate'],
+    capabilities: ['company.view', 'company.evaluate', 'policy.view'],
     href: '/company',
   },
   {

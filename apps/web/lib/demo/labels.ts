@@ -20,3 +20,6 @@ export const workbenchViewLabels = messages.workbench.views;
 export const priorityLabels = messages.workbench.priorityValues;
 export const evidenceStateLabels = messages.workbench.evidenceValues;
 export const nextActionLabels = messages.workbench.nextActionValues;
+export const policyLifecycleLabels = messages.policy.lifecycleValues;
+export const policyPathLabels = messages.policy.paths;
+export const policyHistoryLabels = messages.policy.historyActions;
