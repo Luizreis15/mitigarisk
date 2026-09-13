@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getPublicSupabaseConfig, getServiceRoleSupabaseConfig } from "./env";
+import { getPublicSupabaseConfig, getServiceRoleSupabaseConfig } from "./env.ts";
 
 // Server-only Supabase boundary. Importing this module from a browser bundle
 // throws immediately: the service role key must never leave the server
