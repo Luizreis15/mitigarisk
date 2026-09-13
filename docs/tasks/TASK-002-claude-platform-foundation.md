@@ -52,3 +52,32 @@ The MVP must support tenant-specific policies and explainable onboarding evaluat
 ## Expected handoff
 
 Commit changes on `feat/claude-platform-foundation` using Conventional Commits, then return findings and the standard handoff from `docs/governance/MULTI-AGENT-DEVELOPMENT.md`. Do not merge or apply anything to the hosted Supabase project.
+
+## Handoff (2026-09-12, Claude Code)
+
+Outcome: implemented in full. Schema, RLS, immutability, domain contracts, Supabase boundary, threat model, and ADRs are in place and verified against a disposable local Postgres instance (no hosted project touched).
+
+Branch and commit: `feat/claude-platform-foundation`, commits `7aa171f` (schema), `bd69161` (SQL verification harness), `3caa13f` (domain contracts + Supabase boundary), `7fcb288` (domain unit tests), `92ba1db` (threat model + ADRs).
+
+Files changed: `supabase/migrations/**` (9 files), `supabase/seed.sql`, `supabase/tests/**` (shim, RLS suite, harness script, README), `apps/web/lib/domain/**`, `apps/web/lib/supabase/**`, `apps/web/tests/domain/**`, `apps/web/package.json` + lockfile (added `@supabase/supabase-js`), `apps/web/tsconfig.json` (`allowImportingTsExtensions`), `apps/web/.gitignore`/`.gitignore` (build-artifact ignores), `docs/adr/0002-0004`, `docs/security/TASK-002-threat-model.md`.
+
+Decisions and assumptions (see ADR 0002–0004 for full rationale):
+- Tenant membership derived from `public.memberships` via security-definer helpers, no custom JWT claim.
+- Role → capability grants are an implementer default pending product ratification (ADR 0002).
+- Environments/plans/quotas, background-job/worker infra, and generated Supabase types are explicitly deferred (ADR 0004) — additive later, not reworked.
+- `app` schema functions are not PostgREST-exposed; added `public.has_capability`/`public.record_audit_event` wrappers after local verification caught that the original design would have silently 404'd from `apps/web/lib/supabase/authorization.ts`.
+
+Checks run and exact results:
+- `supabase/tests/run-local-verification.sh` (initdb/pg_ctl, no Docker, no network) — all 9 migrations apply cleanly; all 16 RLS/immutability/capability-RPC assertions in `supabase/tests/010-rls-tenant-isolation.sql` pass. Re-run after every schema change during implementation.
+- `cd apps/web && npx tsc --noEmit -p tsconfig.json` — no errors.
+- `cd apps/web && npm run lint` (oxlint) — zero errors in any file this task touched; pre-existing errors in unrelated `components/ui/**`/`hooks/**` frontend files are untouched and out of scope.
+- `cd apps/web && npm test` (`node --test`) — 8/8 pass, including a regression test that fails if the TS capability/role key lists drift from the SQL seed.
+- `supabase gen types typescript` was attempted to generate a real `Database` type but requires Docker, unavailable in this environment; domain contracts are hand-written instead (ADR 0004). Reported explicitly per acceptance criterion 9.
+
+Security/tenant/audit impact: every tenant-owned table has RLS keyed off `tenant_id`; cross-tenant reads and writes are denied and verified negatively. Published policies, completed evaluations, case evidence/decisions, and audit events are immutable at the trigger level, not just by convention. Audit writes are attributed server-side (`auth.uid()`), not caller-supplied. No secret, credential, or live network operation was introduced or required.
+
+Migration and rollback notes: every migration is additive (`create table/function if not exists` or `create or replace`); each file ends with a rollback comment. No destructive migration exists in this task.
+
+Known limitations: role→capability matrix needs product review; no worker/queue implementation; no generated Supabase types (Docker required); no frontend or real email/webhook delivery, per scope.
+
+Recommended reviewer: an independent agent for the RLS/authorization design (security-sensitive, per `docs/governance/MULTI-AGENT-DEVELOPMENT.md`), plus product sign-off on the role→capability seed before any UI is built on top of it.
