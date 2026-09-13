@@ -16,14 +16,17 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { demoNotice } from '@/lib/demo/data';
+import { demoEmail, demoPasswordPlaceholder } from '@/lib/demo/data';
+import { roleLabels, rolePaths } from '@/lib/demo/labels';
+import type { DemoRole } from '@/lib/demo/types';
+import { messages } from '@/lib/i18n/messages';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
 
 export default function LoginPage() {
   const router = useRouter();
   const notify = usePrototypeFeedback();
-  const [email, setEmail] = useState('helena.duarte@demo.mitiga.local');
+  const [email, setEmail] = useState(demoEmail);
   const [submitted, setSubmitted] = useState(false);
 
   return (
@@ -37,17 +40,14 @@ export default function LoginPage() {
           <MitigaMark className="text-white" />
           <div className="max-w-md space-y-4">
             <p className="text-[0.7rem] tracking-[0.14em] uppercase text-white/70">
-              Campo de risco
+              {messages.login.kicker}
             </p>
             <h1 className="text-[2rem] leading-[1.2] font-semibold">
-              Confiança silenciosa para decisões auditáveis.
+              {messages.login.headline}
             </h1>
-            <p className="text-sm leading-6 text-white/80">
-              Este login não autentica ninguém. Ele apenas abre o protótipo das
-              visões Empresa, Super admin e Operador, com dados fictícios.
-            </p>
+            <p className="text-sm leading-6 text-white/80">{messages.login.intro}</p>
           </div>
-          <p className="text-xs text-white/55">MITIGA · demonstração frontend</p>
+          <p className="text-xs text-white/55">{messages.login.footer}</p>
         </section>
 
         <section className="flex items-center px-4 py-10 sm:px-8">
@@ -57,17 +57,15 @@ export default function LoginPage() {
                 <MitigaMark />
               </div>
               <CardTitle className="text-[1.375rem] leading-[1.3]">
-                Entrar no protótipo
+                {messages.login.title}
               </CardTitle>
-              <CardDescription>
-                Use qualquer valor. Nenhuma credencial é validada ou enviada.
-              </CardDescription>
+              <CardDescription>{messages.login.subtitle}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               <Alert className="border-[#c5d4dc] bg-[#e4edf2]">
                 <InfoIcon />
-                <AlertTitle>Ambiente de protótipo</AlertTitle>
-                <AlertDescription>{demoNotice}</AlertDescription>
+                <AlertTitle>{messages.prototype.environmentBanner}</AlertTitle>
+                <AlertDescription>{messages.prototype.notice}</AlertDescription>
               </Alert>
 
               <form
@@ -75,15 +73,12 @@ export default function LoginPage() {
                 onSubmit={(event) => {
                   event.preventDefault();
                   setSubmitted(true);
-                  notify(
-                    'Sessão de demonstração iniciada',
-                    'Nenhuma autenticação real foi executada.',
-                  );
-                  router.push('/empresa');
+                  notify(messages.login.toastSessionTitle, messages.login.toastSessionBody);
+                  router.push(rolePaths.company);
                 }}
               >
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-mail de demonstração</Label>
+                  <Label htmlFor="email">{messages.login.emailLabel}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -94,22 +89,22 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Senha (não verificada)</Label>
+                  <Label htmlFor="password">{messages.login.passwordLabel}</Label>
                   <Input
                     id="password"
                     type="password"
                     autoComplete="current-password"
-                    defaultValue="nao-e-uma-senha-real"
+                    defaultValue={demoPasswordPlaceholder}
                     className="h-11"
                   />
                 </div>
                 {submitted ? (
                   <output className="block text-sm text-muted-foreground">
-                    Abrindo a visão empresa…
+                    {messages.login.submitting}
                   </output>
                 ) : null}
                 <Button type="submit" className="h-11 w-full">
-                  Continuar no protótipo
+                  {messages.login.continue}
                 </Button>
               </form>
 
@@ -119,40 +114,37 @@ export default function LoginPage() {
                   variant="outline"
                   className="h-11"
                   onClick={() =>
-                    notify(
-                      'SSO indisponível',
-                      'O acesso federado não faz parte deste protótipo.',
-                    )
+                    notify(messages.login.toastSsoTitle, messages.login.toastSsoBody)
                   }
                 >
                   <KeyRoundIcon />
-                  Entrar com SSO
+                  {messages.login.sso}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   className="h-11"
                   onClick={() =>
-                    notify(
-                      'Recuperação indisponível',
-                      'Não há envio de e-mail nem fluxo de 2FA neste protótipo.',
-                    )
+                    notify(messages.login.toastRecoverTitle, messages.login.toastRecoverBody)
                   }
                 >
-                  Recuperar senha
+                  {messages.login.recover}
                 </Button>
               </div>
 
-              <nav aria-label="Atalhos do protótipo" className="flex flex-wrap gap-3 text-sm">
-                <Link className="underline-offset-4 hover:underline" href="/empresa">
-                  Empresa
-                </Link>
-                <Link className="underline-offset-4 hover:underline" href="/super-admin">
-                  Super admin
-                </Link>
-                <Link className="underline-offset-4 hover:underline" href="/operador">
-                  Operador
-                </Link>
+              <nav
+                aria-label={messages.login.shortcutsLabel}
+                className="flex flex-wrap gap-3 text-sm"
+              >
+                {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
+                  <Link
+                    key={role}
+                    className="underline-offset-4 hover:underline"
+                    href={rolePaths[role]}
+                  >
+                    {roleLabels[role]}
+                  </Link>
+                ))}
               </nav>
             </CardContent>
           </Card>

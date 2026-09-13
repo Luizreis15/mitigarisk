@@ -1,60 +1,16 @@
-import type {
-  AlertSeverity,
-  CaseStatus,
-  DataQuality,
-  DemoRole,
-  RiskBand,
-  TenantHealth,
-} from './types';
+import { messages } from '@/lib/i18n/messages';
+import type { DemoRole } from './types';
 
-export const roleLabels: Record<DemoRole, string> = {
-  empresa: 'Empresa',
-  'super-admin': 'Super admin',
-  operador: 'Operador',
-};
+export const roleLabels = messages.views;
 
 export const rolePaths: Record<DemoRole, string> = {
-  empresa: '/empresa',
+  company: '/company',
   'super-admin': '/super-admin',
-  operador: '/operador',
+  operator: '/operator',
 };
 
-export const riskBandLabels: Record<RiskBand, string> = {
-  low: 'Baixo',
-  medium: 'Médio',
-  high: 'Alto',
-};
-
-export const caseStatusLabels: Record<CaseStatus, string> = {
-  open: 'Aberto',
-  in_review: 'Em revisão',
-  waiting_evidence: 'Aguardando evidência',
-  escalated: 'Escalado',
-  closed: 'Concluído',
-};
-
-export const qualityLabels: Record<DataQuality, string> = {
-  complete: 'Completa',
-  partial: 'Parcial',
-  insufficient: 'Insuficiente',
-};
-
-export const healthLabels: Record<TenantHealth, string> = {
-  healthy: 'Saudável',
-  degraded: 'Degradado',
-  incident: 'Incidente',
-};
-
-export const severityLabels: Record<AlertSeverity, string> = {
-  info: 'Informativo',
-  warning: 'Atenção',
-  danger: 'Crítico',
-};
-
-export function formatDateTime(iso: string) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(iso));
-}
+export const riskBandLabels = messages.status.risk;
+export const caseStatusLabels = messages.status.case;
+export const qualityLabels = messages.status.quality;
+export const healthLabels = messages.status.health;
+export const severityLabels = messages.status.severity;

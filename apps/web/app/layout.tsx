@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 
 import { PrototypeProviders } from '@/components/prototype/providers';
+import { messages } from '@/lib/i18n/messages';
+import { defaultPresentation } from '@/lib/i18n/presentation';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'MITIGA — protótipo de gestão de riscos',
-  description:
-    'Protótipo navegável das visões Login, Empresa, Super admin e Operador.',
+  title: messages.meta.title,
+  description: messages.meta.description,
 };
 
 export default function RootLayout({
@@ -15,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang={defaultPresentation.locale}>
       <body>
         <PrototypeProviders>{children}</PrototypeProviders>
       </body>

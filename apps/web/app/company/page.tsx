@@ -45,46 +45,49 @@ import {
   demoCases,
   demoDimensions,
   demoEvaluations,
+  presentation,
 } from '@/lib/demo/data';
-import { formatDateTime, riskBandLabels } from '@/lib/demo/labels';
+import { riskBandLabels } from '@/lib/demo/labels';
 import type { RiskBand } from '@/lib/demo/types';
+import { interpolate, messages } from '@/lib/i18n/messages';
+import { formatDateTime, formatNumber, formatScore } from '@/lib/i18n/presentation';
 
-export default function EmpresaPage() {
+export default function CompanyPage() {
   const notify = usePrototypeFeedback();
   const [band, setBand] = useState<RiskBand | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtered = useMemo(
-    () =>
-      demoEvaluations.filter((item) => band === 'all' || item.band === band),
+    () => demoEvaluations.filter((item) => band === 'all' || item.band === band),
     [band],
   );
+  const openCases = demoCases.filter((item) => item.status !== 'closed');
 
   const filters = (
     <div className="space-y-3">
-      <Label htmlFor="filtro-faixa">Faixa de risco</Label>
+      <Label htmlFor="filter-band">{messages.filters.riskBand}</Label>
       <NativeSelect
-        id="filtro-faixa"
+        id="filter-band"
         className="h-11 w-full"
         value={band}
         onChange={(event) => setBand(event.target.value as RiskBand | 'all')}
       >
-        <NativeSelectOption value="all">Todas as faixas</NativeSelectOption>
-        <NativeSelectOption value="low">Baixo</NativeSelectOption>
-        <NativeSelectOption value="medium">Médio</NativeSelectOption>
-        <NativeSelectOption value="high">Alto</NativeSelectOption>
+        <NativeSelectOption value="all">{messages.filters.allBands}</NativeSelectOption>
+        <NativeSelectOption value="low">{messages.status.risk.low}</NativeSelectOption>
+        <NativeSelectOption value="medium">{messages.status.risk.medium}</NativeSelectOption>
+        <NativeSelectOption value="high">{messages.status.risk.high}</NativeSelectOption>
       </NativeSelect>
     </div>
   );
 
   return (
-    <AppShell view="empresa" onOpenFilters={() => setFiltersOpen(true)}>
+    <AppShell view="company" onOpenFilters={() => setFiltersOpen(true)}>
       <div className="grid gap-6">
         <section
           id="overview"
           className="scroll-mt-28 rounded-2xl bg-[image:var(--gradient-shell)] p-6 text-white shadow-[var(--shadow-sm)]"
         >
           <p className="text-[0.7rem] tracking-[0.12em] uppercase text-white/70">
-            Exposição consolidada
+            {messages.company.kicker}
           </p>
           <div className="mt-3 grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(16rem,1fr)]">
             <div>
@@ -92,33 +95,32 @@ export default function EmpresaPage() {
                 {currentTenant.name}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-                Score consolidado 64/100 na política {currentTenant.policyVersion}.
-                A decisão final permanece com a contratante. Ator da sessão de
-                demonstração: {currentTenant.actor}.
+                {interpolate(messages.company.summary, {
+                  score: formatScore(64),
+                  policy: currentTenant.policyVersion,
+                  actor: currentTenant.actor,
+                })}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button
                   className="h-11 bg-white text-[#203442] hover:bg-white/90"
                   onClick={() =>
-                    notify(
-                      'Avaliação simulada',
-                      'Nenhum cálculo real foi disparado neste protótipo.',
-                    )
+                    notify(messages.company.toastEvalTitle, messages.company.toastEvalBody)
                   }
                 >
-                  Criar avaliação
+                  {messages.company.createEvaluation}
                 </Button>
                 <Button
                   variant="outline"
                   className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
                   onClick={() =>
                     notify(
-                      'Exportação simulada',
-                      'Nenhum arquivo ou dado de cliente foi gerado.',
+                      messages.company.toastExportTitle,
+                      messages.company.toastExportBody,
                     )
                   }
                 >
-                  Exportar resumo
+                  {messages.company.exportSummary}
                 </Button>
               </div>
             </div>
@@ -126,7 +128,7 @@ export default function EmpresaPage() {
               {demoDimensions.map((dimension) => (
                 <ScoreMeter
                   key={dimension.code}
-                  label={dimension.label}
+                  label={messages.company.dimensions[dimension.code]}
                   score={dimension.score}
                   band={dimension.band}
                 />
@@ -139,15 +141,17 @@ export default function EmpresaPage() {
 
         <section id="evaluations" className="scroll-mt-28 space-y-3">
           <div>
-            <h2 className="text-[1.375rem] leading-[1.3] font-semibold">Avaliações</h2>
+            <h2 className="text-[1.375rem] leading-[1.3] font-semibold">
+              {messages.company.evaluationsTitle}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Motivos, qualidade e versão de política visíveis em cada linha.
+              {messages.company.evaluationsHint}
             </p>
           </div>
           {filtered.length === 0 ? (
             <EmptyFilterState
-              title="Nenhuma avaliação nesta faixa"
-              description="Ajuste o filtro de risco para voltar aos registros fictícios."
+              title={messages.empty.evaluationsTitle}
+              description={messages.empty.evaluationsBody}
             />
           ) : (
             <>
@@ -155,11 +159,11 @@ export default function EmpresaPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Referência</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Política</TableHead>
-                      <TableHead>Quando</TableHead>
+                      <TableHead>{messages.company.reference}</TableHead>
+                      <TableHead>{messages.company.score}</TableHead>
+                      <TableHead>{messages.company.status}</TableHead>
+                      <TableHead>{messages.company.policy}</TableHead>
+                      <TableHead>{messages.company.when}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -170,7 +174,7 @@ export default function EmpresaPage() {
                           <p className="text-xs text-muted-foreground">{item.subject}</p>
                         </TableCell>
                         <TableCell className="font-mono tabular-nums">
-                          {item.score}
+                          {formatNumber(item.score, presentation)}
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1.5">
@@ -181,7 +185,9 @@ export default function EmpresaPage() {
                         <TableCell className="font-mono text-xs">
                           {item.policyVersion}
                         </TableCell>
-                        <TableCell>{formatDateTime(item.evaluatedAt)}</TableCell>
+                        <TableCell>
+                          {formatDateTime(item.evaluatedAt, presentation)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -193,14 +199,15 @@ export default function EmpresaPage() {
                     <p className="font-medium">{item.externalRef}</p>
                     <p className="text-sm text-muted-foreground">{item.subject}</p>
                     <p className="mt-2 font-mono text-sm">
-                      Score {item.score} · {riskBandLabels[item.band]}
+                      {messages.company.score} {formatNumber(item.score, presentation)} ·{' '}
+                      {riskBandLabels[item.band]}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <RiskStatus band={item.band} />
                       <QualityStatus quality={item.quality} />
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground">
-                      {item.policyVersion} · {formatDateTime(item.evaluatedAt)}
+                      {item.policyVersion} · {formatDateTime(item.evaluatedAt, presentation)}
                     </p>
                     <p className="mt-2 text-sm">{item.recommendation}</p>
                   </article>
@@ -217,7 +224,10 @@ export default function EmpresaPage() {
                 <SeverityStatus severity={alert.severity} />
                 <CardTitle className="text-base">{alert.title}</CardTitle>
                 <CardDescription>
-                  {alert.subject} · SLA restante {alert.slaMinutes} min
+                  {interpolate(messages.company.slaRemaining, {
+                    subject: alert.subject,
+                    minutes: formatNumber(alert.slaMinutes, presentation),
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -225,10 +235,13 @@ export default function EmpresaPage() {
                   variant="outline"
                   className="h-11"
                   onClick={() =>
-                    notify('Alerta revisado localmente', `${alert.id} permanece fictício.`)
+                    notify(
+                      messages.company.toastAlertTitle,
+                      interpolate(messages.company.toastAlertBody, { id: alert.id }),
+                    )
                   }
                 >
-                  Revisar alerta
+                  {messages.company.reviewAlert}
                 </Button>
               </CardContent>
             </Card>
@@ -238,35 +251,33 @@ export default function EmpresaPage() {
         <section id="cases" className="scroll-mt-28">
           <Card>
             <CardHeader>
-              <CardTitle>Casos em aberto</CardTitle>
+              <CardTitle>{messages.company.openCases}</CardTitle>
               <CardDescription>
-                {demoCases.filter((item) => item.status !== 'closed').length} itens
-                na operação da Arena Lúdica.
+                {interpolate(messages.company.openCasesHint, {
+                  count: formatNumber(openCases.length, presentation),
+                  tenant: currentTenant.name,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {demoCases
-                .filter((item) => item.status !== 'closed')
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="font-medium">{item.subject}</p>
-                      <p className="text-sm text-muted-foreground">{item.lastNote}</p>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      className="h-11"
-                      onClick={() =>
-                        notify('Caso aberto na demonstração', item.id)
-                      }
-                    >
-                      Abrir
-                    </Button>
+              {openCases.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">{item.subject}</p>
+                    <p className="text-sm text-muted-foreground">{item.lastNote}</p>
                   </div>
-                ))}
+                  <Button
+                    variant="secondary"
+                    className="h-11"
+                    onClick={() => notify(messages.company.toastCaseTitle, item.id)}
+                  >
+                    {messages.company.open}
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </section>
@@ -275,10 +286,8 @@ export default function EmpresaPage() {
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
         <SheetContent side="bottom" className="p-4">
           <SheetHeader>
-            <SheetTitle>Filtros</SheetTitle>
-            <SheetDescription>
-              Aplicam-se apenas aos dados fictícios desta tela.
-            </SheetDescription>
+            <SheetTitle>{messages.filters.title}</SheetTitle>
+            <SheetDescription>{messages.filters.companyHint}</SheetDescription>
           </SheetHeader>
           {filters}
         </SheetContent>

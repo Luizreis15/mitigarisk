@@ -36,9 +36,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { currentTenant, demoNotice } from '@/lib/demo/data';
+import { currentTenant, presentation } from '@/lib/demo/data';
 import { roleLabels, rolePaths } from '@/lib/demo/labels';
 import type { DemoRole } from '@/lib/demo/types';
+import { interpolate, messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
@@ -50,21 +51,21 @@ type NavItem = {
 };
 
 const navigation: Record<DemoRole, NavItem[]> = {
-  empresa: [
-    { id: 'overview', label: 'Visão geral', icon: LayoutDashboardIcon },
-    { id: 'evaluations', label: 'Avaliações', icon: ClipboardListIcon },
-    { id: 'alerts', label: 'Alertas', icon: BellIcon },
-    { id: 'cases', label: 'Casos', icon: InboxIcon },
+  company: [
+    { id: 'overview', label: messages.nav.overview, icon: LayoutDashboardIcon },
+    { id: 'evaluations', label: messages.nav.evaluations, icon: ClipboardListIcon },
+    { id: 'alerts', label: messages.nav.alerts, icon: BellIcon },
+    { id: 'cases', label: messages.nav.cases, icon: InboxIcon },
   ],
   'super-admin': [
-    { id: 'tenants', label: 'Tenants', icon: Building2Icon },
-    { id: 'health', label: 'Saúde', icon: ActivityIcon },
-    { id: 'audit', label: 'Auditoria', icon: ShieldIcon },
+    { id: 'tenants', label: messages.nav.tenants, icon: Building2Icon },
+    { id: 'health', label: messages.nav.health, icon: ActivityIcon },
+    { id: 'audit', label: messages.nav.audit, icon: ShieldIcon },
   ],
-  operador: [
-    { id: 'queue', label: 'Fila', icon: InboxIcon },
-    { id: 'assigned', label: 'Atribuídos', icon: UsersIcon },
-    { id: 'evidence', label: 'Evidências', icon: ClipboardListIcon },
+  operator: [
+    { id: 'queue', label: messages.nav.queue, icon: InboxIcon },
+    { id: 'assigned', label: messages.nav.assigned, icon: UsersIcon },
+    { id: 'evidence', label: messages.nav.evidence, icon: ClipboardListIcon },
   ],
 };
 
@@ -88,16 +89,16 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[image:var(--gradient-canvas)] text-foreground">
       <a
-        href="#conteudo-principal"
+        href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:rounded-md focus:bg-card focus:px-3 focus:py-2"
       >
-        Ir para o conteúdo
+        {messages.nav.skipToContent}
       </a>
 
       <div className="lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
         <aside
           className="sticky top-0 hidden h-screen bg-[image:var(--gradient-shell)] text-sidebar-foreground md:flex md:w-[5.5rem] md:flex-col lg:w-[var(--sidebar-width)]"
-          aria-label="Navegação principal"
+          aria-label={messages.nav.primary}
         >
           <div className="flex h-[var(--topbar-height)] items-center border-b border-white/10 px-4 lg:px-5">
             <Link href={rolePaths[view]} className="rounded-md">
@@ -120,7 +121,7 @@ export function AppShell({
             ))}
           </nav>
           <p className="hidden px-5 pb-5 text-xs leading-5 text-white/55 lg:block">
-            Campo de risco ativo neste ambiente de demonstração.
+            {messages.nav.riskFieldHint}
           </p>
         </aside>
 
@@ -133,7 +134,7 @@ export function AppShell({
                     variant="ghost"
                     size="icon-lg"
                     className="md:hidden"
-                    aria-label="Abrir menu"
+                    aria-label={messages.nav.openMenu}
                   />
                 }
               >
@@ -145,7 +146,9 @@ export function AppShell({
                     <MitigaMark className="text-white" />
                   </SheetTitle>
                   <SheetDescription className="text-white/70">
-                    Navegação da visão {roleLabels[view].toLowerCase()}.
+                    {interpolate(messages.nav.sheetNav, {
+                      view: roleLabels[view],
+                    })}
                   </SheetDescription>
                 </SheetHeader>
                 <nav className="flex flex-col gap-1 px-2">
@@ -174,7 +177,10 @@ export function AppShell({
                 {currentTenant.name} · {currentTenant.environment}
               </p>
               <p className="truncate text-sm text-foreground">
-                Visão {roleLabels[view].toLowerCase()} · política {currentTenant.policyVersion}
+                {interpolate(messages.nav.viewPolicy, {
+                  view: roleLabels[view],
+                  policy: currentTenant.policyVersion,
+                })}
               </p>
             </div>
 
@@ -184,15 +190,15 @@ export function AppShell({
               onSubmit={(event) => {
                 event.preventDefault();
                 notify(
-                  'Busca local de demonstração',
+                  messages.search.toastTitle,
                   query
-                    ? `Nenhum backend consultado para “${query}”.`
-                    : 'Informe uma referência fictícia para filtrar visualmente.',
+                    ? interpolate(messages.search.toastQuery, { query })
+                    : messages.search.toastEmpty,
                 );
               }}
             >
-              <Label htmlFor={`busca-${view}`} className="sr-only">
-                Buscar demonstração
+              <Label htmlFor={`search-${view}`} className="sr-only">
+                {messages.nav.searchLabel}
               </Label>
               <div className="relative w-full">
                 <SearchIcon
@@ -200,10 +206,10 @@ export function AppShell({
                   aria-hidden="true"
                 />
                 <Input
-                  id={`busca-${view}`}
+                  id={`search-${view}`}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar referência fictícia"
+                  placeholder={messages.nav.searchPlaceholder}
                   className="h-11 bg-card pl-8"
                 />
               </div>
@@ -218,7 +224,7 @@ export function AppShell({
                 onClick={onOpenFilters}
               >
                 <FilterIcon />
-                Filtros
+                {messages.nav.filters}
               </Button>
             ) : null}
 
@@ -226,11 +232,18 @@ export function AppShell({
           </header>
 
           <div className="border-b border-border bg-[#eef4f2] px-4 py-2 text-sm text-[#3d4d57] sm:px-6">
-            {demoNotice}
+            {messages.prototype.notice}
+            <span className="mt-1 block text-xs">
+              {interpolate(messages.presentation.summary, {
+                timeZone: presentation.timeZone,
+                currency: presentation.currency,
+                locale: presentation.locale,
+              })}
+            </span>
           </div>
 
           <main
-            id="conteudo-principal"
+            id="main-content"
             className="mx-auto w-full max-w-[var(--content-max-width)] px-4 py-6 sm:px-6 lg:px-8"
           >
             {children}
@@ -239,7 +252,7 @@ export function AppShell({
       </div>
 
       <nav
-        aria-label="Rotas primárias"
+        aria-label={messages.nav.mobileRoutes}
         className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 backdrop-blur-md md:hidden"
       >
         {items.slice(0, 3).map((item) => (
@@ -258,7 +271,7 @@ export function AppShell({
           className="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.65rem] text-muted-foreground"
         >
           <LogOutIcon className="size-4" aria-hidden="true" />
-          Sair
+          {messages.nav.signOut}
         </Link>
       </nav>
     </div>
@@ -276,7 +289,7 @@ function RoleSwitcher({ current }: { current: DemoRole }) {
         <span className="truncate">{roleLabels[current]}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
-        <DropdownMenuLabel>Trocar visão do protótipo</DropdownMenuLabel>
+        <DropdownMenuLabel>{messages.nav.switchView}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
           <DropdownMenuItem
@@ -289,7 +302,7 @@ function RoleSwitcher({ current }: { current: DemoRole }) {
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/" />}>
-          Voltar ao login
+          {messages.nav.backToLogin}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
