@@ -11,7 +11,9 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test": "node --test tests/**/*.test.ts"
+    "test": "node --test tests/**/*.test.ts",
+    "build:vercel": "DEPLOY_TARGET=vercel NITRO_PRESET=vercel vite build",
+    "verify:vercel": "node scripts/verify-vercel-build.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -45,6 +47,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.34",
+    "nitro": "^3.0.260903-beta",
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
