@@ -57,3 +57,44 @@ export type DemoTenant = {
   consumptionPct: number;
   billedMinorUnits: number;
 };
+
+export type Capability =
+  | 'company.view'
+  | 'company.evaluate'
+  | 'operator.queue'
+  | 'platform.admin';
+
+export type MembershipStatus = 'active' | 'invited' | 'onboarding';
+
+export type MembershipViewModel = {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  environment: string;
+  role: DemoRole;
+  status: MembershipStatus;
+  capabilities: Capability[];
+  href: string;
+};
+
+export type OnboardingStepId =
+  | 'company_profile'
+  | 'environment'
+  | 'policy_template'
+  | 'invite_operators';
+
+export type OnboardingStepViewModel = {
+  id: OnboardingStepId;
+  optional: boolean;
+};
+
+export type PrototypeScenarioId =
+  | 'empty-company'
+  | 'empty-operator'
+  | 'empty-admin'
+  | 'denied-admin';
+
+export type PrototypeScenario = {
+  id: PrototypeScenarioId;
+  href: string;
+};

@@ -3,7 +3,7 @@ export const messages = {
   meta: {
     title: 'MITIGA — risk management prototype',
     description:
-      'Navigable prototype of Login, Company, Super admin, and Operator views.',
+      'Navigable prototype of login, workspace selection, onboarding, Company, Super admin, and Operator views.',
   },
   prototype: {
     notice:
@@ -14,13 +14,13 @@ export const messages = {
     kicker: 'Risk field',
     headline: 'Quiet confidence for auditable decisions.',
     intro:
-      'This login does not authenticate anyone. It only opens the Company, Super admin, and Operator prototype views with fictional data.',
+      'This login does not authenticate anyone. It opens workspace selection, onboarding, and role views with fictional data.',
     footer: 'MITIGA · frontend demonstration',
     title: 'Enter the prototype',
     subtitle: 'Use any value. No credential is validated or sent.',
     emailLabel: 'Demonstration email',
     passwordLabel: 'Password (not verified)',
-    submitting: 'Opening the company view…',
+    submitting: 'Opening workspace selection…',
     continue: 'Continue in the prototype',
     sso: 'Sign in with SSO',
     recover: 'Recover password',
@@ -57,6 +57,7 @@ export const messages = {
     filters: 'Filters',
     signOut: 'Sign out',
     switchView: 'Switch prototype view',
+    workspaces: 'Workspaces',
     backToLogin: 'Back to login',
     riskFieldHint: 'Risk field is active in this demonstration environment.',
     viewPolicy: 'View {view} · policy {policy}',
@@ -210,6 +211,119 @@ export const messages = {
   },
   presentation: {
     summary: 'Times in {timeZone} · {currency} · {locale}',
+  },
+  session: {
+    membership: {
+      active: 'Active',
+      invited: 'Invitation pending',
+      onboarding: 'Setup required',
+    },
+    capability: {
+      'company.view': 'View company workspace',
+      'company.evaluate': 'Create evaluations',
+      'operator.queue': 'Work the operations queue',
+      'platform.admin': 'Administer the platform',
+    },
+  },
+  tenants: {
+    kicker: 'After sign-in',
+    title: 'Choose a workspace',
+    intro:
+      'Membership is explicit. Select a company, continue first-time setup, or review an invitation. Nothing here writes to a backend.',
+    yourWorkspaces: 'Your memberships',
+    startCompany: 'Start a first company',
+    startCompanyHint:
+      'No tenant exists yet. Complete setup before evaluations or cases appear.',
+    continueSetup: 'Continue setup',
+    scenarios: 'Prototype states',
+    scenariosHint:
+      'Empty and denied states are understandable without operational demo records.',
+    open: 'Open',
+    reviewInvite: 'Review invitation',
+    actorLine: 'Signed in as {name} · {email}',
+    environment: '{environment}',
+    roleLine: '{role} · {status}',
+    scenario: {
+      'empty-company': 'Empty company workspace',
+      'empty-operator': 'Empty operator queue',
+      'empty-admin': 'Empty platform view',
+      'denied-admin': 'Missing platform capability',
+    },
+  },
+  onboarding: {
+    kicker: 'First company',
+    title: 'Set up your company',
+    intro:
+      'These steps stay on this device. No tenant, policy, or invitation is created.',
+    progressLabel: 'Setup progress',
+    progressValue: 'Step {current} of {total}',
+    steps: {
+      company_profile: {
+        title: 'Company profile',
+        body: 'Name the contracting company and the environment. Legal identifiers stay in a later policy pack.',
+      },
+      environment: {
+        title: 'Working environment',
+        body: 'Choose staging or production presentation. Time zone and currency remain configurable.',
+      },
+      policy_template: {
+        title: 'Policy template',
+        body: 'Start from a published template. The company keeps the final accept-or-reject decision.',
+      },
+      invite_operators: {
+        title: 'Invite operators',
+        body: 'Optional. Operators need an accepted membership before they can see queue work.',
+      },
+    },
+    optional: 'Optional',
+    required: 'Required',
+    current: 'Current',
+    continue: 'Mark step complete',
+    back: 'Previous step',
+    finish: 'Finish setup locally',
+    toastFinishTitle: 'Setup stayed local',
+    toastFinishBody: 'No company record was provisioned.',
+    toastStepTitle: 'Step recorded locally',
+    toastStepBody: 'This prototype does not persist onboarding.',
+    openWorkspace: 'Preview empty company workspace',
+  },
+  invite: {
+    kicker: 'Membership',
+    title: 'Invitation pending',
+    intro:
+      '{name} invited you to {tenant}. You cannot see tenant records until the invitation is accepted.',
+    missing: 'This invitation is not in the local fixtures.',
+    capabilities: 'Capabilities after acceptance',
+    noneYet: 'No capabilities until the membership is active.',
+    accept: 'Accept invitation',
+    decline: 'Decline',
+    toastAcceptTitle: 'Acceptance simulated',
+    toastAcceptBody: 'Membership did not change on a server.',
+    toastDeclineTitle: 'Decline simulated',
+    toastDeclineBody: 'The invitation remains in this prototype.',
+    waiting: 'Waiting for you to accept. Tenant data stays hidden.',
+  },
+  denied: {
+    kicker: 'Authorization',
+    title: 'This capability is not granted',
+    intro:
+      'The interface hid the action because {capability} is missing. Visibility is not authorization; a real session would be denied server-side.',
+    unknown: 'the requested capability',
+    back: 'Return to workspaces',
+    hint: 'No data from another tenant is shown.',
+  },
+  emptyWorkspace: {
+    companyTitle: 'No evaluations yet',
+    companyBody:
+      'When this company is live, onboarding evaluations will appear here. Create an evaluation after a published policy exists.',
+    operatorTitle: 'Queue is idle',
+    operatorBody:
+      'No cases are assigned. Operators only see work after an active membership and an evaluation that needs review.',
+    adminTitle: 'No tenants to govern',
+    adminBody:
+      'Platform health and audit appear after the first company is provisioned. Support access stays empty until justified.',
+    ctaOnboarding: 'Start company setup',
+    ctaWorkspaces: 'Choose another workspace',
   },
 } as const;
 

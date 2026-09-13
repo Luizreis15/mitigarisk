@@ -74,7 +74,7 @@ export default function LoginPage() {
                   event.preventDefault();
                   setSubmitted(true);
                   notify(messages.login.toastSessionTitle, messages.login.toastSessionBody);
-                  router.push(rolePaths.company);
+                  router.push('/tenants');
                 }}
               >
                 <div className="space-y-2">
@@ -136,6 +136,9 @@ export default function LoginPage() {
                 aria-label={messages.login.shortcutsLabel}
                 className="flex flex-wrap gap-3 text-sm"
               >
+                <Link className="underline-offset-4 hover:underline" href="/tenants">
+                  {messages.nav.workspaces}
+                </Link>
                 {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
                   <Link
                     key={role}
