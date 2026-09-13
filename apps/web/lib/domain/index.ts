@@ -6,3 +6,5 @@ export * from "./cases";
 export * from "./integrations";
 export * from "./notifications";
 export * from "./audit";
+export * from "./identity";
+export * from "./tenant-bootstrap";

@@ -38,6 +38,21 @@ export const ROLE_KEYS = [
 
 export type RoleKey = (typeof ROLE_KEYS)[number];
 
+// Roles a tenant invitation may grant. platform_super_admin is deliberately
+// excluded: it is not tenant-scoped membership at all
+// (memberships_role_is_tenant_scoped in
+// supabase/migrations/20260912120800_security_and_english_first_hardening.sql),
+// and public.invite_member() rejects it independently at the database level.
+export const TENANT_ROLE_KEYS = ROLE_KEYS.filter(
+  (key): key is Exclude<RoleKey, "platform_super_admin"> => key !== "platform_super_admin",
+);
+
+export type TenantRoleKey = (typeof TENANT_ROLE_KEYS)[number];
+
+export function isTenantRoleKey(value: string): value is TenantRoleKey {
+  return (TENANT_ROLE_KEYS as readonly string[]).includes(value);
+}
+
 export type TenantStatus = "active" | "suspended";
 
 export interface Tenant {
@@ -60,6 +75,34 @@ export interface Membership {
   invitedBy: UserId | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MembershipTransitionContext {
+  /** The acting user is the membership's own user_id. */
+  isSelf: boolean;
+  /** The acting user is a platform admin or holds tenant.manage_members for this tenant. */
+  isAdmin: boolean;
+}
+
+/**
+ * Mirrors app.guard_membership_transition() in
+ * supabase/migrations/20260913090000_auth_tenant_bootstrap.sql: the only
+ * capability-free transition is a member accepting their own invitation
+ * (invited -> active); every other transition requires admin authority.
+ * This is a pre-check for a clean, early error message only — the database
+ * trigger is the real enforcement boundary and is the source of truth if
+ * the two ever disagree.
+ */
+export function canTransitionMembershipStatus(
+  from: MembershipStatus,
+  to: MembershipStatus,
+  context: MembershipTransitionContext,
+): boolean {
+  if (from === to) return false;
+  if (from === "invited" && to === "active") {
+    return context.isAdmin || context.isSelf;
+  }
+  return context.isAdmin;
 }
 
 export function isCapabilityKey(value: string): value is CapabilityKey {
