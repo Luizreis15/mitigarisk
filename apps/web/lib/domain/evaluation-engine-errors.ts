@@ -75,6 +75,17 @@ export class ThresholdCoverageError extends PolicyConfigurationError {
   }
 }
 
+export class InvalidDecisionBandError extends PolicyConfigurationError {
+  readonly label: string;
+  readonly value: unknown;
+  constructor(label: string, value: unknown) {
+    super(`Threshold "${label}" has an invalid decisionBand: must be "approve", "review", or "reject"`);
+    this.name = "InvalidDecisionBandError";
+    this.label = label;
+    this.value = value;
+  }
+}
+
 export class MalformedEvaluationInputError extends Error {
   readonly factorKey: string;
   constructor(factorKey: string, reason: string) {
@@ -88,5 +99,16 @@ export class MalformedInputPayloadError extends Error {
   constructor(reason: string) {
     super(`Malformed evaluation input payload: ${reason}`);
     this.name = "MalformedInputPayloadError";
+  }
+}
+
+export class UnsupportedContractVersionError extends Error {
+  readonly received: unknown;
+  readonly expected: number;
+  constructor(received: unknown, expected: number) {
+    super(`Unsupported evaluation engine contract version: expected ${expected}, received ${String(received)}`);
+    this.name = "UnsupportedContractVersionError";
+    this.received = received;
+    this.expected = expected;
   }
 }

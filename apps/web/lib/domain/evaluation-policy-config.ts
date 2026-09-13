@@ -1,6 +1,7 @@
 import type { DecisionBand, PolicyFactor, PolicyThreshold } from "./policy";
 import {
   DuplicateFactorKeyError,
+  InvalidDecisionBandError,
   InvalidFactorConfigError,
   InvalidFactorWeightError,
   InvalidThresholdRangeError,
@@ -21,6 +22,20 @@ import {
 
 export const SCORE_MIN = 0;
 export const SCORE_MAX = 100;
+
+// DecisionBand (./policy.ts) is a compile-time-only contract: a caller that
+// is not itself type-checked (a future API adapter deserializing an
+// untrusted JSON policy payload, for instance) can hand this engine any
+// string in the decisionBand field. TypeScript's structural typing gives no
+// runtime guarantee, so it must be checked explicitly here — the same
+// "fail closed on invalid input" posture as every other field in this
+// module, and the only thing standing between an unvalidated string and
+// EvaluationEngineResult.recommendation.
+const DECISION_BANDS: readonly DecisionBand[] = ["approve", "review", "reject"];
+
+function isDecisionBand(value: unknown): value is DecisionBand {
+  return typeof value === "string" && (DECISION_BANDS as readonly string[]).includes(value);
+}
 
 export type FactorDirection = "higher_is_riskier" | "lower_is_riskier";
 
@@ -135,6 +150,9 @@ function validateThresholds(thresholds: readonly PolicyThresholdInput[]): Valida
       t.maxScore <= t.minScore
     ) {
       throw new InvalidThresholdRangeError(`${t.minScore}-${t.maxScore}`);
+    }
+    if (!isDecisionBand(t.decisionBand)) {
+      throw new InvalidDecisionBandError(`${t.minScore}-${t.maxScore}`, t.decisionBand);
     }
   }
 

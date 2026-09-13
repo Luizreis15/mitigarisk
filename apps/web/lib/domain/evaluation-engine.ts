@@ -9,6 +9,7 @@ import { normalizeEvaluationInput } from "./evaluation-input.ts";
 import { calculateEvaluationScore } from "./evaluation-scoring.ts";
 import { assessDataQuality, type DataQualityStatus } from "./evaluation-data-quality.ts";
 import { deriveEvaluationReasons, type EvaluationReason } from "./evaluation-reasons.ts";
+import { UnsupportedContractVersionError } from "./evaluation-engine-errors.ts";
 
 // The single, versioned entry point a future Evaluation API adapter calls.
 // Framework-independent and free of any Supabase/network/IO call: given the
@@ -59,14 +60,25 @@ export interface EvaluationEngineResult {
 }
 
 /**
- * Runs the deterministic evaluation engine end to end: validates the
- * policy configuration, normalizes the input facts, computes the score and
- * recommendation band, assesses data quality, and derives explanatory
- * reason codes. Throws a typed error from evaluation-engine-errors.ts on
- * any invalid policy configuration or malformed input; never returns a
+ * Runs the deterministic evaluation engine end to end: checks the caller's
+ * contract version, validates the policy configuration, normalizes the
+ * input facts, computes the score and recommendation band, assesses data
+ * quality, and derives explanatory reason codes. Throws a typed error from
+ * evaluation-engine-errors.ts on an unsupported contract version, any
+ * invalid policy configuration, or malformed input; never returns a
  * partial result.
  */
 export function runEvaluation(input: EvaluationEngineInput): EvaluationEngineResult {
+  // EvaluationEngineInput.contractVersion is a compile-time-only contract:
+  // an untyped or out-of-date caller (a future API adapter, most likely)
+  // can hand this function any value here, and a mismatch means the caller
+  // may be relying on a shape or meaning this version of the engine does
+  // not implement. Checked first, before touching the policy or facts, so
+  // a version mismatch never produces a result that looks valid.
+  if (input.contractVersion !== EVALUATION_ENGINE_CONTRACT_VERSION) {
+    throw new UnsupportedContractVersionError(input.contractVersion, EVALUATION_ENGINE_CONTRACT_VERSION);
+  }
+
   const policy = validatePolicyConfiguration(input.factors, input.thresholds);
   const normalizedInput = normalizeEvaluationInput(policy, input.facts);
   const { score, band } = calculateEvaluationScore(policy, normalizedInput);

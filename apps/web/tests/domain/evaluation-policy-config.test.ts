@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { validatePolicyConfiguration } from "../../lib/domain/evaluation-policy-config.ts";
 import {
   DuplicateFactorKeyError,
+  InvalidDecisionBandError,
   InvalidFactorConfigError,
   InvalidFactorWeightError,
   InvalidThresholdRangeError,
@@ -10,6 +11,7 @@ import {
   NoThresholdsError,
   ThresholdCoverageError,
 } from "../../lib/domain/evaluation-engine-errors.ts";
+import type { PolicyThresholdInput } from "../../lib/domain/evaluation-policy-config.ts";
 import { twoFactorPolicy } from "./evaluation-engine-fixtures.ts";
 
 void test("validatePolicyConfiguration accepts a well-formed policy", () => {
@@ -101,4 +103,39 @@ void test("rejects thresholds with a coverage gap", () => {
     { minScore: 40, maxScore: 100, decisionBand: "reject" as const },
   ];
   assert.throws(() => validatePolicyConfiguration(factors, thresholds), ThresholdCoverageError);
+});
+
+// decisionBand is only a compile-time contract (DecisionBand = "approve" |
+// "review" | "reject"); an untyped caller can hand this engine any string
+// at runtime, so it must be checked explicitly. These tests bypass the
+// compiler with an unsafe cast to exercise exactly that path.
+void test("rejects a threshold whose decisionBand is not approve/review/reject", () => {
+  const { factors } = twoFactorPolicy();
+  const badValues: unknown[] = ["allow", "decline", "APPROVE", "", null, undefined, 1, {}, ["approve"]];
+
+  for (const badValue of badValues) {
+    const thresholds = [
+      { minScore: 0, maxScore: 30, decisionBand: badValue },
+      { minScore: 30, maxScore: 100, decisionBand: "reject" as const },
+    ] as unknown as PolicyThresholdInput[];
+    assert.throws(
+      () => validatePolicyConfiguration(factors, thresholds),
+      InvalidDecisionBandError,
+      `expected rejection for decisionBand = ${JSON.stringify(badValue)}`,
+    );
+  }
+});
+
+void test("still accepts every genuinely valid decisionBand", () => {
+  const { factors } = twoFactorPolicy();
+  const thresholds: PolicyThresholdInput[] = [
+    { minScore: 0, maxScore: 30, decisionBand: "approve" },
+    { minScore: 30, maxScore: 70, decisionBand: "review" },
+    { minScore: 70, maxScore: 100, decisionBand: "reject" },
+  ];
+  const result = validatePolicyConfiguration(factors, thresholds);
+  assert.deepEqual(
+    result.thresholds.map((t) => t.decisionBand),
+    ["approve", "review", "reject"],
+  );
 });

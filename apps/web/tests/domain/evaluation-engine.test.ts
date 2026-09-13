@@ -5,7 +5,10 @@ import {
   runEvaluation,
   type EvaluationEngineInput,
 } from "../../lib/domain/evaluation-engine.ts";
-import { DuplicateFactorKeyError } from "../../lib/domain/evaluation-engine-errors.ts";
+import {
+  DuplicateFactorKeyError,
+  UnsupportedContractVersionError,
+} from "../../lib/domain/evaluation-engine-errors.ts";
 import type { CorrelationId, PolicyVersionId } from "../../lib/domain/ids.ts";
 import { twoFactorPolicy } from "./evaluation-engine-fixtures.ts";
 
@@ -53,6 +56,26 @@ void test("an invalid policy configuration fails closed with a typed error, befo
   const input = baseInput();
   const duplicated = { ...input, factors: [...input.factors, input.factors[0]] };
   assert.throws(() => runEvaluation(duplicated), DuplicateFactorKeyError);
+});
+
+// contractVersion is a compile-time-only contract; an untyped or
+// out-of-date caller can hand runEvaluation any value here, so it must be
+// checked explicitly, before the policy or facts are ever touched.
+void test("an unsupported contract version fails closed with a typed error, before touching the policy", () => {
+  for (const badVersion of [0, 2, 999, -1] as const) {
+    const input = {
+      ...baseInput(),
+      contractVersion: badVersion as unknown as typeof EVALUATION_ENGINE_CONTRACT_VERSION,
+      // A duplicate-key policy would also fail, but for a different reason;
+      // proving the contract-version check wins confirms it runs first.
+      factors: [...twoFactorPolicy().factors, twoFactorPolicy().factors[0]],
+    };
+    assert.throws(
+      () => runEvaluation(input),
+      UnsupportedContractVersionError,
+      `expected rejection for contractVersion = ${badVersion}`,
+    );
+  }
 });
 
 void test("a missing required input still produces a complete, defined result", () => {
