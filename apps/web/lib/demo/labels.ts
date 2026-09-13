@@ -5,6 +5,7 @@ export const roleLabels = messages.views;
 
 export const rolePaths: Record<DemoRole, string> = {
   company: '/company',
+  'company-admin': '/company/admin',
   'super-admin': '/super-admin',
   operator: '/operator',
 };

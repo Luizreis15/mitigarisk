@@ -24,7 +24,10 @@ function isCapability(value: string | null): value is Capability {
     value === 'company.evaluate' ||
     value === 'operator.queue' ||
     value === 'platform.admin' ||
-    value === 'policy.view'
+    value === 'policy.view' ||
+    value === 'tenant.view' ||
+    value === 'tenant.manage_settings' ||
+    value === 'tenant.manage_members'
   );
 }
 

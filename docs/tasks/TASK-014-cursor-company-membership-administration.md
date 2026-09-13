@@ -57,4 +57,68 @@ security/tenant impact, limitations, and recommended reviewer.
 
 ## Handoff notes (Cursor)
 
-_To be completed by Cursor._
+Outcome:
+English-first Company Admin workspace for the fictional Northstar Gaming Ltd.
+tenant: profile, members, capability-explained roles, pending/suspended/removed
+fixtures, and local-only invite, role-change, and suspend/reactivate confirmations
+that never claim persistence or email delivery.
+
+Branch and commit:
+`feat/cursor-company-membership-administration` from `origin/preview/vercel-adapter`
+(`5da36f7`). Commits: `354a199` feat(web); this commit docs(task).
+
+Files changed:
+- `apps/web/app/company/admin/page.tsx`
+- `apps/web/app/company/admin/members/page.tsx`
+- `apps/web/app/company/page.tsx`
+- `apps/web/app/denied/page.tsx`
+- `apps/web/components/prototype/app-shell.tsx`
+- `apps/web/components/prototype/company-admin-state.tsx`
+- `apps/web/components/prototype/empty-workspace.tsx`
+- `apps/web/lib/demo/company-admin.ts`
+- `apps/web/lib/demo/labels.ts`
+- `apps/web/lib/demo/session.ts`
+- `apps/web/lib/demo/types.ts`
+- `apps/web/lib/i18n/messages.ts`
+- `docs/tasks/TASK-014-cursor-company-membership-administration.md`
+
+Decisions and assumptions:
+- Company Admin is a distinct prototype view (`company-admin`) so profile and
+  members use route navigation instead of in-page Company scroll sections.
+- Role bundles (`tenant_admin`, `risk_analyst`, `operator`, `auditor`) are
+  labelled as convenience bundles; capability chips are the authoritative
+  explanation. UI hiding is not authorization.
+- Confirmations and toasts state that invitations are not sent and membership
+  edits are not saved; fixture rows are not mutated.
+- Empty, loading, error, and denied states are query-driven (`state=`) and
+  linked from `/tenants` prototype scenarios.
+- Helix Company, Operator, Super Admin, workbench, policy, evaluation, and case
+  routes are unchanged aside from a capability-gated administration entry from
+  the Company workspace.
+
+Checks run and exact results:
+- `./scripts/check-secrets.sh` — Secret check passed.
+- `./scripts/verify-web.sh` — oxlint clean; `vinext build` succeeded; Web
+  verification passed. Routes include `/company/admin` and
+  `/company/admin/members`.
+- `npm run verify:vercel` (in `apps/web`) — Vercel Build Output API v3
+  verification passed (config.json v3, Node.js function with handler,
+  static/_next client bundle).
+
+Security/tenant/audit impact:
+- No Supabase, auth, email, mutation, or persistence. Tenant scope is visual
+  only. No real emails, UUIDs, credentials, or customer data. Prototype notice
+  remains on the shell.
+
+Migration and rollback notes:
+- No migrations. Rollback is revert of this branch; no hosted change was made.
+
+Known limitations:
+- Session remains the existing local prototype actor. TASK-013 owns real
+  Auth/session. Browser end-to-end click-through was not available (no browser
+  tools; local HTTP from this agent could not reach the isolated vinext
+  listener). Interactive invite/suspend/role dialogs were not click-verified.
+
+Recommended reviewer:
+Codex (merge owner) and an independent frontend/security pass on copy honesty
+and capability-vs-role presentation.

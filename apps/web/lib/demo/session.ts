@@ -27,6 +27,21 @@ export const memberships: MembershipViewModel[] = [
     href: '/company',
   },
   {
+    id: 'mem_northstar_admin',
+    tenantId: 'ten_northstar_gaming',
+    tenantName: 'Northstar Gaming Ltd.',
+    environment: 'Staging',
+    role: 'company-admin',
+    status: 'active',
+    capabilities: [
+      'company.view',
+      'tenant.view',
+      'tenant.manage_settings',
+      'tenant.manage_members',
+    ],
+    href: '/company/admin',
+  },
+  {
     id: 'mem_helix_operator',
     tenantId: 'ten_helix_commerce',
     tenantName: 'Helix Commerce Ltd.',
@@ -81,6 +96,10 @@ export const prototypeScenarios: PrototypeScenario[] = [
   { id: 'empty-operator', href: '/operator?state=empty' },
   { id: 'empty-admin', href: '/super-admin?state=empty' },
   { id: 'denied-admin', href: '/denied?capability=platform.admin' },
+  { id: 'empty-members', href: '/company/admin/members?state=empty' },
+  { id: 'denied-members', href: '/company/admin/members?state=denied' },
+  { id: 'loading-admin', href: '/company/admin?state=loading' },
+  { id: 'error-admin', href: '/company/admin?state=error' },
 ];
 
 export function membershipById(id: string) {
