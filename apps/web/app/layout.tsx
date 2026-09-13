@@ -1,19 +1,13 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+
+import { PrototypeProviders } from '@/components/prototype/providers';
+import { messages } from '@/lib/i18n/messages';
+import { defaultPresentation } from '@/lib/i18n/presentation';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
 export const metadata: Metadata = {
-  title: 'Untitled site',
+  title: messages.meta.title,
+  description: messages.meta.description,
 };
 
 export default function RootLayout({
@@ -22,11 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang={defaultPresentation.locale}>
+      <body>
+        <PrototypeProviders>{children}</PrototypeProviders>
       </body>
     </html>
   );

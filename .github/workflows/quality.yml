@@ -24,7 +24,7 @@ jobs:
         run: ./scripts/check-secrets.sh
 
   web-quality:
-    name: Web lint and build
+    name: Web security, tests, lint and build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,5 +38,25 @@ jobs:
       - name: Install locked dependencies
         working-directory: apps/web
         run: npm ci
+      - name: Audit production dependency tree
+        working-directory: apps/web
+        run: npm audit --omit=dev --audit-level=high
+      - name: Run domain unit tests
+        working-directory: apps/web
+        run: npm test
+      - name: Type-check application and domain contracts
+        working-directory: apps/web
+        run: npx tsc --noEmit -p tsconfig.json
       - name: Validate web application
         run: ./scripts/verify-web.sh
+
+  database-quality:
+    name: Database migrations, RLS and immutability
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Add PostgreSQL tools to PATH
+        run: echo "$(pg_config --bindir)" >> "$GITHUB_PATH"
+      - name: Run disposable local PostgreSQL verification
+        run: ./supabase/tests/run-local-verification.sh

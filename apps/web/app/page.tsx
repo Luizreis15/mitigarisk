@@ -1,106 +1,155 @@
-const sidebarWidths = [74, 58, 82, 66, 71, 54];
-const articleWidths = [100, 97, 94, 98, 86];
+'use client';
 
-export default function Home() {
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useState } from 'react';
+import { InfoIcon, KeyRoundIcon } from 'lucide-react';
+
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { demoEmail, demoPasswordPlaceholder } from '@/lib/demo/data';
+import { roleLabels, rolePaths } from '@/lib/demo/labels';
+import type { DemoRole } from '@/lib/demo/types';
+import { messages } from '@/lib/i18n/messages';
+import { MitigaMark } from '@/components/prototype/mitiga-mark';
+import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const notify = usePrototypeFeedback();
+  const [email, setEmail] = useState(demoEmail);
+  const [submitted, setSubmitted] = useState(false);
+
   return (
-    <main className="fixed inset-0 overflow-hidden bg-[#fbfaf8] text-zinc-900">
-      <header
-        aria-hidden="true"
-        className="grid h-[76px] grid-cols-[1fr_auto_1fr] items-center border-b border-stone-200 bg-white/95 px-6 sm:px-14"
-      >
-        <div className="flex items-center gap-3">
-          <span className="h-9 w-9 rounded-full bg-stone-100" />
-          <span className="h-3.5 w-28 rounded-full bg-stone-100" />
-        </div>
-        <span className="hidden h-9 w-[min(30vw,420px)] rounded-xl bg-stone-100 sm:block" />
-        <div className="flex items-center justify-end gap-3">
-          <span className="hidden h-9 w-9 rounded-full bg-stone-100 sm:block" />
-          <span className="h-9 w-24 rounded-xl bg-stone-100" />
-        </div>
-      </header>
-
+    <main className="relative min-h-screen overflow-hidden bg-[image:var(--gradient-canvas)]">
       <div
         aria-hidden="true"
-        className="grid h-[calc(100%-76px)] grid-cols-[180px_minmax(0,1fr)_260px] gap-10 px-6 pb-24 pt-10 opacity-55 max-lg:grid-cols-[150px_minmax(0,1fr)] max-sm:grid-cols-1 sm:px-14"
-      >
-        <aside className="hidden border-r border-stone-200 pr-7 sm:block">
-          <div className="mb-6 h-2.5 w-16 rounded-full bg-stone-200" />
-          <div className="space-y-4">
-            {sidebarWidths.map((width) => (
-              <div key={width} className="flex items-center gap-3">
-                <span className="h-4 w-4 rounded bg-stone-200" />
-                <span
-                  className="h-2.5 rounded-full bg-stone-200"
-                  style={{ width: `${width}%` }}
-                />
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-[42%] bg-[image:var(--gradient-shell)] lg:block"
+      />
+      <div className="relative mx-auto grid min-h-screen max-w-[90rem] lg:grid-cols-[minmax(18rem,2fr)_minmax(22rem,3fr)]">
+        <section className="hidden flex-col justify-between px-10 py-12 text-white lg:flex">
+          <MitigaMark className="text-white" />
+          <div className="max-w-md space-y-4">
+            <p className="text-[0.7rem] tracking-[0.14em] uppercase text-white/70">
+              {messages.login.kicker}
+            </p>
+            <h1 className="text-[2rem] leading-[1.2] font-semibold">
+              {messages.login.headline}
+            </h1>
+            <p className="text-sm leading-6 text-white/80">{messages.login.intro}</p>
+          </div>
+          <p className="text-xs text-white/55">{messages.login.footer}</p>
+        </section>
+
+        <section className="flex items-center px-4 py-10 sm:px-8">
+          <Card className="mx-auto w-full max-w-md shadow-[var(--shadow-sm)] ring-border">
+            <CardHeader className="space-y-3">
+              <div className="lg:hidden">
+                <MitigaMark />
               </div>
-            ))}
-          </div>
-          <div className="mb-6 mt-9 h-2.5 w-24 rounded-full bg-stone-200" />
-          <div className="space-y-4">
-            {sidebarWidths.slice(0, 3).map((width) => (
-              <span
-                key={width}
-                className="block h-2.5 rounded-full bg-stone-200"
-                style={{ width: `${width}%` }}
-              />
-            ))}
-          </div>
-        </aside>
+              <CardTitle className="text-[1.375rem] leading-[1.3]">
+                {messages.login.title}
+              </CardTitle>
+              <CardDescription>{messages.login.subtitle}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <Alert className="border-[#c5d4dc] bg-[#e4edf2]">
+                <InfoIcon />
+                <AlertTitle>{messages.prototype.environmentBanner}</AlertTitle>
+                <AlertDescription>{messages.prototype.notice}</AlertDescription>
+              </Alert>
 
-        <article className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          <div className="space-y-3">
-            <div className="h-2.5 w-28 rounded-full bg-stone-200" />
-            <div className="h-7 w-4/5 rounded-lg bg-stone-200" />
-            <div className="h-7 w-3/5 rounded-lg bg-stone-200" />
-          </div>
-          <div className="min-h-[240px] flex-1 rounded-2xl bg-stone-200" />
-          <div className="flex items-center gap-3">
-            <span className="h-9 w-9 rounded-full bg-stone-200" />
-            <span className="h-2.5 w-28 rounded-full bg-stone-200" />
-          </div>
-          <div className="space-y-2">
-            {articleWidths.map((width) => (
-              <span
-                key={width}
-                className="block h-2.5 rounded-full bg-stone-200"
-                style={{ width: `${width}%` }}
-              />
-            ))}
-          </div>
-        </article>
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setSubmitted(true);
+                  notify(messages.login.toastSessionTitle, messages.login.toastSessionBody);
+                  router.push(rolePaths.company);
+                }}
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="email">{messages.login.emailLabel}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="username"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">{messages.login.passwordLabel}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    defaultValue={demoPasswordPlaceholder}
+                    className="h-11"
+                  />
+                </div>
+                {submitted ? (
+                  <output className="block text-sm text-muted-foreground">
+                    {messages.login.submitting}
+                  </output>
+                ) : null}
+                <Button type="submit" className="h-11 w-full">
+                  {messages.login.continue}
+                </Button>
+              </form>
 
-        <aside className="space-y-5 max-lg:hidden">
-          {[0, 1].map((card) => (
-            <div
-              key={card}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white/70 p-6"
-            >
-              <span className="block h-10 w-10 rounded-full bg-stone-200" />
-              <span className="block h-3 w-3/5 rounded-full bg-stone-200" />
-              <span className="block h-2.5 w-full rounded-full bg-stone-200" />
-              <span className="block h-2.5 w-4/5 rounded-full bg-stone-200" />
-              <span className="block h-8 w-24 rounded-lg bg-stone-200" />
-            </div>
-          ))}
-        </aside>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11"
+                  onClick={() =>
+                    notify(messages.login.toastSsoTitle, messages.login.toastSsoBody)
+                  }
+                >
+                  <KeyRoundIcon />
+                  {messages.login.sso}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-11"
+                  onClick={() =>
+                    notify(messages.login.toastRecoverTitle, messages.login.toastRecoverBody)
+                  }
+                >
+                  {messages.login.recover}
+                </Button>
+              </div>
+
+              <nav
+                aria-label={messages.login.shortcutsLabel}
+                className="flex flex-wrap gap-3 text-sm"
+              >
+                {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
+                  <Link
+                    key={role}
+                    className="underline-offset-4 hover:underline"
+                    href={rolePaths[role]}
+                  >
+                    {roleLabels[role]}
+                  </Link>
+                ))}
+              </nav>
+            </CardContent>
+          </Card>
+        </section>
       </div>
-
-      <output
-        aria-live="polite"
-        aria-atomic="true"
-        className="absolute left-1/2 top-[clamp(96px,13vh,122px)] w-[min(620px,calc(100%-40px))] -translate-x-1/2 rounded-[18px] border border-stone-200 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgb(24_24_27/9%)] backdrop-blur-sm"
-      >
-        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.09em] text-stone-500">
-          Building your site
-        </p>
-        <h1 className="text-xl font-semibold tracking-tight">
-          Your site is taking shape
-        </h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Your first version will appear here automatically when it’s ready.
-        </p>
-      </output>
     </main>
   );
 }
