@@ -17,7 +17,7 @@ Identify decisions that require human approval. Do not include credentials. Pref
 ```text
 Implement the attached MITIGA task contract on branch [branch]. Read the repository rules before editing. Stay within the allowed files and scope.
 
-Preserve pt-BR product copy, MITIGA design tokens, accessibility, strict TypeScript, server-side authorization, tenant isolation, and auditability. Use existing components and contracts. Do not invent provider credentials or alter architecture.
+Preserve English-first, market-neutral product copy, MITIGA design tokens, accessibility, strict TypeScript, server-side authorization, tenant isolation, and auditability. Use existing components and contracts. Do not invent provider credentials or alter architecture.
 
 Run every required check. Finish with the exact agent handoff template from MULTI-AGENT-DEVELOPMENT.md, including screenshots for visible UI work and all known limitations.
 
