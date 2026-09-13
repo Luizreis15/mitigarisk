@@ -72,7 +72,7 @@ export function RiskStatus({ band }: { band: RiskBand }) {
 
   return (
     <StatusFrame
-      label={`Risco ${riskBandLabels[band].toLowerCase()}`}
+      label={riskBandLabels[band]}
       icon={icon}
       tone={band}
     />
@@ -82,7 +82,7 @@ export function RiskStatus({ band }: { band: RiskBand }) {
 export function QualityStatus({ quality }: { quality: DataQuality }) {
   return (
     <StatusFrame
-      label={`Qualidade ${qualityLabels[quality].toLowerCase()}`}
+      label={qualityLabels[quality]}
       icon={
         quality === 'complete' ? (
           <CheckCircle2Icon aria-hidden="true" />

@@ -1,4 +1,4 @@
-export type DemoRole = 'empresa' | 'super-admin' | 'operador';
+export type DemoRole = 'company' | 'super-admin' | 'operator';
 
 export type RiskBand = 'low' | 'medium' | 'high';
 export type CaseStatus =
@@ -55,4 +55,5 @@ export type DemoTenant = {
   evaluationsToday: number;
   webhookFailures: number;
   consumptionPct: number;
+  billedMinorUnits: number;
 };

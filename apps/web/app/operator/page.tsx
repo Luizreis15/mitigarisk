@@ -26,11 +26,13 @@ import { AppShell } from '@/components/prototype/app-shell';
 import { EmptyFilterState } from '@/components/prototype/empty-filter-state';
 import { CaseStatusBadge } from '@/components/prototype/status-badge';
 import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
-import { currentTenant, demoCases, demoEvaluations } from '@/lib/demo/data';
-import { caseStatusLabels, formatDateTime } from '@/lib/demo/labels';
+import { currentTenant, demoCases, demoEvaluations, presentation } from '@/lib/demo/data';
+import { caseStatusLabels } from '@/lib/demo/labels';
 import type { CaseStatus } from '@/lib/demo/types';
+import { interpolate, messages } from '@/lib/i18n/messages';
+import { formatDateTime, formatNumber } from '@/lib/i18n/presentation';
 
-export default function OperadorPage() {
+export default function OperatorPage() {
   const notify = usePrototypeFeedback();
   const [status, setStatus] = useState<CaseStatus | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -38,19 +40,21 @@ export default function OperadorPage() {
     () => demoCases.filter((item) => status === 'all' || item.status === status),
     [status],
   );
-  const assigned = demoCases.filter((item) => item.assignee === 'Camila Ribeiro');
+  const assigned = demoCases.filter(
+    (item) => item.assignee === currentTenant.operator,
+  );
   const evidence = demoEvaluations.filter((item) => item.quality !== 'complete');
 
   const filters = (
     <div className="space-y-3">
-      <Label htmlFor="filtro-status">Status da fila</Label>
+      <Label htmlFor="filter-status">{messages.filters.queueStatus}</Label>
       <NativeSelect
-        id="filtro-status"
+        id="filter-status"
         className="h-11 w-full"
         value={status}
         onChange={(event) => setStatus(event.target.value as CaseStatus | 'all')}
       >
-        <NativeSelectOption value="all">Todos os status</NativeSelectOption>
+        <NativeSelectOption value="all">{messages.filters.allStatuses}</NativeSelectOption>
         {(Object.keys(caseStatusLabels) as CaseStatus[]).map((value) => (
           <NativeSelectOption key={value} value={value}>
             {caseStatusLabels[value]}
@@ -61,19 +65,23 @@ export default function OperadorPage() {
   );
 
   return (
-    <AppShell view="operador" onOpenFilters={() => setFiltersOpen(true)}>
+    <AppShell view="operator" onOpenFilters={() => setFiltersOpen(true)}>
       <div className="grid gap-6">
         <section
           id="queue"
           className="scroll-mt-28 rounded-2xl bg-[image:var(--gradient-shell)] p-6 text-white"
         >
           <p className="text-[0.7rem] tracking-[0.12em] uppercase text-white/70">
-            Fila operacional
+            {messages.operator.kicker}
           </p>
-          <h1 className="mt-2 text-[2rem] leading-[1.2] font-semibold">Operador</h1>
+          <h1 className="mt-2 text-[2rem] leading-[1.2] font-semibold">
+            {messages.operator.title}
+          </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
-            Processar SLA, evidências e encaminhamento. Sessão de demonstração
-            como Camila Ribeiro em {currentTenant.name}. Sem alteração de política.
+            {interpolate(messages.operator.intro, {
+              actor: currentTenant.operator,
+              tenant: currentTenant.name,
+            })}
           </p>
         </section>
 
@@ -81,8 +89,8 @@ export default function OperadorPage() {
 
         {queue.length === 0 ? (
           <EmptyFilterState
-            title="Fila vazia neste status"
-            description="Escolha outro status para ver casos fictícios com SLA."
+            title={messages.empty.queueTitle}
+            description={messages.empty.queueBody}
           />
         ) : (
           <div className="grid gap-3">
@@ -98,48 +106,55 @@ export default function OperadorPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{item.lastNote}</p>
                   <p className="font-mono text-xs text-muted-foreground">
-                    SLA até {formatDateTime(item.slaDueAt)} · {item.evidenceCount}{' '}
-                    evidências · {item.assignee}
+                    {interpolate(messages.operator.slaLine, {
+                      due: formatDateTime(item.slaDueAt, presentation),
+                      count: formatNumber(item.evidenceCount, presentation),
+                      assignee: item.assignee,
+                    })}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     className="h-11"
-                    onClick={() =>
-                      notify('Caso assumido na demonstração', item.id)
-                    }
+                    onClick={() => notify(messages.operator.toastClaimTitle, item.id)}
                   >
-                    Assumir
+                    {messages.operator.claim}
                   </Button>
                   <Button
                     variant="outline"
                     className="h-11"
                     onClick={() =>
                       notify(
-                        'Evidência solicitada localmente',
-                        'Nenhuma mensagem foi enviada.',
+                        messages.operator.toastEvidenceTitle,
+                        messages.operator.toastEvidenceBody,
                       )
                     }
                   >
-                    Solicitar evidência
+                    {messages.operator.requestEvidence}
                   </Button>
                   <Button
                     variant="secondary"
                     className="h-11"
                     onClick={() =>
-                      notify('Escalado na demonstração', 'Analista fictício notificado.')
+                      notify(
+                        messages.operator.toastEscalateTitle,
+                        messages.operator.toastEscalateBody,
+                      )
                     }
                   >
-                    Escalar
+                    {messages.operator.escalate}
                   </Button>
                   <Button
                     variant="ghost"
                     className="h-11"
                     onClick={() =>
-                      notify('Conclusão simulada', 'Nenhum caso real foi encerrado.')
+                      notify(
+                        messages.operator.toastCompleteTitle,
+                        messages.operator.toastCompleteBody,
+                      )
                     }
                   >
-                    Concluir
+                    {messages.operator.complete}
                   </Button>
                 </div>
               </article>
@@ -150,9 +165,11 @@ export default function OperadorPage() {
         <section id="assigned" className="scroll-mt-28">
           <Card>
             <CardHeader>
-              <CardTitle>Casos atribuídos</CardTitle>
+              <CardTitle>{messages.operator.assignedTitle}</CardTitle>
               <CardDescription>
-                Itens com responsável Camila Ribeiro nesta demonstração.
+                {interpolate(messages.operator.assignedHint, {
+                  actor: currentTenant.operator,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
@@ -168,9 +185,9 @@ export default function OperadorPage() {
                   <Button
                     variant="outline"
                     className="h-11"
-                    onClick={() => notify('Histórico local', item.lastNote)}
+                    onClick={() => notify(messages.operator.toastHistoryTitle, item.lastNote)}
                   >
-                    Ver histórico
+                    {messages.operator.history}
                   </Button>
                 </div>
               ))}
@@ -181,17 +198,18 @@ export default function OperadorPage() {
         <section id="evidence" className="scroll-mt-28">
           <Card>
             <CardHeader>
-              <CardTitle>Pendências de evidência</CardTitle>
-              <CardDescription>
-                Qualidade insuficiente permanece distinta do score de risco.
-              </CardDescription>
+              <CardTitle>{messages.operator.evidenceTitle}</CardTitle>
+              <CardDescription>{messages.operator.evidenceHint}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
               {evidence.map((item) => (
                 <div key={item.id} className="rounded-lg border p-3">
                   <p className="font-medium">{item.externalRef}</p>
                   <p className="text-sm text-muted-foreground">
-                    Motivos: {item.reasons.join(', ')} · política {item.policyVersion}
+                    {interpolate(messages.operator.reasons, {
+                      reasons: item.reasons.join(', '),
+                      policy: item.policyVersion,
+                    })}
                   </p>
                   <p className="mt-1 text-sm">{item.recommendation}</p>
                 </div>
@@ -204,8 +222,8 @@ export default function OperadorPage() {
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
         <SheetContent side="bottom" className="p-4">
           <SheetHeader>
-            <SheetTitle>Filtros da fila</SheetTitle>
-            <SheetDescription>Os filtros não consultam nenhum backend.</SheetDescription>
+            <SheetTitle>{messages.filters.title}</SheetTitle>
+            <SheetDescription>{messages.filters.operatorHint}</SheetDescription>
           </SheetHeader>
           {filters}
         </SheetContent>

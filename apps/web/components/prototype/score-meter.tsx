@@ -1,4 +1,6 @@
 import type { RiskBand } from '@/lib/demo/types';
+import { interpolate, messages } from '@/lib/i18n/messages';
+import { formatScore } from '@/lib/i18n/presentation';
 
 export function ScoreMeter({
   score,
@@ -21,7 +23,7 @@ export function ScoreMeter({
           {label}
         </p>
         <p className="font-mono text-sm tabular-nums text-foreground">
-          {score}/100
+          {formatScore(score)}
         </p>
       </div>
       <meter
@@ -31,7 +33,11 @@ export function ScoreMeter({
         value={score}
         style={{ backgroundImage: gradient }}
       >
-        {label}: {score} de 100
+        {interpolate(messages.score.ofTotal, {
+          label,
+          score,
+          max: 100,
+        })}
       </meter>
     </div>
   );

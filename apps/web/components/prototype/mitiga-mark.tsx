@@ -1,5 +1,6 @@
 import { useId } from 'react';
 
+import { messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
 export function MitigaMark({
@@ -9,7 +10,8 @@ export function MitigaMark({
   className?: string;
   compact?: boolean;
 }) {
-  const gradientId = `mitiga${useId().replaceAll(':', '')}`;  return (
+  const gradientId = `mitiga${useId().replaceAll(':', '')}`;
+  return (
     <span className={cn('inline-flex items-center gap-3', className)}>
       <svg
         width="40"
@@ -51,10 +53,10 @@ export function MitigaMark({
         </defs>
       </svg>
       {compact ? (
-        <span className="sr-only">MITIGA</span>
+        <span className="sr-only">{messages.brand}</span>
       ) : (
         <span className="text-[0.95rem] font-semibold tracking-[0.12em] text-inherit uppercase">
-          MITIGA
+          {messages.brand}
         </span>
       )}
     </span>
