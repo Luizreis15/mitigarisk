@@ -590,8 +590,10 @@ identified `ERR_MODULE_NOT_FOUND` for `next`, imported by
 `apps/web/middleware.ts`. Vinext's local and Build Output API checks had not
 covered Vercel's separate root-middleware bundling path. The correction adds
 the exact Next runtime package as a production dependency and makes
-`verify:vercel` fail when a `next/server` middleware import lacks a declared,
-resolvable runtime dependency.
+`verify:vercel` fail when a `next/server.js` middleware import lacks a
+declared, resolvable runtime dependency. The first corrected preview then
+exposed Node ESM's requirement for the explicit `.js` subpath; the middleware
+import and regression check use that deployable entry point.
 
 This follow-up changes no authentication policy, tenant boundary, hosted
 Supabase configuration, data, migration, email template, or secret. Rollback

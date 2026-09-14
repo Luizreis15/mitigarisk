@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server.js';
 import { getPublicSupabaseConfig, hasPublicSupabaseConfig } from './lib/supabase/env';
 
 // Session-refresh-only middleware

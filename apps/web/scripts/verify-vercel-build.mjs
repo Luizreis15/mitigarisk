@@ -36,15 +36,16 @@ function readJson(filePath, label) {
 }
 
 const middlewarePath = path.join(webRoot, "middleware.ts");
-if (existsSync(middlewarePath) && readFileSync(middlewarePath, "utf8").includes('from "next/server"')) {
+const middlewareSource = existsSync(middlewarePath) ? readFileSync(middlewarePath, "utf8") : "";
+if (/from\s+["']next\/server(?:\.js)?["']/.test(middlewareSource)) {
   const packageJson = readJson(path.join(webRoot, "package.json"), "package.json");
   if (!packageJson.dependencies?.next) {
-    fail("middleware.ts imports next/server, so next must be a production dependency for Vercel's separately bundled middleware");
+    fail("middleware.ts imports next/server.js, so next must be a production dependency for Vercel's separately bundled middleware");
   }
   try {
-    require.resolve("next/server");
+    require.resolve("next/server.js");
   } catch {
-    fail("middleware.ts imports next/server, but that runtime entry point cannot be resolved");
+    fail("middleware.ts imports next/server.js, but that runtime entry point cannot be resolved");
   }
 }
 
