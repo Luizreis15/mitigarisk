@@ -66,14 +66,32 @@ export const messages = {
     title: 'Your MITIGA account',
     signedInAs: 'Signed in as {email}.',
     platformAdminNotice: 'You have platform administrator access.',
+    platformAdminBody:
+      'This screen confirms a verified platform session. It does not open tenant operations.',
     noMembershipTitle: 'No workspace yet',
     noMembershipBody:
       'Your account is not a member of any company yet. Ask a company administrator to invite you, or a platform administrator to set up your company.',
-    membershipCountLabel: '{count} active company membership(s).',
+    membershipCountOne: '{count} active company membership.',
+    membershipCountOther: '{count} active company memberships.',
+    membershipBody:
+      'Membership is confirmed as a count only. Tenant-specific navigation is unavailable until a verified tenant context is selected by the server.',
+    tenantContextUnavailable:
+      'Tenant-specific Company, Operator, and policy workspaces are unavailable until the server selects a verified tenant context. This page does not list tenants, roles, or capabilities.',
     buildingNotice:
-      'Full workspace views are still being connected to this real session. Sample data remains available separately through the development preview on the sign-in screen — it never reflects this account.',
+      'Full workspace views are still being connected to this real session.',
+    demoPreviewTitle: 'Sample data preview',
     demoPreviewLink: 'Open sample data preview',
+    demoPreviewHint:
+      'The sample-data preview is fictional demonstration content. It is not this account, not a real tenant workspace, and not authorization.',
     signOut: 'Sign out',
+    skipToContent: 'Skip to workspace status',
+    configUnavailableTitle: 'Workspace is not configured',
+    configUnavailableBody:
+      'Public Supabase configuration is missing. This screen does not sign anyone in and does not fall back to a fictional session.',
+    readFailureTitle: 'Workspace details could not be read',
+    readFailureBody:
+      'The signed-in session is still valid, but membership details could not be loaded. No tenant context is assumed. Try again or sign out.',
+    backToSignIn: 'Back to sign-in',
   },
   views: {
     company: 'Company',
