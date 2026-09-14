@@ -114,3 +114,76 @@ void test("authenticated view model keeps the server-derived email and count", (
   assert.equal(model.membershipCountForm, "one");
   assert.equal(model.showsAuthenticatedSession, true);
 });
+
+void test("a non-admin session with multiple memberships and no server-validated selection requires explicit choice", () => {
+  assert.equal(
+    describeWorkspacePresentation({
+      publicConfigAvailable: true,
+      membershipReadFailed: false,
+      isPlatformAdmin: false,
+      activeMembershipCount: 2,
+      tenantSelectionRequired: true,
+    }),
+    "tenant_selection_required",
+  );
+});
+
+void test("a platform admin is never routed into tenant selection, even if the caller passes tenantSelectionRequired", () => {
+  assert.equal(
+    describeWorkspacePresentation({
+      publicConfigAvailable: true,
+      membershipReadFailed: false,
+      isPlatformAdmin: true,
+      activeMembershipCount: 0,
+      tenantSelectionRequired: true,
+    }),
+    "platform_admin",
+  );
+});
+
+void test("selection-required view model carries the tenant options and hides the selected-tenant notice", () => {
+  const model = buildWorkspaceViewModel({
+    publicConfigAvailable: true,
+    membershipReadFailed: false,
+    isPlatformAdmin: false,
+    activeMembershipCount: 2,
+    signedInEmail: "example@demo.mitiga.local",
+    tenantSelectionRequired: true,
+    tenantOptions: [
+      { tenantId: "t1", tenantName: "Acme", tenantSlug: "acme" },
+      { tenantId: "t2", tenantName: "Beta", tenantSlug: "beta" },
+    ],
+  });
+  assert.equal(model.kind, "tenant_selection_required");
+  assert.equal(model.tenantOptions.length, 2);
+  assert.equal(model.selectedTenantName, null);
+});
+
+void test("active-member view model carries the selected tenant name and no tenant options", () => {
+  const model = buildWorkspaceViewModel({
+    publicConfigAvailable: true,
+    membershipReadFailed: false,
+    isPlatformAdmin: false,
+    activeMembershipCount: 1,
+    signedInEmail: "example@demo.mitiga.local",
+    selectedTenantName: "Acme",
+  });
+  assert.equal(model.kind, "active_member");
+  assert.equal(model.selectedTenantName, "Acme");
+  assert.deepEqual(model.tenantOptions, []);
+});
+
+void test("config-unavailable view model never carries tenant options or a selected tenant name", () => {
+  const model = buildWorkspaceViewModel({
+    publicConfigAvailable: false,
+    membershipReadFailed: false,
+    isPlatformAdmin: false,
+    activeMembershipCount: 0,
+    signedInEmail: null,
+    tenantSelectionRequired: true,
+    tenantOptions: [{ tenantId: "t1", tenantName: "Acme", tenantSlug: "acme" }],
+  });
+  assert.equal(model.kind, "config_unavailable");
+  assert.deepEqual(model.tenantOptions, []);
+  assert.equal(model.selectedTenantName, null);
+});
