@@ -51,3 +51,8 @@ void test("middleware.ts excludes static assets from its matcher", () => {
   assert.ok(source.includes("_next/static"), "matcher must exclude _next/static");
   assert.ok(source.includes("_next/image"), "matcher must exclude _next/image");
 });
+
+void test("middleware.ts uses standard request headers rather than NextRequest-only cookies", () => {
+  assert.equal(source.includes("request.cookies"), false, "Vercel invokes the middleware with a standard Request");
+  assert.ok(source.includes("request.headers"), "middleware must read cookies through standard HTTP headers");
+});

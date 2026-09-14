@@ -601,6 +601,14 @@ the Supabase branch actually executes, additionally required the middleware
 function as the module's default export; that compatibility export and its
 regression assertion are now included.
 
+The next production smoke test reached the configured Supabase refresh path
+and showed that Vercel invokes this Web Handler with a standard `Request`, not
+a `NextRequest` cookie facade. Cookie reads and writes now use standard HTTP
+headers (with the existing `cookie` package made an explicit production
+dependency), while `NextResponse.next` still carries refreshed request headers
+to the application. A source-inspection regression test forbids
+`request.cookies` in middleware.
+
 This follow-up changes no authentication policy, tenant boundary, hosted
 Supabase configuration, data, migration, email template, or secret. Rollback
 is the follow-up commit plus promotion of the preceding known-good deployment.
