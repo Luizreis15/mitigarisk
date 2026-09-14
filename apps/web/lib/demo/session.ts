@@ -104,6 +104,10 @@ export const prototypeScenarios: PrototypeScenario[] = [
   { id: 'denied-evaluate', href: '/evaluations/new?state=denied' },
   { id: 'loading-entities', href: '/entities?state=loading' },
   { id: 'error-entities', href: '/entities?state=error' },
+  { id: 'empty-governance', href: '/super-admin/tenants?state=empty' },
+  { id: 'denied-governance', href: '/super-admin/tenants?state=denied' },
+  { id: 'loading-governance', href: '/super-admin/tenants?state=loading' },
+  { id: 'error-governance', href: '/super-admin/tenants?state=error' },
 ];
 
 export function membershipById(id: string) {

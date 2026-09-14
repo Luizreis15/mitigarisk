@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { TriangleAlertIcon } from 'lucide-react';
 
@@ -44,6 +45,7 @@ import { healthLabels } from '@/lib/demo/labels';
 import type { TenantHealth } from '@/lib/demo/types';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { memberships } from '@/lib/demo/session';
+import { getGovernedTenant, governanceDetailHref } from '@/lib/demo/platform-governance';
 import {
   formatCurrencyFromMinorUnits,
   formatDateTime,
@@ -110,6 +112,16 @@ function SuperAdminContent() {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
             {empty ? messages.emptyWorkspace.adminBody : messages.admin.intro}
           </p>
+          {empty ? null : (
+            <div className="mt-5">
+              <Button
+                className="h-11 bg-white text-[#203442] hover:bg-white/90"
+                render={<Link href="/super-admin/tenants" />}
+              >
+                {messages.admin.openDirectory}
+              </Button>
+            </div>
+          )}
         </section>
 
         {empty ? (
@@ -160,20 +172,32 @@ function SuperAdminContent() {
                         })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          className="h-11"
-                          onClick={() =>
-                            notify(
-                              messages.admin.toastInvestigateTitle,
-                              interpolate(messages.admin.toastInvestigateBody, {
-                                name: tenant.name,
-                              }),
-                            )
-                          }
-                        >
-                          {messages.admin.investigate}
-                        </Button>
+                        {getGovernedTenant(tenant.id) ? (
+                          <Button
+                            variant="outline"
+                            className="h-11"
+                            render={
+                              <Link href={governanceDetailHref(tenant.id)} />
+                            }
+                          >
+                            {messages.platformGovernance.open}
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="h-11"
+                            onClick={() =>
+                              notify(
+                                messages.admin.toastInvestigateTitle,
+                                interpolate(messages.admin.toastInvestigateBody, {
+                                  name: tenant.name,
+                                }),
+                              )
+                            }
+                          >
+                            {messages.admin.investigate}
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -80,6 +80,12 @@ const navigation: Record<DemoRole, NavItem[]> = {
     },
   ],
   'super-admin': [
+    {
+      id: 'directory',
+      label: messages.nav.tenantDirectory,
+      icon: Building2Icon,
+      href: '/super-admin/tenants',
+    },
     { id: 'tenants', label: messages.nav.tenants, icon: Building2Icon },
     { id: 'health', label: messages.nav.health, icon: ActivityIcon },
     { id: 'audit', label: messages.nav.audit, icon: ShieldIcon },
@@ -395,6 +401,11 @@ function RoleSwitcher({
         {capabilities?.includes('company.view') ? (
           <DropdownMenuItem render={<Link href="/entities" />}>
             {messages.nav.entities}
+          </DropdownMenuItem>
+        ) : null}
+        {capabilities?.includes('platform.admin') ? (
+          <DropdownMenuItem render={<Link href="/super-admin/tenants" />}>
+            {messages.nav.tenantDirectory}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem render={<Link href="/" />}>
