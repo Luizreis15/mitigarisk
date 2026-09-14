@@ -31,6 +31,24 @@ export function WorkspaceStatus({ model }: { model: WorkspaceViewModel }) {
     );
   }
 
+  if (model.kind === 'invalid_selection') {
+    return (
+      <Alert variant="destructive" id="workspace-status">
+        <AlertTitle>{messages.workspace.invalidSelectionTitle}</AlertTitle>
+        <AlertDescription>{messages.workspace.invalidSelectionBody}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (model.kind === 'tenant_selection_required') {
+    return (
+      <Alert id="workspace-status">
+        <AlertTitle>{messages.workspace.tenantSelectionTitle}</AlertTitle>
+        <AlertDescription>{messages.workspace.tenantSelectionBody}</AlertDescription>
+      </Alert>
+    );
+  }
+
   if (model.kind === 'active_member') {
     return (
       <Alert id="workspace-status">
