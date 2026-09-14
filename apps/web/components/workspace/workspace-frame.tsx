@@ -35,6 +35,13 @@ export function WorkspaceFrame({
               })}
             </CardDescription>
           ) : null}
+          {model.selectedTenantName ? (
+            <CardDescription>
+              {interpolate(messages.workspace.selectedTenantNotice, {
+                tenantName: model.selectedTenantName,
+              })}
+            </CardDescription>
+          ) : null}
         </CardHeader>
         <CardContent className="space-y-4">{children}</CardContent>
       </Card>

@@ -31,6 +31,15 @@ export function WorkspaceStatus({ model }: { model: WorkspaceViewModel }) {
     );
   }
 
+  if (model.kind === 'tenant_selection_required') {
+    return (
+      <Alert id="workspace-status">
+        <AlertTitle>{messages.workspace.tenantSelectionTitle}</AlertTitle>
+        <AlertDescription>{messages.workspace.tenantSelectionBody}</AlertDescription>
+      </Alert>
+    );
+  }
+
   if (model.kind === 'active_member') {
     return (
       <Alert id="workspace-status">

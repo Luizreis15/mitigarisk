@@ -74,9 +74,13 @@ export const messages = {
     membershipCountOne: '{count} active company membership.',
     membershipCountOther: '{count} active company memberships.',
     membershipBody:
-      'Membership is confirmed as a count only. Tenant-specific navigation is unavailable until a verified tenant context is selected by the server.',
+      'This tenant context was selected and verified by the server against your own active memberships.',
+    selectedTenantNotice: 'Selected company: {tenantName}.',
+    tenantSelectionTitle: 'Choose a company',
+    tenantSelectionBody:
+      'Your account has more than one active company membership. Select one to continue; the server re-verifies this choice on every request.',
     tenantContextUnavailable:
-      'Tenant-specific Company, Operator, and policy workspaces are unavailable until the server selects a verified tenant context. This page does not list tenants, roles, or capabilities.',
+      'Tenant-specific Operator and policy workspaces are unavailable until this task connects them. This page does not list roles or capabilities.',
     buildingNotice:
       'Full workspace views are still being connected to this real session.',
     demoPreviewTitle: 'Sample data preview',
