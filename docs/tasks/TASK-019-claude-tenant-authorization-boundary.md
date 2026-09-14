@@ -298,9 +298,11 @@ full manual checklist is recorded in
 post-merge Codex run against a real Development project.
 
 **Known limitations:**
-- The `tenant.view`-capability gap described in decision 4 above is not
-  resolved by this task; `/workspace`'s landing gate remains
-  membership-only until CLA-010 is ratified.
+- The `tenant.view`-capability question described in decision 4 above is
+  now ratified (see the 2026-09-14 follow-up handoff below and ADR 0011's
+  "Ratification" section): `/workspace`'s landing gate is intentionally
+  membership-only, by approved policy, not merely pending CLA-010. The
+  broader role→capability matrix (CLA-010) remains open separately.
 - `vinext`'s deprecation warning for the `middleware` file convention
   (decision 7) is not addressed; a future framework-migration task should
   evaluate renaming to `proxy.ts` if/when this repository adopts it.
@@ -318,3 +320,164 @@ post-merge Codex run against a real Development project.
 CLA-010 once the role→capability matrix is ratified. Human review is
 required specifically for that ratification, which this task's scope
 does not include.
+
+## Follow-up handoff (Claude Code, 2026-09-14): shell-entry ratification and `?tenant=` fail-closed correction
+
+**Outcome:** Complete. No merge, no deploy, no migration, no hosted
+Supabase/Vercel change, no service-role use. Still on
+`feat/claude-tenant-authorization-boundary`, not merged.
+
+**What prompted this follow-up:** The human owner ratified the
+`/workspace`-shell-entry policy from the original handoff's decision 4
+(identity + active membership is sufficient; capability checks are
+scoped to real future operational routes, not the shell) and asked for a
+security/compliance fix-up to the `?tenant=` handling, which a review
+found did not match this task's own stated fail-closed intent.
+
+**The bug fixed:** `apps/web/app/workspace/page.tsx`'s original
+`InvalidTenantSelectionError` handling retried
+`resolveActiveTenantContext(client, identity, null)` — i.e., re-resolved
+with no candidate id. With exactly one active membership, that retry
+auto-selected it, silently substituting the caller's real tenant for a
+malformed, stale, or cross-tenant one they had actually requested. This
+was never a cross-tenant data leak — `resolveActiveTenantContext()` never
+returns a tenant the caller isn't an active member of — but it violated
+"fail closed with a stable typed error, never substitute a different
+answer," and a malformed `?tenant=` value was also pre-filtered by a
+UUID-shape check that coerced it to "no selection" before ever reaching
+the typed-error path, a second, weaker validation route outside that
+boundary. Full description and reasoning: ADR 0011, "Amendment: `?tenant=`
+fail-closed correction."
+
+**Commits (Conventional Commits, appended to the same branch):** see
+`git log` on `feat/claude-tenant-authorization-boundary` for this
+follow-up's commits, applied after the original five: a `fix(workspace)`
+commit for the `?tenant=` correction and shell-entry ratification
+plumbing, a `test(workspace)` commit for the new malformed/stale/
+cross-tenant negative tests, and a `docs` commit for this handoff and the
+ADR 0011 amendment.
+
+**Files changed in this follow-up (all within TASK-019's original scope
+globs — `apps/web/app/workspace/**`, `apps/web/lib/domain/**`,
+`apps/web/lib/i18n/**`, `apps/web/components/workspace/**`,
+`apps/web/tests/**`, `docs/adr/**`, this task file):**
+- `apps/web/lib/domain/tenant-selection.ts` — added
+  `classifyTenantSelectionError()`, a pure mapping from each typed error
+  to a route-facing classification (`no_membership`,
+  `selection_required`, `invalid_selection`, `unknown`).
+- `apps/web/lib/domain/workspace-access.ts` — added an `invalid_selection`
+  presentation kind and an `invalidTenantSelection` input flag; it takes
+  priority over `tenant_selection_required` and is never reached for a
+  platform admin; its view model discloses no membership count, no
+  tenant options, and no selected-tenant name.
+- `apps/web/app/workspace/page.tsx` — removed the pre-emptive UUID-shape
+  check (a malformed `?tenant=` value now flows through unvalidated,
+  exactly like any other candidate) and the retry-on-invalid fallback;
+  replaced hand-rolled `instanceof` branching with
+  `classifyTenantSelectionError()`.
+- `apps/web/components/workspace/workspace-status.tsx` — renders the new
+  `invalid_selection` state.
+- `apps/web/components/workspace/workspace-experience.tsx` — renders a
+  "Start over" link (via `next/link`, to satisfy this repo's
+  `no-html-link-for-pages` lint rule — a plain `<a>` failed
+  `./scripts/verify-web.sh`'s oxlint step) back to plain `/workspace` for
+  the `invalid_selection` state.
+- `apps/web/lib/i18n/messages.ts` — added `invalidSelectionTitle`,
+  `invalidSelectionBody`, `tryAgainLink` under the `workspace` section.
+- `docs/adr/0011-tenant-authorization-boundary.md` — amended: corrected
+  the `?tenant=` decision text (it previously described the buggy
+  fallback as intended behavior), and added "Ratification" and
+  "Amendment" sections.
+- Tests: `apps/web/tests/domain/tenant-selection.test.ts` (malformed-id
+  cases, `classifyTenantSelectionError` coverage including that
+  malformed/stale/cross-tenant classify identically),
+  `apps/web/tests/supabase/tenant-context.test.ts` (malformed-id
+  integration cases plus a regression test that reproduces the exact
+  silent-fallback bug and proves the fix no longer takes that path),
+  `apps/web/tests/domain/workspace-access.test.ts` (new `invalid_selection`
+  presentation/view-model tests).
+- No Supabase migration, RLS policy, or RPC was touched. No file outside
+  the listed scope was created, edited, or deleted.
+
+**Decisions and assumptions:**
+1. Shell-entry ratification is recorded as an ADR amendment, not a new
+   ADR: it changes the status of an existing, already-documented decision
+   (from "engineering judgment call, open question" to "ratified policy"),
+   not a new architectural choice.
+2. Malformed, stale, and cross-tenant selections are made to classify and
+   render identically (`invalid_selection`, generic copy, no data) so the
+   response never discloses which of the three actually happened, or
+   whether the requested tenant id exists at all.
+3. The retry-removal fix intentionally does not attempt to recover a
+   "best guess" tenant for the caller on an invalid selection (e.g.
+   auto-selecting their sole membership) — the caller must explicitly
+   retry via the "Start over" link, since silently picking anything on
+   their behalf is the exact behavior being removed.
+4. `next/link` was used for the new "Start over" link (and was already
+   used by the existing demo-preview link) rather than a plain `<a>`,
+   required by this repository's oxlint configuration
+   (`no-html-link-for-pages`) — `apps/web/components/workspace/workspace-tenant-selection.tsx`'s
+   existing per-option links use a dynamic `href` template and were not
+   flagged by that rule, but the new static `/workspace` link was.
+
+**Exact checks run and results (clean state, this follow-up's HEAD):**
+```text
+$ cd apps/web && npm test
+ℹ tests 152 / pass 152 / fail 0
+
+$ cd apps/web && npx tsc --noEmit -p tsconfig.json
+(no output — zero diagnostics)
+
+$ cd apps/web && npm run build
+Build complete. Route (app) lists all 21 routes, including /workspace.
+
+$ cd apps/web && npm run verify:vercel
+✓ .vercel/output/ is a genuine Vercel Build Output API v3 deployment.
+
+$ ./scripts/check-secrets.sh
+Secret check passed.
+
+$ ./scripts/verify-web.sh
+oxlint clean; vinext build succeeded; Web verification passed.
+```
+
+**Security/tenant/privacy/audit impact:**
+- Tenant isolation: unchanged at the data level — the original
+  implementation never returned a tenant the caller wasn't an active
+  member of, so there was no cross-tenant data exposure to begin with.
+  This follow-up closes a fail-closed-consistency gap (a silent
+  substitution instead of a stable typed error) and a UI-trust gap (the
+  UI could imply an explicit choice was honored when it was actually
+  overridden).
+- Authorization: every non-success path is now routed through one pure
+  classification function rather than ad hoc `instanceof` checks
+  duplicated at the call site, reducing the chance of a future edit
+  reintroducing a similar silent-fallback bug.
+- Privacy: `invalid_selection` discloses strictly less than before (no
+  membership count, no tenant data at all) and treats every cause
+  (malformed input, staleness, a real cross-tenant id) identically, so it
+  cannot be used to probe whether a given id is real.
+- Auditability: still a read-only route; no business mutation, no audit
+  event fabricated.
+- Rollback: no migration or hosted state. Revert this follow-up's commits
+  (on top of the original five) to return to the prior behavior;
+  reverting further removes TASK-019 entirely, per the original handoff.
+
+**Manual verification status:** Unchanged from the original handoff — not
+executed, no safe Development environment configured, none requested.
+`docs/security/TASK-019-manual-test-checklist.md` step 3 and step 6
+already exercise a mismatched/cross-tenant `?tenant=` value and are still
+the right steps to confirm this fix manually; no update to that checklist
+was needed since its expected outcome ("falls back," "returns to the
+selection list") is still accurate in spirit, now backed by the
+corrected, non-silent implementation.
+
+**Known limitations:** Same as the original handoff, minus the
+now-resolved shell-entry-capability question. The capability-checking
+primitive (`resolveAuthorizedTenantContext()`) still has no caller in
+this codebase.
+
+**Recommended independent reviewer:** Codex, to confirm the ADR 0011
+amendment accurately reflects the ratified policy and that the regression
+test in `tenant-context.test.ts` genuinely reproduces the fixed bug (not
+just asserts the fix).

@@ -1,6 +1,7 @@
 # ADR 0011 — Tenant authorization boundary: membership proof, capability check, and what middleware is not for
 
-- Status: accepted
+- Status: accepted; amended 2026-09-14 — see "Ratification" and
+  "Amendment: `?tenant=` fail-closed correction" below
 - Date: 2026-09-14
 
 ## Context
@@ -56,23 +57,19 @@ separate, composable functions**, not one bundled call.
   before membership is proven.
 
 **`/workspace`'s own landing gate calls only the membership-proof
-function, not the capability-checking one — a deliberate, documented gap,
-not an oversight.** The obvious literal reading of "capability checked via
-RPC/RLS" would gate `/workspace` on some capability. The only existing
-candidate that reads as "may view this tenant" is `tenant.view`, but
-`tenant.view` is granted to `tenant_admin` and `auditor` only
-(`supabase/migrations/20260912120100_identity_and_tenancy.sql`) — not
-`risk_analyst`, `operator`, or `integration_developer`. Gating the base
-workspace landing page on `tenant.view` would silently lock three of five
-tenant roles out of a page they are legitimately an active member of, to
-satisfy this task's own acceptance-criteria wording. That would be
-exactly the "resolve product ambiguity silently" failure this repository's
-governance forbids. The role→capability matrix gap is already tracked as
-CLA-010 in `docs/audits/2026-09-13-claude-architecture-security-audit.md`
-and is a protected human decision. `resolveAuthorizedTenantContext()` is
-still built, fully tested, and left ready for the first future route that
-needs "prove membership AND prove capability X for it" (an operational
-route this task's scope explicitly excludes).
+function, not the capability-checking one — a deliberate, documented and
+now-ratified design, not an oversight.** See "Ratification" below for the
+approved policy and its reasoning; the short version is that no existing
+capability maps to "may view the generic workspace shell" for every
+tenant role (`tenant.view` is granted only to `tenant_admin` and
+`auditor` — `supabase/migrations/20260912120100_identity_and_tenancy.sql`
+— not `risk_analyst`, `operator`, or `integration_developer`), and
+gating shell entry on it would have silently locked three of five tenant
+roles out of a page they are legitimately active members of.
+`resolveAuthorizedTenantContext()` is still built, fully tested, and left
+ready for the first future route that needs "prove membership AND prove
+capability X for it" (an operational route this task's scope explicitly
+excludes).
 
 **`/workspace` accepts a `?tenant=` query param, never trusted, always
 re-verified.** With one active membership, the page auto-selects it
@@ -86,11 +83,14 @@ navigation is a fresh server request that re-runs
 client-side state, no `localStorage`, no `useSearchParams` read for
 authorization (enforced by
 `apps/web/tests/app/workspace-component-boundary.test.ts`, which already
-covered this for TASK-018 and needed no change for this task). An invalid,
-stale, or cross-tenant id silently falls back to the same
-no-param selection flow rather than surfacing a distinguishable error, so
-the response never confirms or denies whether the requested id was ever
-real.
+covered this for TASK-018 and needed no change for this task). A
+malformed, stale, or cross-tenant id fails closed into a distinct,
+generic `invalid_selection` presentation state with a link back to plain
+`/workspace` to retry — it is never silently reinterpreted as "no
+selection was requested" (see "Amendment" below for why that distinction
+matters and what it replaced). The response never confirms or denies
+whether the requested id was ever real: all three causes render
+identically.
 
 **Middleware refreshes the session and nothing else.**
 `apps/web/middleware.ts` implements the documented `@supabase/ssr`
@@ -130,11 +130,90 @@ workspaces").
   Company profile, Operator queue) has a concrete, tested pattern for
   "prove membership then check a specific capability"
   (`resolveAuthorizedTenantContext()`) rather than needing to invent one.
-- The `tenant.view`-vs-`/workspace` gap identified above is not resolved
-  by this task and should not be treated as resolved by a future reader of
-  this ADR: it remains open until CLA-010's capability matrix is
-  ratified by a human decision.
+- The specific question of whether `/workspace`'s own shell entry requires
+  a capability is now ratified — see "Ratification" below — and is closed.
+  The broader role→capability matrix (CLA-010) is a separate, still-open
+  question: this ratification does not review or bless any individual
+  role's current capability grants, only the shell-entry policy.
 - No migration, RLS policy, or RPC was added, changed, or removed. Every
   authorization decision in this task composes existing database
   primitives (`memberships` RLS, `has_capability`) rather than
   reimplementing them.
+
+## Ratification (2026-09-14)
+
+The human owner reviewed decision 4 above and ratified it explicitly:
+**identity verified server-side plus an active tenant membership is
+sufficient to enter the `/workspace` shell. `tenant.view` (or any other
+single capability) is not, and must not become, a universal gate for
+shell entry.** Capability checks remain mandatory, but scoped to real
+operations on real tenant data in future routes — each such route must
+call `resolveAuthorizedTenantContext()` (or `assertCapability()` directly)
+with the specific capability its own operation actually requires, decided
+when that route is built, not retrofitted onto the shell.
+
+This ratification resolves, specifically and only, whether `/workspace`
+itself needs a capability check to render. It does not ratify, ratify by
+implication, or otherwise touch:
+- The current contents of the role→capability matrix in
+  `supabase/migrations/20260912120100_identity_and_tenancy.sql` (CLA-010
+  remains open for that).
+- Which capability any future operational route (Company profile,
+  Operator queue, policy editor, etc.) should require — that is decided
+  per route, when it is built.
+- Any change to RLS, the `has_capability` RPC, or membership semantics —
+  none of that was touched by this task or this ratification.
+
+No code change resulted from this ratification by itself: `/workspace`'s
+implementation already matched this policy (see decision 4 as originally
+written above). Its purpose is to record that the design was reviewed and
+approved, converting what was previously an engineering judgment call
+into a settled product decision a future task or reviewer does not need
+to re-litigate.
+
+## Amendment: `?tenant=` fail-closed correction (2026-09-14)
+
+A follow-up security review found that the original implementation of the
+`?tenant=` handling described above did not match this ADR's own stated
+intent. The route's error handling caught `InvalidTenantSelectionError`
+(malformed, stale, or cross-tenant candidate id) and retried by calling
+`resolveActiveTenantContext(client, identity, null)` — i.e., re-resolving
+with *no* candidate id. Whenever the caller had exactly one active
+membership, that retry auto-selected it, silently substituting the
+caller's real tenant for whatever tenant they had actually asked for. A
+bookmarked or manipulated `?tenant=` value could not be used to cross into
+another tenant's data — `resolveActiveTenantContext()` itself never
+returned a tenant the caller was not an active member of — but the
+fallback still violated the "fail closed with a stable typed error, never
+substitute a different answer" principle this ADR states elsewhere, and
+could confuse a caller into believing their explicit selection had been
+honored when it had not.
+
+**Fix:** the route no longer retries at all on `InvalidTenantSelectionError`.
+A new pure helper,
+`apps/web/lib/domain/tenant-selection.ts`'s `classifyTenantSelectionError()`,
+maps each of the module's three typed errors
+(`NoActiveTenantMembershipError`, `TenantSelectionRequiredError`,
+`InvalidTenantSelectionError`) to a route-facing classification in one
+place, so `apps/web/app/workspace/page.tsx` no longer hand-rolls
+`instanceof` branching or a fallback retry. `InvalidTenantSelectionError`
+now maps straight to a new `invalid_selection` presentation state
+(`apps/web/lib/domain/workspace-access.ts`): a generic, non-disclosing
+notice with no membership count, no tenant name, and no tenant list,
+plus a plain link back to `/workspace` (clearing the query param) so the
+caller can retry from a clean state. The route also stopped
+pre-validating `?tenant=` with a UUID-shape check before calling
+`resolveActiveTenantContext()`: a malformed value is now passed through
+unvalidated, exactly like any other candidate id, and reaches
+`InvalidTenantSelectionError` through the same `!match` path a
+well-formed-but-wrong id does — removing a second, weaker validation path
+that existed outside the typed-error boundary.
+
+`apps/web/tests/supabase/tenant-context.test.ts` adds a regression test
+("route-level: an invalid selection must never be retried with no
+candidate id") that reproduces the exact scenario above — a caller with
+one real active membership requesting a different, stale tenant — and
+proves both that the corrected code path throws
+`InvalidTenantSelectionError` and that the removed fallback would indeed
+have silently returned the caller's own tenant, so the regression this
+fix prevents is demonstrated, not merely asserted.
