@@ -7,7 +7,9 @@ import {
   UnknownAuthError,
   assertValidEmail,
   assertValidPasswordShape,
+  assertMatchingPasswordConfirmation,
   type PasswordResetRequestInput,
+  type PasswordUpdateInput,
   type SignInWithPasswordInput,
 } from "../domain/auth-session.ts";
 import type { UserId } from "../domain/ids";
@@ -97,6 +99,15 @@ export async function requestPasswordReset(
 
   const { error } = await client.auth.resetPasswordForEmail(input.email, options);
   if (error) mapPasswordResetRequestError(error);
+}
+
+export async function updatePassword(
+  client: SupabaseClient,
+  input: PasswordUpdateInput,
+): Promise<void> {
+  assertMatchingPasswordConfirmation(input);
+  const { error } = await client.auth.updateUser({ password: input.password });
+  if (error) throw new UnknownAuthError(error.message);
 }
 
 /**

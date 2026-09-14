@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   InvalidEmailError,
   InvalidPasswordShapeError,
+  PasswordConfirmationMismatchError,
+  assertMatchingPasswordConfirmation,
   assertValidEmail,
   assertValidPasswordShape,
 } from "../../lib/domain/auth-session.ts";
@@ -10,6 +12,16 @@ import {
 void test("assertValidEmail accepts well-formed addresses", () => {
   assert.doesNotThrow(() => assertValidEmail("person@example.test"));
   assert.doesNotThrow(() => assertValidEmail("a.b+c@sub.example.test"));
+});
+
+void test("password confirmation must match exactly", () => {
+  assert.doesNotThrow(() =>
+    assertMatchingPasswordConfirmation({ password: "correct-horse", confirmation: "correct-horse" }),
+  );
+  assert.throws(
+    () => assertMatchingPasswordConfirmation({ password: "correct-horse", confirmation: "different-value" }),
+    PasswordConfirmationMismatchError,
+  );
 });
 
 void test("assertValidEmail rejects malformed addresses", () => {

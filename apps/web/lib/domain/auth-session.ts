@@ -17,6 +17,11 @@ export interface PasswordResetRequestInput {
   email: string;
 }
 
+export interface PasswordUpdateInput {
+  password: string;
+  confirmation: string;
+}
+
 export interface AuthenticatedSession {
   userId: UserId;
   email: string | null;
@@ -42,6 +47,13 @@ export class InvalidPasswordShapeError extends AuthSessionError {
   constructor(reason: string) {
     super(`Invalid password: ${reason}`);
     this.name = "InvalidPasswordShapeError";
+  }
+}
+
+export class PasswordConfirmationMismatchError extends AuthSessionError {
+  constructor() {
+    super("Password confirmation does not match");
+    this.name = "PasswordConfirmationMismatchError";
   }
 }
 
@@ -119,5 +131,12 @@ export function assertValidPasswordShape(password: string): void {
   }
   if (password.length < MIN_PASSWORD_LENGTH) {
     throw new InvalidPasswordShapeError(`must be at least ${MIN_PASSWORD_LENGTH} characters`);
+  }
+}
+
+export function assertMatchingPasswordConfirmation(input: PasswordUpdateInput): void {
+  assertValidPasswordShape(input.password);
+  if (input.password !== input.confirmation) {
+    throw new PasswordConfirmationMismatchError();
   }
 }
