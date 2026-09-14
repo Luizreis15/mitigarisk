@@ -532,6 +532,25 @@ describe the *process* for an approved test account but name no concrete,
 pre-approved address). Per the task's explicit instruction, no address was
 invented and no email was sent. Remains "pending approved test recipient."
 
+### End-to-end production continuation — 2026-09-14
+
+The human owner subsequently approved `leduardoreis15@gmail.com` exclusively
+for this acceptance test and explicitly approved the production promotion and
+email submission. Production deployment `dpl_6G83RBBxvMfjF5aWT7QfC6nbY297`
+was promoted after the middleware compatibility fixes. Final smoke results:
+
+```text
+GET /                 -> 200
+GET /auth/confirm     -> 200 after safe redirect to /auth/error?reason=invalid_link
+GET /update-password  -> 200 after safe redirect to /auth/error?reason=missing_action
+GET /reset-password   -> 200
+```
+
+One recovery request was submitted for the approved address. The application
+rendered its non-enumerating `Check your email` success state. Receipt, link
+consumption, and final password submission remain human-only acceptance steps;
+no password or OTP is to be shared with an agent.
+
 ### Security/tenant/privacy/audit impact of this follow-up
 
 The hosted configuration changes strengthen the auth email flow (accurate
@@ -556,16 +575,15 @@ covers.
 
 ### Known limitations
 
-- SMTP `sender_name` reads `Mitiga`, not the approved `MITIGA` — a one-field
-  dashboard correction for the human owner (see "Hosted configuration"
-  above); not fixed by this agent, and not writable safely from this
-  terminal without touching the SMTP credential field.
+- SMTP `sender_name` was manually corrected to approved `MITIGA` by the human
+  owner.
 - Resend click/open-tracking verification (step 8) is pending — no Resend
   access was authorized or available from this terminal.
 - Log review for the exposure window is pending — no safe, non-secret-revealing
   tool exists in this terminal to perform it; needs Supabase Dashboard
   access.
-- The end-to-end acceptance test remains pending an approved test account.
+- Recovery submission passed with the approved test account; receipt, link
+  consumption, and final password submission remain human acceptance steps.
 - The `/update-password` residual observation from the prior follow-up
   handoff (an abandoned-recovery-cookie edge case, not a privilege
   escalation) remains unfixed and out of this task's scope, as previously
