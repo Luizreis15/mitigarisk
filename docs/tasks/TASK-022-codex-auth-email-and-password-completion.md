@@ -596,7 +596,10 @@ exposed Node ESM's requirement for the explicit `.js` subpath; the middleware
 import and regression check use that deployable entry point. The second
 preview proved Vercel also leaves relative middleware imports unbundled; the
 public Supabase configuration read is therefore self-contained in middleware,
-and `verify:vercel` now rejects any relative import there.
+and `verify:vercel` now rejects any relative import there. Production, where
+the Supabase branch actually executes, additionally required the middleware
+function as the module's default export; that compatibility export and its
+regression assertion are now included.
 
 This follow-up changes no authentication policy, tenant boundary, hosted
 Supabase configuration, data, migration, email template, or secret. Rollback

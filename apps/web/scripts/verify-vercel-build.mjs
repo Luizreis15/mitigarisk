@@ -40,6 +40,9 @@ const middlewareSource = existsSync(middlewarePath) ? readFileSync(middlewarePat
 if (/from\s+["']\.{1,2}\//.test(middlewareSource)) {
   fail("middleware.ts must be self-contained because Vercel deploys the root middleware without bundling local imports");
 }
+if (middlewareSource && !/export\s+default\s+middleware\s*;/.test(middlewareSource)) {
+  fail("middleware.ts must default-export middleware for Vercel's routing middleware runtime");
+}
 if (/from\s+["']next\/server(?:\.js)?["']/.test(middlewareSource)) {
   const packageJson = readJson(path.join(webRoot, "package.json"), "package.json");
   if (!packageJson.dependencies?.next) {
