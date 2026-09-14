@@ -116,7 +116,8 @@ No merge or deploy was made.
 Branch and commit:
 `audit/cursor-product-experience-2026-09-13` from annotated tag
 `audit-baseline-2026-09-13-r2` (`93d02fd8b206e0dea2b36af0dec9f1e91847196a`).
-Commits: `fe949ee` docs(audit); this commit docs(task).
+Commits: `fe949ee` docs(audit); `2b94364` docs(task); this follow-up
+adds CUR-024–CUR-030.
 
 Report path:
 `docs/audits/2026-09-13-cursor-product-experience-audit.md`
@@ -130,7 +131,7 @@ Files changed:
 - `docs/tasks/TASK-020-cursor-product-experience-audit.md`
 
 Finding counts by severity:
-critical 0, high 4, medium 9, low 4, observation 6 (CUR-001–CUR-023).
+critical 0, high 4, medium 13, low 6, observation 7 (CUR-001–CUR-030).
 
 Decisions and assumptions:
 - Annotated tag object SHA differs from the commit SHA; the peeled commit

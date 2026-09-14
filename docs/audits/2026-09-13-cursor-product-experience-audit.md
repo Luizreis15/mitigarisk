@@ -29,7 +29,7 @@ TASK-019 (server tenant selection and session-refresh middleware) is **not imple
 
 Local automated checks at this SHA all passed (106 tests, TypeScript, vinext build, Vercel output, secret scan, web verification). There are **no automated UI tests** for prototype pages or rendered `/workspace` states.
 
-**Finding counts:** critical 0 · high 4 · medium 9 · low 4 · observation 6.
+**Finding counts:** critical 0 · high 4 · medium 13 · low 6 · observation 7 (CUR-001–CUR-030).
 
 ---
 
@@ -68,7 +68,7 @@ There is no middleware file. Prototype routes are **inaccessible as real product
 |---|---|---|---|
 | 001 web foundation | Implemented | Yes | Prototype origin of current shell. |
 | 002 platform/Supabase | Implemented (schema/RLS/domain) | Yes (Claude) | Not wired to UI except auth/membership count. |
-| 003 integration gates | Implemented | Contract; Codex | Checks still used. |
+| 003 integration gates | Implemented (tooling) | **Missing in the task file** | Scripts/CI exist; CUR-029. |
 | 004 English-first | Implemented | Yes | Catalog remains English; metadata still says “prototype” (CUR-009). |
 | 005 authenticated shell | Implemented as **demo** tenant picker | Yes in `TASK-005-cursor-authenticated-shell.md` | Duplicate file `TASK-005-cursor-authenticated-product-shell.md` has **no handoff** (CUR-011). `/tenants` is not real tenant selection (TASK-019). |
 | 006 auth/tenant bootstrap RPCs | Implemented in SQL | Yes (Claude) | UI does not call tenant bootstrap. |
@@ -316,6 +316,89 @@ Findings are severity-ranked. IDs are stable `CUR-###`.
 - **Remediation:** Keep conversion off these patterns.  
 - **Acceptance:** TASK-019 tests forbid URL-trusted tenant/capability.
 
+### CUR-024 — Fixture narrative copy lives outside the message catalog
+
+- **Severity:** medium  
+- **Confidence:** high  
+- **Classification:** pre-MVP (ADR 0002)  
+- **Owner:** Cursor  
+- **Affected:** `apps/web/lib/demo/data.ts` (evaluation `recommendation`, alert titles, case `lastNote`); rendered on `/cases/:id` and Company/Operator tables.  
+- **Evidence:** User-visible English is stored on fixture objects rather than `messages.ts`. ADR 0002 requires externalized runtime copy.  
+- **Impact:** Future locale work and copy review miss operational sentences.  
+- **Remediation:** Move displayed fixture sentences into the catalog keyed by stable IDs.  
+- **Acceptance:** No user-facing sentence remains only in `lib/demo/data.ts`.
+
+### CUR-025 — Escalate toast can be read as a real notification
+
+- **Severity:** medium  
+- **Confidence:** high  
+- **Classification:** pre-MVP  
+- **Owner:** Cursor  
+- **Affected:** `apps/web/lib/i18n/messages.ts` 493 (`toastEscalateBody`: “A fictional analyst was notified.”); `apps/web/app/operator/page.tsx`.  
+- **Evidence:** Past tense “was notified” plus “fictional analyst” still asserts a notify event. Other toasts say “No message was sent.”  
+- **Impact:** Weaker honesty than adjacent operator actions.  
+- **Remediation:** Align with “No message was sent.”  
+- **Acceptance:** Escalate copy does not claim a notification occurred.
+
+### CUR-026 — Platform tenant detail opens global Helix Company/Operator, not that tenant
+
+- **Severity:** medium  
+- **Confidence:** high  
+- **Classification:** pre-MVP  
+- **Owner:** Cursor  
+- **Affected:** `apps/web/app/super-admin/tenants/[id]/page.tsx` 274–278 (`Link` to `/company` and `/operator`).  
+- **Evidence:** Buttons sit on a specific governed tenant row but always open Helix fixture workspaces (`currentTenant`).  
+- **Impact:** Reviewers infer platform support can open that tenant’s operations (TASK-017 copy elsewhere denies impersonation).  
+- **Remediation:** Label as “Open Helix demonstration” or remove until TASK-019.  
+- **Acceptance:** The destination tenant name matches the row, or the control is clearly sample-only.
+
+### CUR-027 — In-page nav smooth-scroll ignores `prefers-reduced-motion`
+
+- **Severity:** medium  
+- **Confidence:** high for code; browser unconfirmed for impact  
+- **Classification:** pre-MVP a11y  
+- **Owner:** Cursor  
+- **Affected:** `apps/web/components/prototype/app-shell.tsx` 100–102 vs `apps/web/app/globals.css` reduced-motion rules that do not cover JS `scrollIntoView`.  
+- **Evidence:** `behavior: 'smooth'` is unconditional.  
+- **Impact:** Vestibular/motion-sensitive users get animated jumps on Company/Operator section nav.  
+- **Remediation:** Use `auto` when `matchMedia('(prefers-reduced-motion: reduce)')`.  
+- **Acceptance:** Browser check with reduced-motion enabled.
+
+### CUR-028 — Case “record decision” updates only an in-memory timeline
+
+- **Severity:** low  
+- **Confidence:** high  
+- **Classification:** accepted demo limitation unless copy claims the card changed  
+- **Owner:** Cursor  
+- **Affected:** `apps/web/app/cases/[id]/page.tsx` 72–90 vs the decision card still reading fixture `recordedDecision`.  
+- **Evidence:** `append` pushes `local_*` events; the decision summary field is not updated. TASK-008 already said fixtures are not the source of truth.  
+- **Impact:** Timeline looks like an audit log of a decision the summary does not show.  
+- **Remediation:** Disable the summary, or keep both views in sync locally, with existing “never persist” copy.  
+- **Acceptance:** After a local decision action, summary and timeline do not contradict.
+
+### CUR-029 — TASK-003 has no handoff section
+
+- **Severity:** low  
+- **Confidence:** high  
+- **Classification:** documentation hygiene  
+- **Owner:** Codex  
+- **Affected:** `docs/tasks/TASK-003-codex-integration-foundation.md`.  
+- **Evidence:** File ends at acceptance criteria; `scripts/check-secrets.sh` and `quality.yml` exist.  
+- **Impact:** Merge history of the integration gates is not reconstructible from the contract.  
+- **Remediation:** Append a late handoff pointing at the commits that landed the scripts.  
+- **Acceptance:** TASK-003 contains Outcome / Checks like sibling tasks.
+
+### CUR-030 — Recommendation vocabulary is not one product glossary (positive-adjacent)
+
+- **Severity:** observation  
+- **Confidence:** medium  
+- **Classification:** pre-MVP copy alignment, not a defect until a human picks terms  
+- **Owner:** human (risk-decision language) then Cursor  
+- **Evidence:** ADR 0007 / engine use `approve` / `review` / `reject`. TASK-010 UI uses “accept path / additional evidence.” Case actions include escalate/RFI. TASK-009 contract text historically said allow/decline.  
+- **Impact:** Training and future real UI may disagree with stored `DecisionBand`.  
+- **Remediation:** One glossary in the catalog; do not treat this as an engine bug.  
+- **Acceptance:** Human-approved terms mapped in `messages.ts` only.
+
 ### CUR-018 — English-first and market-neutral UI copy (positive)
 
 - **Severity:** observation  
@@ -404,7 +487,7 @@ This is a delivery **suggestion** for Codex/Cursor/Claude. It does **not** appro
 3. **Days 8–14 — Cursor demo coherence (CUR-005, CUR-006, CUR-007, CUR-008)** one tenant per flow; one Super Admin landing.  
 4. **Days 12–18 — Recovery completion (CUR-004)** after human Auth redirect configuration.  
 5. **Days 15–22 — First real operational slice** only after 019: likely entity list **or** tenant-scoped workspace home — not the whole prototype.  
-6. **Days 18–28 — A11y + tests (CUR-010, CUR-012, CUR-014, CUR-016)** including a headed pass at ~375px and desktop.  
+6. **Days 18–28 — A11y + tests (CUR-010, CUR-012, CUR-014, CUR-016, CUR-024, CUR-027)** including a headed pass at ~375px and desktop, catalogued fixture sentences, and reduced-motion on section scroll.  
 7. **Days 25–35 — Freeze demo vs real** in copy and IA; remaining fixture routes stay labeled; no silent “this is now live.”
 
 Protected questions for the human owner (not decided here): whether the Vercel preview may keep an ungated demo next to real login; password-reset email URLs; when Northstar test users may be used in a recorded browser pass.
