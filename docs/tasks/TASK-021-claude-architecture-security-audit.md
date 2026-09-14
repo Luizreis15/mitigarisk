@@ -10,7 +10,7 @@ database definitions, or hosted systems.
 ## Audit baseline
 
 - Audit the exact commit identified by the annotated Git tag
-  `audit-baseline-2026-09-13`.
+  `audit-baseline-2026-09-13-r2`.
 - Record the resolved commit SHA at the beginning of the report.
 - If the tag is missing or resolves to a different base than the task contract,
   stop and report the discrepancy. Do not silently audit another revision.
