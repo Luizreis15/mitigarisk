@@ -141,6 +141,61 @@ void test("a platform admin is never routed into tenant selection, even if the c
   );
 });
 
+void test("an invalid (malformed, stale, or cross-tenant) selection is classified before tenant_selection_required or active_member", () => {
+  assert.equal(
+    describeWorkspacePresentation({
+      publicConfigAvailable: true,
+      membershipReadFailed: false,
+      isPlatformAdmin: false,
+      activeMembershipCount: 1,
+      invalidTenantSelection: true,
+    }),
+    "invalid_selection",
+  );
+  assert.equal(
+    describeWorkspacePresentation({
+      publicConfigAvailable: true,
+      membershipReadFailed: false,
+      isPlatformAdmin: false,
+      activeMembershipCount: 2,
+      invalidTenantSelection: true,
+      tenantSelectionRequired: true,
+    }),
+    "invalid_selection",
+  );
+});
+
+void test("a platform admin is never routed into invalid_selection either", () => {
+  assert.equal(
+    describeWorkspacePresentation({
+      publicConfigAvailable: true,
+      membershipReadFailed: false,
+      isPlatformAdmin: true,
+      activeMembershipCount: 0,
+      invalidTenantSelection: true,
+    }),
+    "platform_admin",
+  );
+});
+
+void test("invalid_selection view model discloses no membership count and no tenant data", () => {
+  const model = buildWorkspaceViewModel({
+    publicConfigAvailable: true,
+    membershipReadFailed: false,
+    isPlatformAdmin: false,
+    activeMembershipCount: 3,
+    signedInEmail: "example@demo.mitiga.local",
+    invalidTenantSelection: true,
+    tenantOptions: [{ tenantId: "t1", tenantName: "Acme", tenantSlug: "acme" }],
+    selectedTenantName: "Acme",
+  });
+  assert.equal(model.kind, "invalid_selection");
+  assert.equal(model.activeMembershipCount, 0);
+  assert.deepEqual(model.tenantOptions, []);
+  assert.equal(model.selectedTenantName, null);
+  assert.equal(model.showsAuthenticatedSession, true);
+});
+
 void test("selection-required view model carries the tenant options and hides the selected-tenant notice", () => {
   const model = buildWorkspaceViewModel({
     publicConfigAvailable: true,

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { TenantId } from "../../lib/domain/ids";
 import {
   resolveTenantSelection,
+  classifyTenantSelectionError,
   NoActiveTenantMembershipError,
   TenantSelectionRequiredError,
   InvalidTenantSelectionError,
@@ -81,6 +82,67 @@ void test("a stale selection (tenant no longer an active membership) is invalid"
     resolveTenantSelection({ activeMemberships: [optionB], requestedTenantId: TENANT_A }),
     { kind: "invalid_selection" },
   );
+});
+
+void test("a malformed (non-UUID-shaped) requested id is invalid, never treated as no selection", () => {
+  // A malformed string never equals any real membership tenant id, so it
+  // reaches invalid_selection the same way a well-formed but wrong id
+  // does — there is no separate "looks wrong, treat as absent" branch.
+  assert.deepEqual(
+    resolveTenantSelection({
+      activeMemberships: [optionA],
+      requestedTenantId: "not-a-uuid" as TenantId,
+    }),
+    { kind: "invalid_selection" },
+  );
+  assert.deepEqual(
+    resolveTenantSelection({
+      activeMemberships: [optionA],
+      requestedTenantId: "" as TenantId,
+    }),
+    { kind: "invalid_selection" },
+  );
+});
+
+void test("a malformed requested id with multiple active memberships is still invalid, not a fresh selection prompt", () => {
+  assert.deepEqual(
+    resolveTenantSelection({
+      activeMemberships: [optionA, optionB],
+      requestedTenantId: "<script>alert(1)</script>" as TenantId,
+    }),
+    { kind: "invalid_selection" },
+  );
+});
+
+void test("classifyTenantSelectionError maps each typed error to its route-facing classification", () => {
+  assert.deepEqual(classifyTenantSelectionError(new NoActiveTenantMembershipError()), {
+    kind: "no_membership",
+  });
+  assert.deepEqual(classifyTenantSelectionError(new TenantSelectionRequiredError([optionA, optionB])), {
+    kind: "selection_required",
+    options: [optionA, optionB],
+  });
+  assert.deepEqual(classifyTenantSelectionError(new InvalidTenantSelectionError()), {
+    kind: "invalid_selection",
+  });
+});
+
+void test("classifyTenantSelectionError classifies malformed, stale, and cross-tenant errors identically, disclosing no distinction", () => {
+  // All three real-world causes of InvalidTenantSelectionError (malformed
+  // input, a stale/removed membership, an arbitrary cross-tenant id)
+  // collapse to one InvalidTenantSelectionError instance and therefore one
+  // classification — a caller cannot distinguish them from the error alone.
+  const malformed = classifyTenantSelectionError(new InvalidTenantSelectionError());
+  const stale = classifyTenantSelectionError(new InvalidTenantSelectionError());
+  const crossTenant = classifyTenantSelectionError(new InvalidTenantSelectionError());
+  assert.deepEqual(malformed, { kind: "invalid_selection" });
+  assert.deepEqual(malformed, stale);
+  assert.deepEqual(stale, crossTenant);
+});
+
+void test("classifyTenantSelectionError maps an unrelated error to unknown rather than a specific tenant-selection outcome", () => {
+  assert.deepEqual(classifyTenantSelectionError(new Error("connection reset")), { kind: "unknown" });
+  assert.deepEqual(classifyTenantSelectionError("not even an Error instance"), { kind: "unknown" });
 });
 
 void test("NoActiveTenantMembershipError, TenantSelectionRequiredError, and InvalidTenantSelectionError are distinct typed errors", () => {

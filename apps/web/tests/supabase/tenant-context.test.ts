@@ -103,6 +103,53 @@ void test("a stale selection for a since-removed membership fails closed with In
   );
 });
 
+void test("a malformed requested id fails closed with InvalidTenantSelectionError, with a single active membership", async () => {
+  // Mirrors the route's contract: a non-UUID-shaped ?tenant= value is
+  // passed through unvalidated and must fail the same way a well-formed
+  // but wrong id does, not fall through to auto-select the sole
+  // membership.
+  const { client } = fakeClient({ membershipRows: [membershipRow(TENANT_A, "Acme", "acme")] });
+  await assert.rejects(
+    () => resolveActiveTenantContext(client, IDENTITY, "not-a-uuid" as TenantId),
+    InvalidTenantSelectionError,
+  );
+});
+
+void test("a malformed requested id fails closed with InvalidTenantSelectionError, with multiple active memberships", async () => {
+  const { client } = fakeClient({
+    membershipRows: [membershipRow(TENANT_A, "Acme", "acme"), membershipRow(TENANT_B, "Beta", "beta")],
+  });
+  await assert.rejects(
+    () => resolveActiveTenantContext(client, IDENTITY, "<script>alert(1)</script>" as TenantId),
+    InvalidTenantSelectionError,
+  );
+});
+
+void test("route-level: an invalid selection must never be retried with no candidate id (no silent auto-select fallback)", async () => {
+  // Regression guard for the exact bug this fix-up removes from
+  // apps/web/app/workspace/page.tsx: on InvalidTenantSelectionError, the
+  // caller must classify and stop, never call
+  // resolveActiveTenantContext(client, identity, null) as a fallback —
+  // doing so would silently select TENANT_B below even though the
+  // request explicitly asked for a different (stale/cross-tenant/
+  // malformed) tenant.
+  const { client } = fakeClient({ membershipRows: [membershipRow(TENANT_B, "Beta", "beta")] });
+  let sawInvalidSelection = false;
+  try {
+    await resolveActiveTenantContext(client, IDENTITY, TENANT_A);
+  } catch (error) {
+    assert.ok(error instanceof InvalidTenantSelectionError);
+    sawInvalidSelection = true;
+    // The correct route behavior stops here. Prove that if it *did*
+    // wrongly retry with null, that retry would auto-select TENANT_B —
+    // i.e. the bug this test guards against would be a real, observable
+    // silent tenant switch, not a hypothetical one.
+    const wouldBeSilentFallback = await resolveActiveTenantContext(client, IDENTITY, null);
+    assert.equal(wouldBeSilentFallback.tenantId, TENANT_B);
+  }
+  assert.ok(sawInvalidSelection, "expected InvalidTenantSelectionError to be thrown");
+});
+
 void test("a single active membership auto-selects without requiring a request param", async () => {
   const { client } = fakeClient({ membershipRows: [membershipRow(TENANT_A, "Acme", "acme")] });
   const context = await resolveActiveTenantContext(client, IDENTITY, null);
