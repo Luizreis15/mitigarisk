@@ -76,3 +76,35 @@ export class InvalidTenantSelectionError extends Error {
     this.name = "InvalidTenantSelectionError";
   }
 }
+
+export type TenantSelectionErrorClassification =
+  | { kind: "no_membership" }
+  | { kind: "selection_required"; options: TenantMembershipOption[] }
+  | { kind: "invalid_selection" }
+  | { kind: "unknown" };
+
+/**
+ * Maps one of this module's typed errors to the flags a route needs to pick
+ * a presentation state, without the route re-implementing `instanceof`
+ * checks itself. A malformed, stale, or cross-tenant candidate id all reach
+ * this the same way — as an InvalidTenantSelectionError thrown by
+ * resolveTenantSelection's `!match` branch, since a malformed string simply
+ * never equals any real membership's tenant id — so all three collapse to
+ * the same "invalid_selection" classification and the same generic,
+ * non-disclosing caller response. This must never fall back to a fresh,
+ * unrequested lookup (e.g. re-resolving with no candidate id): doing so
+ * would silently auto-select a different tenant than the one requested,
+ * which is exactly the silent-fallback behavior TASK-019's fix-up removed.
+ */
+export function classifyTenantSelectionError(error: unknown): TenantSelectionErrorClassification {
+  if (error instanceof NoActiveTenantMembershipError) {
+    return { kind: "no_membership" };
+  }
+  if (error instanceof TenantSelectionRequiredError) {
+    return { kind: "selection_required", options: error.options };
+  }
+  if (error instanceof InvalidTenantSelectionError) {
+    return { kind: "invalid_selection" };
+  }
+  return { kind: "unknown" };
+}

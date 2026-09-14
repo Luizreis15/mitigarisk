@@ -79,6 +79,10 @@ export const messages = {
     tenantSelectionTitle: 'Choose a company',
     tenantSelectionBody:
       'Your account has more than one active company membership. Select one to continue; the server re-verifies this choice on every request.',
+    invalidSelectionTitle: 'That company selection could not be used',
+    invalidSelectionBody:
+      'The requested company is not one of your active memberships. This can happen with an old link, a bookmark, or a membership that has changed. Start over to choose again.',
+    tryAgainLink: 'Start over',
     tenantContextUnavailable:
       'Tenant-specific Operator and policy workspaces are unavailable until this task connects them. This page does not list roles or capabilities.',
     buildingNotice:

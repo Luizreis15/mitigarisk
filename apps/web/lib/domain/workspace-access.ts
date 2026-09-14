@@ -16,6 +16,7 @@ export type WorkspaceAccessState =
 export type WorkspacePresentationKind =
   | "config_unavailable"
   | "read_failure"
+  | "invalid_selection"
   | "tenant_selection_required"
   | WorkspaceAccessState;
 
@@ -56,9 +57,16 @@ export function describeWorkspacePresentation(input: {
   isPlatformAdmin: boolean;
   activeMembershipCount: number;
   tenantSelectionRequired?: boolean;
+  invalidTenantSelection?: boolean;
 }): WorkspacePresentationKind {
   if (!input.publicConfigAvailable) return "config_unavailable";
   if (input.membershipReadFailed) return "read_failure";
+  // A malformed, stale, or cross-tenant `?tenant=` value is classified
+  // before tenant_selection_required/active_member/no_membership: it must
+  // never be treated as "no selection was requested" (which would fall
+  // through to auto-select a single remaining membership) or silently
+  // reinterpreted as any other state.
+  if (!input.isPlatformAdmin && input.invalidTenantSelection) return "invalid_selection";
   if (!input.isPlatformAdmin && input.tenantSelectionRequired) return "tenant_selection_required";
   return describeWorkspaceAccess({
     isPlatformAdmin: input.isPlatformAdmin,
@@ -73,6 +81,7 @@ export function buildWorkspaceViewModel(input: {
   activeMembershipCount: number;
   signedInEmail: string | null;
   tenantSelectionRequired?: boolean;
+  invalidTenantSelection?: boolean;
   tenantOptions?: TenantOptionView[];
   selectedTenantName?: string | null;
 }): WorkspaceViewModel {
@@ -82,12 +91,17 @@ export function buildWorkspaceViewModel(input: {
     isPlatformAdmin: input.isPlatformAdmin,
     activeMembershipCount: input.activeMembershipCount,
     tenantSelectionRequired: input.tenantSelectionRequired ?? false,
+    invalidTenantSelection: input.invalidTenantSelection ?? false,
   });
   const showsAuthenticatedSession =
     kind !== "config_unavailable";
-  const activeMembershipCount = showsAuthenticatedSession
-    ? input.activeMembershipCount
-    : 0;
+  // invalid_selection never discloses a membership count: it renders the
+  // same generic "try again" state regardless of how many active
+  // memberships the caller actually has.
+  const activeMembershipCount =
+    showsAuthenticatedSession && kind !== "invalid_selection"
+      ? input.activeMembershipCount
+      : 0;
 
   return {
     kind,
