@@ -12,10 +12,12 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 const webRoot = fileURLToPath(new URL("..", import.meta.url));
 const outputDir = path.join(webRoot, ".vercel", "output");
+const require = createRequire(import.meta.url);
 
 function fail(message) {
   console.error(`\n✗ Vercel output verification failed: ${message}\n`);
@@ -30,6 +32,19 @@ function readJson(filePath, label) {
     return JSON.parse(readFileSync(filePath, "utf8"));
   } catch (error) {
     fail(`${label} at ${path.relative(webRoot, filePath)} is not valid JSON: ${error.message}`);
+  }
+}
+
+const middlewarePath = path.join(webRoot, "middleware.ts");
+if (existsSync(middlewarePath) && readFileSync(middlewarePath, "utf8").includes('from "next/server"')) {
+  const packageJson = readJson(path.join(webRoot, "package.json"), "package.json");
+  if (!packageJson.dependencies?.next) {
+    fail("middleware.ts imports next/server, so next must be a production dependency for Vercel's separately bundled middleware");
+  }
+  try {
+    require.resolve("next/server");
+  } catch {
+    fail("middleware.ts imports next/server, but that runtime entry point cannot be resolved");
   }
 }
 

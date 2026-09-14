@@ -577,3 +577,24 @@ mechanically verifiable — the diff output is reproducible via `supabase
 config diff` and requires no credential to inspect); a human with Supabase
 Dashboard access for the pending log review, the `sender_name` correction,
 and the Resend tracking check.
+
+## Production follow-up — 2026-09-14
+
+The human owner approved full TASK-022 completion, confirmed the SMTP sender
+name was corrected to `MITIGA`, and approved `leduardoreis15@gmail.com`
+exclusively as the end-to-end test recipient.
+
+After the TASK-022 integration commit was promoted, Vercel reported the
+deployment as ready but every public route returned HTTP 500. Runtime logs
+identified `ERR_MODULE_NOT_FOUND` for `next`, imported by
+`apps/web/middleware.ts`. Vinext's local and Build Output API checks had not
+covered Vercel's separate root-middleware bundling path. The correction adds
+the exact Next runtime package as a production dependency and makes
+`verify:vercel` fail when a `next/server` middleware import lacks a declared,
+resolvable runtime dependency.
+
+This follow-up changes no authentication policy, tenant boundary, hosted
+Supabase configuration, data, migration, email template, or secret. Rollback
+is the follow-up commit plus promotion of the preceding known-good deployment.
+The approved recovery email must only be sent after the corrected public
+deployment passes route smoke checks.
