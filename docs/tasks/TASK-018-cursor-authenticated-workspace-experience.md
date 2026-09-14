@@ -118,3 +118,84 @@ to this file with outcome, branch and commits, files changed, decisions and
 assumptions, exact checks, security/tenant/privacy/audit impact,
 migration/rollback notes, known limitations, screenshots if available, and
 recommended reviewer.
+
+## Handoff notes (Cursor)
+
+Outcome:
+Implemented in full. `/workspace` now presents the existing real access
+states (platform administrator, one or more active memberships, no
+membership) plus configuration-unavailable and membership-read failure,
+using reusable server-safe components and a pure view model. Tenant names,
+IDs, roles, capabilities, and operational records are not rendered. Sample
+data remains a visibly fictional preview. No merge or deploy was made.
+
+Branch and commit:
+`feat/cursor-authenticated-workspace-experience` from
+`origin/preview/vercel-adapter` (`bd86439`). Commits: `760e888` feat(web);
+this commit docs(task).
+
+Files changed:
+- `apps/web/app/workspace/page.tsx`
+- `apps/web/components/workspace/workspace-experience.tsx`
+- `apps/web/components/workspace/workspace-frame.tsx`
+- `apps/web/components/workspace/workspace-status.tsx`
+- `apps/web/components/workspace/workspace-demo-preview.tsx`
+- `apps/web/components/workspace/workspace-session-actions.tsx`
+- `apps/web/lib/domain/workspace-access.ts`
+- `apps/web/lib/i18n/messages.ts`
+- `apps/web/lib/i18n/workspace.ts`
+- `apps/web/tests/domain/workspace-access.test.ts`
+- `apps/web/tests/app/workspace-component-boundary.test.ts`
+- `docs/tasks/TASK-018-cursor-authenticated-workspace-experience.md`
+
+Decisions and assumptions:
+- `requireAuthenticatedIdentity()` still runs before authenticated content;
+  missing public config is classified first and never falls back to a
+  fictional session.
+- The existing `memberships` count query is unchanged; its `error` now maps
+  to `read_failure` instead of a silent empty count.
+- Presentation receives only a server-built view model. Components do not
+  import Supabase, read URL/search params, or infer authorization.
+- Copy states that tenant-specific navigation waits for server-selected
+  tenant context (TASK-019 is not anticipated).
+- English pluralization uses `one` vs `other` (count === 1 vs rest).
+- Tests use the fictional address `example@demo.mitiga.local` only.
+
+Checks run and exact results:
+- `cd apps/web && npm test` — 106 tests, 0 fail.
+- `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed (no diagnostics).
+- `cd apps/web && npm run verify:vercel` — `.vercel/output` is genuine Vercel
+  Build Output API v3 (config.json v3, Node.js function, static/_next bundle).
+- `./scripts/check-secrets.sh` — Secret check passed.
+- `./scripts/verify-web.sh` — oxlint clean; `vinext build` succeeded; Web
+  verification passed. Route list still includes `/workspace`.
+- Browser inspection of `/workspace` at narrow and wide viewports was not
+  available in this agent session (no browser tools). Screenshots were not
+  captured.
+
+Security/tenant/audit impact:
+- Tenant isolation: unchanged; only an aggregate membership count is shown.
+- Authorization: unchanged and server-side; UI state is not authorization.
+- Privacy: verified email remains the only personal value displayed; it is
+  not logged and is not copied into fixtures except the fictional demo
+  address above.
+- Auditability: no auditable business mutation occurs. Sign-out remains the
+  existing Server Action.
+- No new Supabase queries, RLS, RPCs, migrations, hosted Auth, Vercel, or
+  secret changes.
+
+Migration and rollback notes:
+- No migrations. Rollback is revert of the task commits. No deploy was made.
+
+Known limitations:
+- `/workspace` still does not select a tenant or expose tenant-scoped
+  navigation; that remains TASK-019.
+- Membership read failure is only observable when the existing count query
+  returns an error for a non-platform-admin identity.
+- Visual keyboard/focus verification at 375px and desktop widths was not
+  performed here.
+
+Recommended reviewer:
+Codex (merge owner), with an independent check that `/workspace` still
+fail-closes via `requireAuthenticatedIdentity()`, never renders tenant
+context, and that workspace components stay free of Supabase imports.
