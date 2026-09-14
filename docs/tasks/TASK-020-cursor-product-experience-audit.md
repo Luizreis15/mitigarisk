@@ -105,3 +105,65 @@ Use Conventional Commits, do not merge or deploy, and append the standard
 handoff to this file. Include report path, audited SHA, exact checks, finding
 counts by severity, limitations, security/tenant/privacy impact, rollback, and
 recommended reviewer. The recommended reviewer is Codex.
+
+## Handoff notes (Cursor)
+
+Outcome:
+Independent product/experience audit completed for the frozen baseline.
+No application code, migrations, hosted systems, or secrets were changed.
+No merge or deploy was made.
+
+Branch and commit:
+`audit/cursor-product-experience-2026-09-13` from annotated tag
+`audit-baseline-2026-09-13-r2` (`93d02fd8b206e0dea2b36af0dec9f1e91847196a`).
+Commits: `fe949ee` docs(audit); `2b94364` docs(task); this follow-up
+adds CUR-024–CUR-030.
+
+Report path:
+`docs/audits/2026-09-13-cursor-product-experience-audit.md`
+
+Audited SHA:
+`93d02fd8b206e0dea2b36af0dec9f1e91847196a` (confirmed via
+`git rev-parse 'audit-baseline-2026-09-13-r2^{commit}'`).
+
+Files changed:
+- `docs/audits/2026-09-13-cursor-product-experience-audit.md`
+- `docs/tasks/TASK-020-cursor-product-experience-audit.md`
+
+Finding counts by severity:
+critical 0, high 4, medium 13, low 6, observation 7 (CUR-001–CUR-030).
+
+Decisions and assumptions:
+- Annotated tag object SHA differs from the commit SHA; the peeled commit
+  matches the contract, so the audit proceeded.
+- ADR 0010’s ungated demo is treated as an accepted limitation except where
+  `/workspace` deep-links into fixture “Signed in as” identity (CUR-001).
+- TASK-019 remains unimplemented; that is a planned gap, not a TASK-018
+  regression.
+- Browser inspection was unavailable; a11y/responsive items that need a
+  headed pass are labeled as such.
+
+Checks run and exact results:
+- `cd apps/web && npm test` — 106 tests, 0 fail.
+- `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed, no diagnostics.
+- `cd apps/web && npm run build` — vinext build succeeded; `/workspace` present.
+- `cd apps/web && npm run verify:vercel` — genuine Vercel Build Output API v3.
+- `./scripts/check-secrets.sh` — Secret check passed.
+- `./scripts/verify-web.sh` — oxlint clean; vinext build succeeded; Web
+  verification passed.
+- Browser inspection and screenshots: unavailable.
+
+Security/tenant/audit impact:
+Documentation only. Tenant isolation unchanged. `.env` not read. Hosted
+Supabase/Vercel not accessed. No credentials requested.
+
+Migration and rollback notes:
+No migrations. Rollback is revert of the documentation commits on this
+branch.
+
+Known limitations:
+No headed browser pass. TASK-015 Development checklist not re-run. Depth of
+RLS/cookies deferred to TASK-021.
+
+Recommended reviewer:
+Codex.
