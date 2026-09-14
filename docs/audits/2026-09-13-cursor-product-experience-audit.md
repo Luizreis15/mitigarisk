@@ -114,342 +114,342 @@ Findings are severity-ranked. IDs are stable `CUR-###`.
 
 ### CUR-001 — Real session can be shown a fictional signed-in identity
 
-- **Severity:** high  
-- **Confidence:** high  
-- **Classification:** pre-MVP (release blocker **if** the preview URL is treated as a customer-facing product; otherwise accepted limitation until a human decides demo hosting)  
-- **Owner:** Cursor (chrome/copy) + human decision (whether demo stays on the same origin)  
-- **Affected:** `apps/web/components/workspace/workspace-demo-preview.tsx` 21–27; `apps/web/app/tenants/page.tsx` 41–44; `apps/web/lib/demo/session.ts` 8–12; `apps/web/lib/i18n/messages.ts` 544 (`tenants.actorLine`: “Signed in as {name} · {email}”).  
-- **Evidence:** Authenticated `/workspace` links to `/tenants`. That page interpolates `sessionActor.name` / `sessionActor.email` (`elena.park@demo.mitiga.local`) as “Signed in as”. Prototype banner says no authentication is connected (`messages.prototype.notice`), which **contradicts** a user who just authenticated.  
-- **Impact:** Users (or reviewers) can believe MITIGA swapped their account for Elena Park, or that sample companies are theirs. Trust and support load; not a leak of other tenants’ real data.  
-- **Remediation:** If a verified session exists, demo chrome must not use “Signed in as” with fixture identity; use “Viewing fictional sample data” and keep the real email distinct or omit actor impersonation. Alternatively host demo on a separate preview.  
+- **Severity:** high
+- **Confidence:** high
+- **Classification:** pre-MVP (release blocker **if** the preview URL is treated as a customer-facing product; otherwise accepted limitation until a human decides demo hosting)
+- **Owner:** Cursor (chrome/copy) + human decision (whether demo stays on the same origin)
+- **Affected:** `apps/web/components/workspace/workspace-demo-preview.tsx` 21–27; `apps/web/app/tenants/page.tsx` 41–44; `apps/web/lib/demo/session.ts` 8–12; `apps/web/lib/i18n/messages.ts` 544 (`tenants.actorLine`: “Signed in as {name} · {email}”).
+- **Evidence:** Authenticated `/workspace` links to `/tenants`. That page interpolates `sessionActor.name` / `sessionActor.email` (`elena.park@demo.mitiga.local`) as “Signed in as”. Prototype banner says no authentication is connected (`messages.prototype.notice`), which **contradicts** a user who just authenticated.
+- **Impact:** Users (or reviewers) can believe MITIGA swapped their account for Elena Park, or that sample companies are theirs. Trust and support load; not a leak of other tenants’ real data.
+- **Remediation:** If a verified session exists, demo chrome must not use “Signed in as” with fixture identity; use “Viewing fictional sample data” and keep the real email distinct or omit actor impersonation. Alternatively host demo on a separate preview.
 - **Acceptance:** With a real session cookie, `/tenants` never claims the fixture actor is the signed-in user. Browser check at 375px and desktop.
 
 ### CUR-002 — Prototype “Sign out” does not sign out
 
-- **Severity:** high  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/components/prototype/workspace-chrome.tsx` 36–38; `apps/web/components/prototype/app-shell.tsx` 308–314, 411–413.  
-- **Evidence:** Controls labeled `messages.nav.signOut` are `Link href="/"`, not `signOutAction`. Real sign-out exists only on `/workspace` (`workspace-session-actions.tsx`). TASK-015 checklist item 8 verifies sign-out **from `/workspace` only**.  
-- **Impact:** After CUR-001, a user who “signs out” from demo chrome keeps cookies; `/workspace` still shows their email.  
-- **Remediation:** Rename demo control to “Back to sign-in” when no session; if a session exists, call `signOutAction` or hide demo sign-out.  
+- **Severity:** high
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/components/prototype/workspace-chrome.tsx` 36–38; `apps/web/components/prototype/app-shell.tsx` 308–314, 411–413.
+- **Evidence:** Controls labeled `messages.nav.signOut` are `Link href="/"`, not `signOutAction`. Real sign-out exists only on `/workspace` (`workspace-session-actions.tsx`). TASK-015 checklist item 8 verifies sign-out **from `/workspace` only**.
+- **Impact:** After CUR-001, a user who “signs out” from demo chrome keeps cookies; `/workspace` still shows their email.
+- **Remediation:** Rename demo control to “Back to sign-in” when no session; if a session exists, call `signOutAction` or hide demo sign-out.
 - **Acceptance:** After using the control with a real session, `/workspace` redirects to `/`.
 
 ### CUR-003 — TASK-019 tenant boundary is absent; operational UI is not a product workspace
 
-- **Severity:** high  
-- **Confidence:** high  
-- **Classification:** pre-MVP (expected next backend/UI slice; not a regression of TASK-018)  
-- **Owner:** Claude Code (boundary) then Cursor (presentation)  
-- **Affected:** no `apps/web/middleware.ts`; `apps/web/app/workspace/page.tsx` has no tenant picker; all `/company/**`, `/operator`, `/cases/**`, `/entities/**`, `/evaluations/**`, `/policies/**`, `/super-admin/**` are client fixture pages.  
-- **Evidence:** TASK-019 requires session-refresh middleware and server-validated tenant selection on `/workspace`. Workspace copy already says tenant navigation waits for the server (`messages.workspace.tenantContextUnavailable`).  
-- **Impact:** The 35-day MVP cannot offer Company/Operator work on real memberships yet. Preview users may still **think** `/company` is that work (banner mitigates; CUR-001 weakens the mitigation).  
-- **Remediation:** Implement TASK-019 exactly; do not gate fixture routes with real auth while they still render Elena Park (ADR 0010).  
+- **Severity:** high
+- **Confidence:** high
+- **Classification:** pre-MVP (expected next backend/UI slice; not a regression of TASK-018)
+- **Owner:** Claude Code (boundary) then Cursor (presentation)
+- **Affected:** no `apps/web/middleware.ts`; `apps/web/app/workspace/page.tsx` has no tenant picker; all `/company/**`, `/operator`, `/cases/**`, `/entities/**`, `/evaluations/**`, `/policies/**`, `/super-admin/**` are client fixture pages.
+- **Evidence:** TASK-019 requires session-refresh middleware and server-validated tenant selection on `/workspace`. Workspace copy already says tenant navigation waits for the server (`messages.workspace.tenantContextUnavailable`).
+- **Impact:** The 35-day MVP cannot offer Company/Operator work on real memberships yet. Preview users may still **think** `/company` is that work (banner mitigates; CUR-001 weakens the mitigation).
+- **Remediation:** Implement TASK-019 exactly; do not gate fixture routes with real auth while they still render Elena Park (ADR 0010).
 - **Acceptance:** TASK-019 automated matrix plus workspace tenant selection without URL-trusted tenant IDs.
 
 ### CUR-004 — Password recovery has no complete-reset surface
 
-- **Severity:** high  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor + Claude Code; **human** must approve Auth redirect URLs / templates (protected)  
-- **Affected:** `apps/web/app/reset-password/page.tsx`; `requestPasswordResetAction` in `auth-actions.ts`; no `updateUser` / recovery session handler under `apps/web`.  
-- **Evidence:** TASK-015 checklist item 9 only confirms the request success copy. Search of `apps/web` finds no recovery token exchange or new-password form.  
-- **Impact:** A Development user who receives a reset email has no in-app place to set a new password.  
-- **Remediation:** Add a recovery completion route that uses the verified session from the email link; keep non-enumeration on the request form.  
+- **Severity:** high
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor + Claude Code; **human** must approve Auth redirect URLs / templates (protected)
+- **Affected:** `apps/web/app/reset-password/page.tsx`; `requestPasswordResetAction` in `auth-actions.ts`; no `updateUser` / recovery session handler under `apps/web`.
+- **Evidence:** TASK-015 checklist item 9 only confirms the request success copy. Search of `apps/web` finds no recovery token exchange or new-password form.
+- **Impact:** A Development user who receives a reset email has no in-app place to set a new password.
+- **Remediation:** Add a recovery completion route that uses the verified session from the email link; keep non-enumeration on the request form.
 - **Acceptance:** Documented redirect; form pending/error; no email existence leak.
 
 ### CUR-005 — Helix Company flow opens Northstar entity intake
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP (prototype quality)  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/company/page.tsx` 139–144; `apps/web/lib/demo/entity-intake.ts` 51, 118–128; `apps/web/lib/demo/data.ts` 12–18.  
-- **Evidence:** Company heading is Helix Commerce Ltd.; Create evaluation → `/evaluations/new`; intake tenant is `northstarCompany`; capability helper reads `mem_helix_company`.  
-- **Impact:** Reviewers cannot tell which fictional company owns intake; future wiring may copy the wrong tenant.  
-- **Remediation:** Drive intake from the same demo tenant as Company, or label the jump as “Northstar demonstration”.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP (prototype quality)
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/company/page.tsx` 139–144; `apps/web/lib/demo/entity-intake.ts` 51, 118–128; `apps/web/lib/demo/data.ts` 12–18.
+- **Evidence:** Company heading is Helix Commerce Ltd.; Create evaluation → `/evaluations/new`; intake tenant is `northstarCompany`; capability helper reads `mem_helix_company`.
+- **Impact:** Reviewers cannot tell which fictional company owns intake; future wiring may copy the wrong tenant.
+- **Remediation:** Drive intake from the same demo tenant as Company, or label the jump as “Northstar demonstration”.
 - **Acceptance:** One tenant name from Company CTA through entity list and intake.
 
 ### CUR-006 — Company workspace unions two tenants’ capabilities
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/company/page.tsx` 74–83.  
-- **Evidence:** Capabilities flatten `mem_helix_company` **or** `mem_northstar_admin`. Role switcher can then expose Company Admin because `tenant.manage_members` is present.  
-- **Impact:** Demo “authorization” looks cross-tenant. UI hiding is already not authorization; this also confuses the story.  
-- **Remediation:** Scope Company overview to Helix membership only; Admin to Northstar.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/company/page.tsx` 74–83.
+- **Evidence:** Capabilities flatten `mem_helix_company` **or** `mem_northstar_admin`. Role switcher can then expose Company Admin because `tenant.manage_members` is present.
+- **Impact:** Demo “authorization” looks cross-tenant. UI hiding is already not authorization; this also confuses the story.
+- **Remediation:** Scope Company overview to Helix membership only; Admin to Northstar.
 - **Acceptance:** Helix Company view cannot open `/company/admin` via role switcher unless that membership is the selected demo context.
 
 ### CUR-007 — Duplicate Platform Super Admin surfaces
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/super-admin/page.tsx`; `apps/web/app/super-admin/tenants/page.tsx`; `apps/web/lib/demo/labels.ts` 9.  
-- **Evidence:** TASK-017 handoff notes leftover usage meters on `/super-admin` vs new governance directory. Role switcher targets `/super-admin`, not `/super-admin/tenants`.  
-- **Impact:** Two “platform” homes; governance can be missed.  
-- **Remediation:** Make `/super-admin` a hub that links to tenants governance, or redirect.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/super-admin/page.tsx`; `apps/web/app/super-admin/tenants/page.tsx`; `apps/web/lib/demo/labels.ts` 9.
+- **Evidence:** TASK-017 handoff notes leftover usage meters on `/super-admin` vs new governance directory. Role switcher targets `/super-admin`, not `/super-admin/tenants`.
+- **Impact:** Two “platform” homes; governance can be missed.
+- **Remediation:** Make `/super-admin` a hub that links to tenants governance, or redirect.
 - **Acceptance:** One primary Super Admin landing; governance reachable in one click.
 
 ### CUR-008 — Duplicate case queues (Company page vs `/cases`)
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** post-MVP unless it blocks operator training  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/company/page.tsx` (in-page cases/alerts); `apps/web/app/cases/page.tsx`; `apps/web/components/prototype/app-shell.tsx` 56–61 (Company nav scrolls in-page; does not link `/cases`).  
-- **Evidence:** Operator workbench is a separate route; Company nav “Cases” is `scrollToSection`.  
-- **Impact:** Two case UIs with different filters.  
-- **Remediation:** Company “Cases” links to `/cases` or a single in-page module; document operator vs company.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** post-MVP unless it blocks operator training
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/company/page.tsx` (in-page cases/alerts); `apps/web/app/cases/page.tsx`; `apps/web/components/prototype/app-shell.tsx` 56–61 (Company nav scrolls in-page; does not link `/cases`).
+- **Evidence:** Operator workbench is a separate route; Company nav “Cases” is `scrollToSection`.
+- **Impact:** Two case UIs with different filters.
+- **Remediation:** Company “Cases” links to `/cases` or a single in-page module; document operator vs company.
 - **Acceptance:** One queue per role in the demo.
 
 ### CUR-009 — Document identity still says “prototype” on real auth routes
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/lib/i18n/messages.ts` 4–8; `apps/web/app/layout.tsx` 8–10 (title/description applied globally).  
-- **Evidence:** `messages.meta.title` is “MITIGA — risk management prototype”; description lists login and workspace selection as a navigable prototype. Real `/` and `/workspace` inherit this.  
-- **Impact:** Browser tab and SEO/bookmark text undercut TASK-015/018 honesty.  
-- **Remediation:** Route-level titles: sign-in / workspace vs “Demonstration preview”.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/lib/i18n/messages.ts` 4–8; `apps/web/app/layout.tsx` 8–10 (title/description applied globally).
+- **Evidence:** `messages.meta.title` is “MITIGA — risk management prototype”; description lists login and workspace selection as a navigable prototype. Real `/` and `/workspace` inherit this.
+- **Impact:** Browser tab and SEO/bookmark text undercut TASK-015/018 honesty.
+- **Remediation:** Route-level titles: sign-in / workspace vs “Demonstration preview”.
 - **Acceptance:** `/` and `/workspace` titles do not say the authenticated account is a prototype; demo routes may.
 
 ### CUR-010 — Frontend behavior is almost untested
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/tests/**` — 24 files, all Node `node:test`; no page render tests for prototype; workspace tests are classifier + import boundary only.  
-- **Evidence:** `workspace-component-boundary.test.ts` reads source text; no assertion that `/workspace` renders `no_membership` copy. Prototype pages have no tests.  
-- **Impact:** Copy/navigation regressions will not fail CI.  
-- **Remediation:** Add source-boundary tests for prototype “Sign out” href vs Server Action; optional shallow render tests for view-model → catalog.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/tests/**` — 24 files, all Node `node:test`; no page render tests for prototype; workspace tests are classifier + import boundary only.
+- **Evidence:** `workspace-component-boundary.test.ts` reads source text; no assertion that `/workspace` renders `no_membership` copy. Prototype pages have no tests.
+- **Impact:** Copy/navigation regressions will not fail CI.
+- **Remediation:** Add source-boundary tests for prototype “Sign out” href vs Server Action; optional shallow render tests for view-model → catalog.
 - **Acceptance:** A broken `actorLine` or workspace kind mapping fails `npm test`.
 
 ### CUR-011 — Duplicate TASK-005 contract without handoff
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** accepted documentation debt / pre-MVP hygiene  
-- **Owner:** Codex  
-- **Affected:** `docs/tasks/TASK-005-cursor-authenticated-product-shell.md` vs `docs/tasks/TASK-005-cursor-authenticated-shell.md`.  
-- **Evidence:** Same objective; only the latter has Cursor handoff.  
-- **Impact:** Agents may implement the shell twice or treat demo `/tenants` as TASK-019.  
-- **Remediation:** Mark the duplicate as superseded.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** accepted documentation debt / pre-MVP hygiene
+- **Owner:** Codex
+- **Affected:** `docs/tasks/TASK-005-cursor-authenticated-product-shell.md` vs `docs/tasks/TASK-005-cursor-authenticated-shell.md`.
+- **Evidence:** Same objective; only the latter has Cursor handoff.
+- **Impact:** Agents may implement the shell twice or treat demo `/tenants` as TASK-019.
+- **Remediation:** Mark the duplicate as superseded.
 - **Acceptance:** One canonical TASK-005 pointer.
 
 ### CUR-012 — Keyboard/semantics gaps on demo workbench and Suspense
 
-- **Severity:** medium  
-- **Confidence:** medium (code fact; browser unconfirmed)  
-- **Classification:** pre-MVP a11y  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/cases/page.tsx` 76–93 (`role="tablist"` on links with `aria-current="page"`, no `role="tab"` / `aria-selected`); `apps/web/app/denied/page.tsx` 65–67 and several pages wrap `useSearchParams` in `Suspense` **without** fallback (`company/page.tsx` 63–67, `operator/page.tsx` 41–45, `policies/page.tsx` 34–38).  
-- **Evidence:** Intake/admin/governance loading views use `aria-busy`/`aria-live`; company/operator/cases do not.  
-- **Impact:** Screen readers get a fake tablist; possible blank flash on filter pages.  
-- **Remediation:** Use tabs correctly or a labeled radio/link group; add `Suspense` fallbacks.  
+- **Severity:** medium
+- **Confidence:** medium (code fact; browser unconfirmed)
+- **Classification:** pre-MVP a11y
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/cases/page.tsx` 76–93 (`role="tablist"` on links with `aria-current="page"`, no `role="tab"` / `aria-selected`); `apps/web/app/denied/page.tsx` 65–67 and several pages wrap `useSearchParams` in `Suspense` **without** fallback (`company/page.tsx` 63–67, `operator/page.tsx` 41–45, `policies/page.tsx` 34–38).
+- **Evidence:** Intake/admin/governance loading views use `aria-busy`/`aria-live`; company/operator/cases do not.
+- **Impact:** Screen readers get a fake tablist; possible blank flash on filter pages.
+- **Remediation:** Use tabs correctly or a labeled radio/link group; add `Suspense` fallbacks.
 - **Acceptance:** Keyboard and SR pass on `/cases` and `/company` (needs browser).
 
 ### CUR-013 — Sign-in page ignores an existing session
 
-- **Severity:** medium  
-- **Confidence:** high for code; medium for UX impact  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/page.tsx` (only `hasPublicSupabaseConfig()`).  
-- **Evidence:** No `getUser()` / redirect to `/workspace` when a cookie exists. Demo entry remains.  
-- **Impact:** Signed-in users can submit the form again or enter sample data without a session reminder.  
-- **Remediation:** If session valid, offer “Continue to workspace” and keep demo clearly secondary.  
+- **Severity:** medium
+- **Confidence:** high for code; medium for UX impact
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/page.tsx` (only `hasPublicSupabaseConfig()`).
+- **Evidence:** No `getUser()` / redirect to `/workspace` when a cookie exists. Demo entry remains.
+- **Impact:** Signed-in users can submit the form again or enter sample data without a session reminder.
+- **Remediation:** If session valid, offer “Continue to workspace” and keep demo clearly secondary.
 - **Acceptance:** With a valid cookie, `/` does not look like a cold start (browser).
 
 ### CUR-014 — Mobile shell drops navigation items
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/components/prototype/app-shell.tsx` 294–314 (`items.slice(0, 3)` plus Sign out).  
-- **Evidence:** Company-admin has more than three destinations (`app-shell.tsx` 62–80).  
-- **Impact:** Members/governance links may exist only in the desktop/sheet menu.  
-- **Remediation:** Overflow “More” sheet on small viewports.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/components/prototype/app-shell.tsx` 294–314 (`items.slice(0, 3)` plus Sign out).
+- **Evidence:** Company-admin has more than three destinations (`app-shell.tsx` 62–80).
+- **Impact:** Members/governance links may exist only in the desktop/sheet menu.
+- **Remediation:** Overflow “More” sheet on small viewports.
 - **Acceptance:** All role routes reachable at 375px width (browser).
 
 ### CUR-015 — Demo role switcher presents workspace switching as product navigation
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** accepted limitation if banner stays; else pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/components/prototype/app-shell.tsx` 348–366; `messages.nav.switchView`.  
-- **Evidence:** Switching uses `rolePaths` links, filtered by the **page-supplied** capability list, not a server.  
-- **Impact:** Fine for a prototype; harmful if CUR-001 is unfixed.  
-- **Remediation:** Label as “Demonstration workspace”.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** accepted limitation if banner stays; else pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/components/prototype/app-shell.tsx` 348–366; `messages.nav.switchView`.
+- **Evidence:** Switching uses `rolePaths` links, filtered by the **page-supplied** capability list, not a server.
+- **Impact:** Fine for a prototype; harmful if CUR-001 is unfixed.
+- **Remediation:** Label as “Demonstration workspace”.
 - **Acceptance:** Visible “fictional” wording next to the switcher.
 
 ### CUR-016 — Prior UI tasks never browser-verified `/workspace` or new governance
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** process  
-- **Owner:** Cursor / Codex  
-- **Affected:** TASK-018 handoff (browser unavailable); TASK-017 same.  
-- **Evidence:** Task files state no screenshots. This audit also had no browser.  
-- **Impact:** Responsive/focus regressions possible despite passing builds.  
-- **Remediation:** Human or headed browser pass of `/`, `/workspace`, `/tenants`, `/company`, `/cases`, `/super-admin/tenants`.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** process
+- **Owner:** Cursor / Codex
+- **Affected:** TASK-018 handoff (browser unavailable); TASK-017 same.
+- **Evidence:** Task files state no screenshots. This audit also had no browser.
+- **Impact:** Responsive/focus regressions possible despite passing builds.
+- **Remediation:** Human or headed browser pass of `/`, `/workspace`, `/tenants`, `/company`, `/cases`, `/super-admin/tenants`.
 - **Acceptance:** Written checklist with viewport widths.
 
 ### CUR-017 — Demo denied/invite authorization from the URL
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** accepted limitation (ADR 0010 / TASK-005) **until** routes become real  
-- **Owner:** n/a while demo; Claude+Cursor when converting  
-- **Affected:** `apps/web/app/denied/page.tsx` 34–39; `apps/web/app/invite/page.tsx` 21–22; `state=` query on members/entities/governance.  
-- **Evidence:** `useSearchParams` selects capability, membership id, or empty/denied/loading.  
-- **Impact:** None for real data; must not be copied into TASK-019.  
-- **Remediation:** Keep conversion off these patterns.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** accepted limitation (ADR 0010 / TASK-005) **until** routes become real
+- **Owner:** n/a while demo; Claude+Cursor when converting
+- **Affected:** `apps/web/app/denied/page.tsx` 34–39; `apps/web/app/invite/page.tsx` 21–22; `state=` query on members/entities/governance.
+- **Evidence:** `useSearchParams` selects capability, membership id, or empty/denied/loading.
+- **Impact:** None for real data; must not be copied into TASK-019.
+- **Remediation:** Keep conversion off these patterns.
 - **Acceptance:** TASK-019 tests forbid URL-trusted tenant/capability.
 
 ### CUR-024 — Fixture narrative copy lives outside the message catalog
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP (ADR 0002)  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/lib/demo/data.ts` (evaluation `recommendation`, alert titles, case `lastNote`); rendered on `/cases/:id` and Company/Operator tables.  
-- **Evidence:** User-visible English is stored on fixture objects rather than `messages.ts`. ADR 0002 requires externalized runtime copy.  
-- **Impact:** Future locale work and copy review miss operational sentences.  
-- **Remediation:** Move displayed fixture sentences into the catalog keyed by stable IDs.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP (ADR 0002)
+- **Owner:** Cursor
+- **Affected:** `apps/web/lib/demo/data.ts` (evaluation `recommendation`, alert titles, case `lastNote`); rendered on `/cases/:id` and Company/Operator tables.
+- **Evidence:** User-visible English is stored on fixture objects rather than `messages.ts`. ADR 0002 requires externalized runtime copy.
+- **Impact:** Future locale work and copy review miss operational sentences.
+- **Remediation:** Move displayed fixture sentences into the catalog keyed by stable IDs.
 - **Acceptance:** No user-facing sentence remains only in `lib/demo/data.ts`.
 
 ### CUR-025 — Escalate toast can be read as a real notification
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/lib/i18n/messages.ts` 493 (`toastEscalateBody`: “A fictional analyst was notified.”); `apps/web/app/operator/page.tsx`.  
-- **Evidence:** Past tense “was notified” plus “fictional analyst” still asserts a notify event. Other toasts say “No message was sent.”  
-- **Impact:** Weaker honesty than adjacent operator actions.  
-- **Remediation:** Align with “No message was sent.”  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/lib/i18n/messages.ts` 493 (`toastEscalateBody`: “A fictional analyst was notified.”); `apps/web/app/operator/page.tsx`.
+- **Evidence:** Past tense “was notified” plus “fictional analyst” still asserts a notify event. Other toasts say “No message was sent.”
+- **Impact:** Weaker honesty than adjacent operator actions.
+- **Remediation:** Align with “No message was sent.”
 - **Acceptance:** Escalate copy does not claim a notification occurred.
 
 ### CUR-026 — Platform tenant detail opens global Helix Company/Operator, not that tenant
 
-- **Severity:** medium  
-- **Confidence:** high  
-- **Classification:** pre-MVP  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/super-admin/tenants/[id]/page.tsx` 274–278 (`Link` to `/company` and `/operator`).  
-- **Evidence:** Buttons sit on a specific governed tenant row but always open Helix fixture workspaces (`currentTenant`).  
-- **Impact:** Reviewers infer platform support can open that tenant’s operations (TASK-017 copy elsewhere denies impersonation).  
-- **Remediation:** Label as “Open Helix demonstration” or remove until TASK-019.  
+- **Severity:** medium
+- **Confidence:** high
+- **Classification:** pre-MVP
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/super-admin/tenants/[id]/page.tsx` 274–278 (`Link` to `/company` and `/operator`).
+- **Evidence:** Buttons sit on a specific governed tenant row but always open Helix fixture workspaces (`currentTenant`).
+- **Impact:** Reviewers infer platform support can open that tenant’s operations (TASK-017 copy elsewhere denies impersonation).
+- **Remediation:** Label as “Open Helix demonstration” or remove until TASK-019.
 - **Acceptance:** The destination tenant name matches the row, or the control is clearly sample-only.
 
 ### CUR-027 — In-page nav smooth-scroll ignores `prefers-reduced-motion`
 
-- **Severity:** medium  
-- **Confidence:** high for code; browser unconfirmed for impact  
-- **Classification:** pre-MVP a11y  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/components/prototype/app-shell.tsx` 100–102 vs `apps/web/app/globals.css` reduced-motion rules that do not cover JS `scrollIntoView`.  
-- **Evidence:** `behavior: 'smooth'` is unconditional.  
-- **Impact:** Vestibular/motion-sensitive users get animated jumps on Company/Operator section nav.  
-- **Remediation:** Use `auto` when `matchMedia('(prefers-reduced-motion: reduce)')`.  
+- **Severity:** medium
+- **Confidence:** high for code; browser unconfirmed for impact
+- **Classification:** pre-MVP a11y
+- **Owner:** Cursor
+- **Affected:** `apps/web/components/prototype/app-shell.tsx` 100–102 vs `apps/web/app/globals.css` reduced-motion rules that do not cover JS `scrollIntoView`.
+- **Evidence:** `behavior: 'smooth'` is unconditional.
+- **Impact:** Vestibular/motion-sensitive users get animated jumps on Company/Operator section nav.
+- **Remediation:** Use `auto` when `matchMedia('(prefers-reduced-motion: reduce)')`.
 - **Acceptance:** Browser check with reduced-motion enabled.
 
 ### CUR-028 — Case “record decision” updates only an in-memory timeline
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** accepted demo limitation unless copy claims the card changed  
-- **Owner:** Cursor  
-- **Affected:** `apps/web/app/cases/[id]/page.tsx` 72–90 vs the decision card still reading fixture `recordedDecision`.  
-- **Evidence:** `append` pushes `local_*` events; the decision summary field is not updated. TASK-008 already said fixtures are not the source of truth.  
-- **Impact:** Timeline looks like an audit log of a decision the summary does not show.  
-- **Remediation:** Disable the summary, or keep both views in sync locally, with existing “never persist” copy.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** accepted demo limitation unless copy claims the card changed
+- **Owner:** Cursor
+- **Affected:** `apps/web/app/cases/[id]/page.tsx` 72–90 vs the decision card still reading fixture `recordedDecision`.
+- **Evidence:** `append` pushes `local_*` events; the decision summary field is not updated. TASK-008 already said fixtures are not the source of truth.
+- **Impact:** Timeline looks like an audit log of a decision the summary does not show.
+- **Remediation:** Disable the summary, or keep both views in sync locally, with existing “never persist” copy.
 - **Acceptance:** After a local decision action, summary and timeline do not contradict.
 
 ### CUR-029 — TASK-003 has no handoff section
 
-- **Severity:** low  
-- **Confidence:** high  
-- **Classification:** documentation hygiene  
-- **Owner:** Codex  
-- **Affected:** `docs/tasks/TASK-003-codex-integration-foundation.md`.  
-- **Evidence:** File ends at acceptance criteria; `scripts/check-secrets.sh` and `quality.yml` exist.  
-- **Impact:** Merge history of the integration gates is not reconstructible from the contract.  
-- **Remediation:** Append a late handoff pointing at the commits that landed the scripts.  
+- **Severity:** low
+- **Confidence:** high
+- **Classification:** documentation hygiene
+- **Owner:** Codex
+- **Affected:** `docs/tasks/TASK-003-codex-integration-foundation.md`.
+- **Evidence:** File ends at acceptance criteria; `scripts/check-secrets.sh` and `quality.yml` exist.
+- **Impact:** Merge history of the integration gates is not reconstructible from the contract.
+- **Remediation:** Append a late handoff pointing at the commits that landed the scripts.
 - **Acceptance:** TASK-003 contains Outcome / Checks like sibling tasks.
 
 ### CUR-030 — Recommendation vocabulary is not one product glossary (positive-adjacent)
 
-- **Severity:** observation  
-- **Confidence:** medium  
-- **Classification:** pre-MVP copy alignment, not a defect until a human picks terms  
-- **Owner:** human (risk-decision language) then Cursor  
-- **Evidence:** ADR 0007 / engine use `approve` / `review` / `reject`. TASK-010 UI uses “accept path / additional evidence.” Case actions include escalate/RFI. TASK-009 contract text historically said allow/decline.  
-- **Impact:** Training and future real UI may disagree with stored `DecisionBand`.  
-- **Remediation:** One glossary in the catalog; do not treat this as an engine bug.  
+- **Severity:** observation
+- **Confidence:** medium
+- **Classification:** pre-MVP copy alignment, not a defect until a human picks terms
+- **Owner:** human (risk-decision language) then Cursor
+- **Evidence:** ADR 0007 / engine use `approve` / `review` / `reject`. TASK-010 UI uses “accept path / additional evidence.” Case actions include escalate/RFI. TASK-009 contract text historically said allow/decline.
+- **Impact:** Training and future real UI may disagree with stored `DecisionBand`.
+- **Remediation:** One glossary in the catalog; do not treat this as an engine bug.
 - **Acceptance:** Human-approved terms mapped in `messages.ts` only.
 
 ### CUR-018 — English-first and market-neutral UI copy (positive)
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** accepted  
-- **Owner:** n/a  
-- **Evidence:** No Portuguese/CPF/CNPJ/BRL/São Paulo matches in `apps/web` `ts/tsx/json`. Catalog is English. Dates go through `Intl` + UTC.  
-- **Impact:** ADR 0002 appears held for runtime UI.  
-- **Remediation:** none.  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** accepted
+- **Owner:** n/a
+- **Evidence:** No Portuguese/CPF/CNPJ/BRL/São Paulo matches in `apps/web` `ts/tsx/json`. Catalog is English. Dates go through `Intl` + UTC.
+- **Impact:** ADR 0002 appears held for runtime UI.
+- **Remediation:** none.
 - **Acceptance:** keep catalog discipline.
 
 ### CUR-019 — Prototype persistence/email/support copy is generally honest
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** accepted  
-- **Owner:** n/a  
-- **Evidence:** Company admin and platform governance strings state toasts do not save, email, or impersonate (`messages.ts` around 249–277, 413–439). Intake `ackTitle`: “Intake was not saved”.  
-- **Impact:** Reduces false operational trust **inside** those screens.  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** accepted
+- **Owner:** n/a
+- **Evidence:** Company admin and platform governance strings state toasts do not save, email, or impersonate (`messages.ts` around 249–277, 413–439). Intake `ackTitle`: “Intake was not saved”.
+- **Impact:** Reduces false operational trust **inside** those screens.
 - **Remediation:** none besides CUR-001/002 labels.
 
 ### CUR-020 — Approved brand mark is in use
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** accepted  
-- **Owner:** n/a  
-- **Evidence:** `mitiga-mark.tsx` 6–32; layout icons `/mitiga-symbol.png`. Compact mark uses `brandMarkAlt`; full mark uses empty `alt` beside visible wordmark (decorative pattern).  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** accepted
+- **Owner:** n/a
+- **Evidence:** `mitiga-mark.tsx` 6–32; layout icons `/mitiga-symbol.png`. Compact mark uses `brandMarkAlt`; full mark uses empty `alt` beside visible wordmark (decorative pattern).
 - **Remediation:** none required.
 
 ### CUR-021 — Ungated fixture routes match ADR 0010
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** accepted limitation  
-- **Owner:** human (hosting policy)  
-- **Evidence:** ADR 0010: fixture routes were not wrapped in real session checks so Elena Park is not presented as the authenticated user **on those routes by design** — but `/workspace` now deep-links into them (CUR-001).  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** accepted limitation
+- **Owner:** human (hosting policy)
+- **Evidence:** ADR 0010: fixture routes were not wrapped in real session checks so Elena Park is not presented as the authenticated user **on those routes by design** — but `/workspace` now deep-links into them (CUR-001).
 - **Remediation:** do not “fix” by wrapping `/company` in `requireAuthenticatedIdentity()` while fixtures remain.
 
 ### CUR-022 — Local quality gates pass at the audited SHA
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** accepted  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** accepted
 - **Evidence:** see Checks below.
 
 ### CUR-023 — Sibling TASK-021 owns architecture/RLS/session-cookie depth
 
-- **Severity:** observation  
-- **Confidence:** high  
-- **Classification:** n/a  
+- **Severity:** observation
+- **Confidence:** high
+- **Classification:** n/a
 - **Evidence:** `docs/tasks/TASK-021-claude-architecture-security-audit.md` on the same tag. This report does not re-audit RLS or cookie flags.
 
 ---
@@ -466,10 +466,10 @@ Findings are severity-ranked. IDs are stable `CUR-###`.
 
 ## Privacy / tenant representation
 
-- Real PII on screen: verified email on `/workspace` only (plus whatever the user types on `/`).  
-- Fixtures use `*.demo.mitiga.local` and fictional names.  
-- Tests use `example@demo.mitiga.local`.  
-- This audit did not open `.env`.  
+- Real PII on screen: verified email on `/workspace` only (plus whatever the user types on `/`).
+- Fixtures use `*.demo.mitiga.local` and fictional names.
+- Tests use `example@demo.mitiga.local`.
+- This audit did not open `.env`.
 - Tenant isolation in **UI**: `/workspace` shows a count, not tenant rows (TASK-018). Demo UIs show named fictional tenants. Server RLS is TASK-021.
 
 ## Test and build evidence
@@ -482,12 +482,12 @@ See Checks. Product-experience coverage is concentrated on domain evaluation, te
 
 This is a delivery **suggestion** for Codex/Cursor/Claude. It does **not** approve Auth policy, hosted projects, email templates, tenant suspension, or production.
 
-1. **Days 1–7 — Claude TASK-019** on `/workspace` only (membership list, explicit multi-tenant choice, capability RPC, session-refresh middleware). Do not convert `/company`.  
-2. **Days 5–10 — Cursor honesty patch (CUR-001, CUR-002, CUR-009, CUR-013)** so a real cookie and Elena Park cannot be read as the same person; document-title split; `/` continue-to-workspace. Human decides if sample data stays on the preview origin.  
-3. **Days 8–14 — Cursor demo coherence (CUR-005, CUR-006, CUR-007, CUR-008)** one tenant per flow; one Super Admin landing.  
-4. **Days 12–18 — Recovery completion (CUR-004)** after human Auth redirect configuration.  
-5. **Days 15–22 — First real operational slice** only after 019: likely entity list **or** tenant-scoped workspace home — not the whole prototype.  
-6. **Days 18–28 — A11y + tests (CUR-010, CUR-012, CUR-014, CUR-016, CUR-024, CUR-027)** including a headed pass at ~375px and desktop, catalogued fixture sentences, and reduced-motion on section scroll.  
+1. **Days 1–7 — Claude TASK-019** on `/workspace` only (membership list, explicit multi-tenant choice, capability RPC, session-refresh middleware). Do not convert `/company`.
+2. **Days 5–10 — Cursor honesty patch (CUR-001, CUR-002, CUR-009, CUR-013)** so a real cookie and Elena Park cannot be read as the same person; document-title split; `/` continue-to-workspace. Human decides if sample data stays on the preview origin.
+3. **Days 8–14 — Cursor demo coherence (CUR-005, CUR-006, CUR-007, CUR-008)** one tenant per flow; one Super Admin landing.
+4. **Days 12–18 — Recovery completion (CUR-004)** after human Auth redirect configuration.
+5. **Days 15–22 — First real operational slice** only after 019: likely entity list **or** tenant-scoped workspace home — not the whole prototype.
+6. **Days 18–28 — A11y + tests (CUR-010, CUR-012, CUR-014, CUR-016, CUR-024, CUR-027)** including a headed pass at ~375px and desktop, catalogued fixture sentences, and reduced-motion on section scroll.
 7. **Days 25–35 — Freeze demo vs real** in copy and IA; remaining fixture routes stay labeled; no silent “this is now live.”
 
 Protected questions for the human owner (not decided here): whether the Vercel preview may keep an ungated demo next to real login; password-reset email URLs; when Northstar test users may be used in a recorded browser pass.
