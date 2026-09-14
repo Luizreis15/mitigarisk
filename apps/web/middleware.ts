@@ -1,6 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server.js';
-import { getPublicSupabaseConfig, hasPublicSupabaseConfig } from './lib/supabase/env';
+
+function getPublicSupabaseConfig(): { url: string; anonKey: string } | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return url && anonKey ? { url, anonKey } : null;
+}
 
 // Session-refresh-only middleware
 // (docs/tasks/TASK-019-claude-tenant-authorization-boundary.md,
@@ -25,11 +30,12 @@ import { getPublicSupabaseConfig, hasPublicSupabaseConfig } from './lib/supabase
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  if (!hasPublicSupabaseConfig()) {
+  const publicConfig = getPublicSupabaseConfig();
+  if (!publicConfig) {
     return response;
   }
 
-  const { url, anonKey } = getPublicSupabaseConfig();
+  const { url, anonKey } = publicConfig;
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {

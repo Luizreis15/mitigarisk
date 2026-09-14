@@ -593,7 +593,10 @@ the exact Next runtime package as a production dependency and makes
 `verify:vercel` fail when a `next/server.js` middleware import lacks a
 declared, resolvable runtime dependency. The first corrected preview then
 exposed Node ESM's requirement for the explicit `.js` subpath; the middleware
-import and regression check use that deployable entry point.
+import and regression check use that deployable entry point. The second
+preview proved Vercel also leaves relative middleware imports unbundled; the
+public Supabase configuration read is therefore self-contained in middleware,
+and `verify:vercel` now rejects any relative import there.
 
 This follow-up changes no authentication policy, tenant boundary, hosted
 Supabase configuration, data, migration, email template, or secret. Rollback

@@ -37,6 +37,9 @@ function readJson(filePath, label) {
 
 const middlewarePath = path.join(webRoot, "middleware.ts");
 const middlewareSource = existsSync(middlewarePath) ? readFileSync(middlewarePath, "utf8") : "";
+if (/from\s+["']\.{1,2}\//.test(middlewareSource)) {
+  fail("middleware.ts must be self-contained because Vercel deploys the root middleware without bundling local imports");
+}
 if (/from\s+["']next\/server(?:\.js)?["']/.test(middlewareSource)) {
   const packageJson = readJson(path.join(webRoot, "package.json"), "package.json");
   if (!packageJson.dependencies?.next) {
