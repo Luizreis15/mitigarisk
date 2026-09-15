@@ -19,3 +19,12 @@ void test('decision form is rendered only for server-provided authority and keep
   assert.match(source, /decision\.decision/);
   assert.doesNotMatch(source, /disabled=.*canDecide/);
 });
+
+void test('database decision boundary explicitly denies platform administrators even with tenant membership', async () => {
+  const migration = await readFile(
+    new URL('../../../../supabase/migrations/20260915120000_supplier_final_decisions.sql', import.meta.url),
+    'utf8',
+  );
+  assert.match(migration, /select not app\.is_platform_admin\(\)/);
+  assert.match(migration, /if app\.is_platform_admin\(\) or not app\.is_active_tenant_admin/);
+});

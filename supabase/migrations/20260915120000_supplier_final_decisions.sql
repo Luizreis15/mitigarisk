@@ -32,7 +32,8 @@ alter table public.supplier_final_decisions enable row level security;
 
 create policy supplier_final_decisions_select on public.supplier_final_decisions
   for select to authenticated using (
-    app.has_tenant_capability_as_member(tenant_id, 'evaluation.view')
+    not app.is_platform_admin()
+    and app.has_tenant_capability_as_member(tenant_id, 'evaluation.view')
   );
 
 revoke insert, update, delete on public.supplier_final_decisions from authenticated, anon;
@@ -45,7 +46,8 @@ security definer
 set search_path = public, pg_temp
 stable
 as $$
-  select app.is_active_tenant_admin(p_tenant_id);
+  select not app.is_platform_admin()
+    and app.is_active_tenant_admin(p_tenant_id);
 $$;
 
 revoke all on function public.can_record_supplier_final_decision(uuid) from public;
@@ -68,7 +70,7 @@ declare
   v_result public.supplier_final_decisions;
   v_rationale text := nullif(btrim(p_rationale), '');
 begin
-  if not app.is_active_tenant_admin(p_tenant_id) then
+  if app.is_platform_admin() or not app.is_active_tenant_admin(p_tenant_id) then
     raise exception 'Final supplier decision requires an active tenant admin' using errcode = '42501';
   end if;
 

@@ -39,6 +39,16 @@ set role authenticated; set local "request.jwt.claim.role"='authenticated'; set 
 savepoint pending; do $$ begin perform public.record_supplier_final_decision('10000000-0000-0000-0000-000000000003','73000000-0000-0000-0000-000000000001','approve',null,'73000000-0000-0000-0000-000000000003'); raise exception 'ASSERTION FAILED'; exception when sqlstate 'P0002' then raise notice 'ok - pending evaluation fails closed'; end $$; rollback to pending;
 savepoint missing; do $$ begin perform public.record_supplier_final_decision('10000000-0000-0000-0000-000000000003','ffffffff-ffff-ffff-ffff-ffffffffffff','approve',null,'73000000-0000-0000-0000-000000000004'); raise exception 'ASSERTION FAILED'; exception when sqlstate 'P0002' then raise notice 'ok - missing or cross-tenant evaluation fails without disclosure'; end $$; rollback to missing;
 
+-- A platform administrator remains denied even if separately granted an
+-- active tenant_admin membership in the same tenant.
+reset role;
+insert into public.memberships (tenant_id,user_id,role_key,status,invited_by)
+values ('10000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000001','tenant_admin','active','00000000-0000-0000-0000-000000000002');
+set role authenticated; set local "request.jwt.claim.role"='authenticated'; set local "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000001';
+select pg_temp.assert(not public.can_record_supplier_final_decision('10000000-0000-0000-0000-000000000003'),'dual-role platform admin is explicitly denied decision authority');
+select pg_temp.assert((select count(*) from public.supplier_final_decisions where tenant_id='10000000-0000-0000-0000-000000000003')=0,'dual-role platform admin cannot read operational final decisions');
+savepoint dual_role; do $$ begin perform public.record_supplier_final_decision('10000000-0000-0000-0000-000000000003','ffffffff-ffff-ffff-ffff-ffffffffffff','approve',null,gen_random_uuid()); raise exception 'ASSERTION FAILED'; exception when sqlstate '42501' then raise notice 'ok - dual-role platform admin is denied before evaluation lookup'; end $$; rollback to dual_role;
+
 -- Every non-admin identity is denied before evaluation lookup.
 reset role;
 do $$ declare u uuid; label text; begin foreach u in array array['00000000-0000-0000-0000-000000000003'::uuid,'00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000006'] loop perform set_config('request.jwt.claim.sub',u::text,true); begin perform public.record_supplier_final_decision('10000000-0000-0000-0000-000000000003','ffffffff-ffff-ffff-ffff-ffffffffffff','approve',null,gen_random_uuid()); raise exception 'ASSERTION FAILED'; exception when sqlstate '42501' then raise notice 'ok - unauthorized identity % denied at database boundary',u; end; end loop; end $$;
