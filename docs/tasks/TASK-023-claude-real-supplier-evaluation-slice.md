@@ -317,3 +317,207 @@ tenant-scoped supplier surviving reload and producing a persisted deterministic
 evaluation result. If it cannot, stop expanding scope and report the single
 blocking condition. Codex will then reduce the implementation stream to one
 builder plus merge owner until the slice is stable.
+
+## Handoff — 2026-09-15 (Claude Code)
+
+### Outcome
+
+Implemented the full vertical slice: real tenant-scoped supplier records,
+fictional evidence metadata, one atomic capability-checked evaluation write
+path against an immutable published policy, and a real authenticated
+`/workspace/suppliers` UI wired to all of it. Database boundary and first
+persisted evaluation are verified end-to-end against a real local Postgres
+engine (22 new SQL assertions, all passing) and 213 TS unit/repository
+tests pass. **One acceptance criterion is not met**: a full browser
+sign-in demonstration could not be completed in this environment — see
+"Known limitations" below for the exact scope boundary and the reasoning,
+which was confirmed with the human owner mid-task rather than resolved
+unilaterally.
+
+### Base and branch
+
+- Branch: `feat/claude-real-supplier-evaluation-slice`
+- Base commit: `8b3aaa7` (`docs(task): define real supplier evaluation slice`), the same commit this branch was created from — contains TASK-022 and this task's contract.
+- Working tree is clean at handoff time (all listed files committed; nothing pushed).
+
+### Files changed
+
+New:
+- `supabase/migrations/20260914120000_supplier_evaluation_capabilities.sql` — `supplier.manage`/`supplier.view` capabilities; removes `risk_analyst`/`case.decide`.
+- `supabase/migrations/20260914120100_suppliers.sql` — `suppliers`, `supplier_evidence` tables, RLS, actor-provenance/identity guards.
+- `supabase/migrations/20260914120200_supplier_evaluation.sql` — additive `evaluations`/`evaluation_reason_codes` columns; `public.complete_supplier_evaluation()` RPC.
+- `supabase/tests/040-supplier-evaluation.sql` — 22 positive/negative RLS, provenance, idempotency, and conflict assertions.
+- `apps/web/lib/domain/supplier.ts`, `supplier-evidence.ts`, `supplier-evaluation-adapter.ts` — types, validation, fact derivation, input hashing.
+- `apps/web/lib/supabase/suppliers-repository.ts`, `supplier-evidence-repository.ts`, `supplier-evaluations-repository.ts`, `published-policy-repository.ts`.
+- `apps/web/app/workspace/suppliers/page.tsx`, `[supplierId]/page.tsx`, `actions.ts`.
+- `apps/web/components/workspace/supplier-list.tsx`, `supplier-create-form.tsx`, `supplier-summary.tsx`, `supplier-evidence-list.tsx`, `supplier-evidence-form.tsx`, `supplier-evaluation-panel.tsx`, `workspace-real-frame.tsx`, `workspace-real-entry.tsx`.
+- `apps/web/tests/domain/supplier.test.ts`, `supplier-evidence.test.ts`, `supplier-evaluation-adapter.test.ts`, `apps/web/tests/supabase/suppliers-repository.test.ts`, `supplier-evaluations-repository.test.ts`.
+
+Modified:
+- `apps/web/lib/domain/tenancy.ts` (new capability keys), `evaluation.ts` (supplierId/dataQuality/missingRequiredFactorKeys/reason metadata fields), `index.ts` (new exports).
+- `apps/web/lib/i18n/messages.ts` (new `supplierWorkspace` namespace only; no existing keys changed).
+- `apps/web/app/workspace/page.tsx`, `apps/web/components/workspace/workspace-experience.tsx` (one optional `realEntryTenantId` prop linking to the real slice; existing behavior unchanged when omitted).
+- `apps/web/tests/domain/tenancy-sql-sync.test.ts` (now scans all migrations, not one hardcoded file, plus a new regression test for the `case.decide` removal).
+- `supabase/seed.sql` (new fictional tenant "Meridian Industrial Holdings" + published "Supplier onboarding policy" v1; see decisions below for why a new tenant was used).
+
+No file outside this list was touched. `apps/web/lib/demo/**` and every existing prototype route (`/entities`, `/evaluations`, `/cases`, `/policies`, `/company`, `/operator`, `/super-admin`, `/tenants`) are unchanged.
+
+### Decisions and assumptions
+
+1. **New capabilities**: added `supplier.manage` (create) and `supplier.view` (read), granted per the task's approved role matrix — `tenant_admin`/`risk_analyst` get both; `operator`/`auditor`/`integration_developer` get view-only (matching their existing `evaluation.view` grant), consistent with "operator may view evaluations... but must not create suppliers."
+2. **`case.decide` correction**: removed from `risk_analyst` via a forward `DELETE` migration on reference data, per the task's explicit instruction — the original TASK-002 seed contradicted the human-approved decision rule.
+3. **New fictional tenant for the policy fixture**: rather than adding a second `policy_versions` row under the existing Helix Commerce tenant, I added a dedicated tenant ("Meridian Industrial Holdings", `10000000-...-0003`) with the same four dev users mirrored into it. The existing `supabase/tests/010-rls-tenant-isolation.sql` asserts Helix Commerce has *exactly one* policy version; adding a second one there would have silently broken that unrelated, pre-existing TASK-002 test. This keeps the slice fully additive with zero edits to another task's fixtures or assertions.
+4. **Evaluation persistence ordering**: `public.complete_supplier_evaluation()` inserts the evaluation as `pending`, writes reason codes, then flips it to `completed` in the same call — the pre-existing `evaluation_reason_codes` guard trigger (TASK-002) rejects writing reason codes once the parent is already `completed`. All of this runs inside one PL/pgSQL function invocation, so any failure rolls back every step; no partial completed state is observable.
+5. **Idempotency key**: the "Run evaluation" form carries a server-generated `correlationId` (fresh per page render). A double-submit before navigation replays the same outcome; a later reload issues a new one, allowing a legitimate re-evaluation. Same `(tenant, correlation_id)` with a *different* derived input (detected via `input_hash`) is rejected as a stable `23505` conflict rather than silently returned.
+6. **Adapter scoring rules are this task's own documented assumption**, not separately specified beyond each factor's 0/100 meaning: `identity_integrity_risk` and `geographic_risk` are derived only from registration/operating-country facts (never the optional, explicitly-untrusted `website_domain`); `geographic_risk` is a country-*count* footprint proxy, not a per-country risk rating, to stay market-neutral per ADR 0002; `ownership_transparency_risk`/`integrity_screening_risk` read the best recorded verification state of the matching evidence type; `financial_exposure_risk` uses a hardcoded fictional ceiling (100,000,000 minor units, currency-agnostic — no conversion in this slice); `evidence_quality_risk` scores reviewed-coverage across all five evidence types with a rejected-evidence floor. All of this lives in `apps/web/lib/domain/supplier-evaluation-adapter.ts` with inline rationale; a future policy-authoring task should make these configurable rather than hardcoded.
+7. **Supplier status lifecycle**: creation always sets `status = 'draft'` server-side (browser cannot set it). This task's in-scope flow (create + read only) never transitions `ready`/`evaluated`/`archived` — left for a future task rather than inventing an unrequested transition rule.
+8. **`evaluation_reason_codes.metadata` column added**: the engine's `EvaluationReason.metadata` (factor key, normalized score, weight share) had nowhere to persist before this task; without it, completed evaluations would lose per-factor explainability. Small additive `jsonb` column, not a redesign.
+
+### Checks run and exact results
+
+```
+$ ./supabase/tests/run-local-verification.sh
+==> applying local auth shim
+==> applying migrations            (all 13 migrations, including the 3 new ones, applied cleanly)
+==> applying dev seed data         (including the new Meridian tenant + published policy)
+==> running SQL verification suites
+    - 010-rls-tenant-isolation.sql   (unchanged, still passes)
+    - 020-integration-hardening.sql  (unchanged, still passes)
+    - 030-auth-tenant-bootstrap.sql  (unchanged, still passes)
+    - 040-supplier-evaluation.sql    (new: 22/22 assertions pass)
+==> all checks passed
+
+$ cd apps/web && npm test
+ℹ tests 213
+ℹ pass 213
+ℹ fail 0
+
+$ cd apps/web && npx tsc --noEmit -p tsconfig.json
+(no output — clean)
+
+$ cd apps/web && npm run lint -- --ignore-pattern 'components/ui/**' --ignore-pattern 'hooks/use-mobile.ts'
+(no output — clean; oxlint caught one real error mid-task, an unused import, fixed before this run)
+
+$ cd apps/web && npm run build
+✓ built in 5 stages; /workspace/suppliers and /workspace/suppliers/:supplierId both registered as routes
+
+$ cd apps/web && npm run verify:vercel
+✓ .vercel/output/ is a genuine Vercel Build Output API v3 deployment
+
+$ ./scripts/check-secrets.sh
+Secret check passed.
+
+$ ./scripts/verify-web.sh
+Web verification passed.
+
+$ git diff --check / git diff --cached --check
+(no output — clean, no whitespace errors)
+```
+
+`supabase db reset` and `supabase test db` (the literal commands named in "Required
+verification") were **not run**: this repository has no `supabase/config.toml`
+(no `supabase init` has ever been run against it), and creating one is outside
+this task's enumerated "Allowed files and bounded contexts." I raised this
+exact tradeoff mid-task (Docker was available, so the CLI-backed stack was
+technically reachable) and the human owner chose to keep strictly within the
+allowed-file list rather than add `supabase/config.toml`. `supabase/tests/run-local-verification.sh`
+is this repository's own established, credential-free substitute (documented
+in `supabase/tests/README.md` since TASK-002, explicitly offered as an
+alternative to the CLI-backed path) and was run instead, exercising the same
+migrations and seed against a real local Postgres engine. Separately,
+`supabase test db` expects pgTAP-formatted test files; this repository's SQL
+suite (from TASK-002 onward, including this task's own `040-supplier-evaluation.sql`)
+uses a custom `psql`-based assertion helper instead, so that command has no
+applicable target here regardless of the CLI/config question — a pre-existing
+repository characteristic, not something this task introduced or could fix
+without an unrelated, out-of-scope rewrite of every prior task's SQL tests.
+
+### Browser evidence
+
+**Not completed as a full authenticated demonstration** — see "Known
+limitations." What was verified in a real running `npm run dev` server
+(no Supabase env configured, matching this environment's no-credentials
+constraint):
+
+- `/` and `/workspace` render correctly (200).
+- `/workspace/suppliers` and `/workspace/suppliers/:supplierId` initially
+  returned a raw 500 because they called `requireAuthenticatedIdentity()`
+  without first checking `hasPublicSupabaseConfig()` the way `/workspace`
+  itself does — a real bug introduced during implementation. Fixed by
+  adding the same guard; both routes now cleanly redirect (307) to
+  `/workspace`, which renders the existing "Workspace is not configured"
+  state. No regression to `/`, `/workspace`, or any prototype route.
+- Full `tsc`/`lint`/`build`/test suite re-run clean after the fix (see
+  "Checks run" above, which already reflects the post-fix state).
+
+### Security / tenant / audit / privacy impact
+
+- Every new table (`suppliers`, `supplier_evidence`) carries `tenant_id`,
+  has RLS enabled, and has no update/delete policy for `authenticated`
+  (this slice is create+read only) — fails closed by omission.
+- `created_by`/`updated_by` are enforced via RLS `with check (created_by = auth.uid())`,
+  the same pattern as every other authenticated-write table in this
+  codebase (`20260912120800_security_and_english_first_hardening.sql`).
+  Verified negatively: a forged `created_by` is rejected (`insufficient_privilege`).
+- Cross-tenant reads/writes verified to fail closed: another tenant sees
+  zero rows and cannot insert; evaluating a supplier id from another
+  tenant returns `P0002` (not found), never confirming or denying its
+  existence in that other tenant.
+- `public.complete_supplier_evaluation()` checks `evaluation.run` before
+  touching any data, calling the `public.*` PostgREST-facing wrappers
+  (not `app.*` directly — `authenticated` has no `USAGE` on schema `app`,
+  matching this codebase's existing convention). RLS on the underlying
+  tables (`security invoker`) is the real backstop underneath it.
+- A completed evaluation and its reason codes are immutable (existing
+  TASK-002 triggers, exercised by the new `sp_evaluation_immutable` test).
+- No raw registration identifier, evidence declaration, or SQL error is
+  logged; typed error names only. No service-role client is imported or
+  referenced anywhere in this diff (`no-service-role-in-client-boundary.test.ts`
+  and the `workspace-component-boundary.test.ts` boundary tests still pass
+  unmodified against the new files).
+- `risk_analyst` no longer holds `case.decide` at the database level,
+  verified with a new SQL assertion and a new TS regression test —
+  closing the contradiction the task flagged.
+
+### Migration and rollback notes
+
+All three new migrations are additive only (`create table if not exists`,
+`add column if not exists`, `insert ... on conflict do nothing`, one
+`delete` on reference-only `role_capabilities` data). Each file's trailing
+comment documents its own rollback. None has been applied to any hosted
+environment. `supabase/seed.sql` changes are local fictional dev fixtures
+only, never applied to a hosted project.
+
+### Known limitations
+
+1. **Browser sign-in demonstration not completed** (acceptance criterion
+   11, in part). Real sign-in needs a live Supabase Auth service, which
+   this task's credential-free local harness does not provide (it shims
+   only the `auth` schema, not GoTrue). Standing up the real local stack
+   needs `supabase init`/`supabase start`, which requires creating
+   `supabase/config.toml` — outside this task's enumerated allowed files.
+   I surfaced this exact tradeoff mid-task; the human owner's decision was
+   to stay inside the allowed-file list rather than add that file. The
+   vertical slice is otherwise fully proven (database layer + unit/integration
+   tests + build), and the UI fails closed correctly when unauthenticated.
+   **Recommended next step**: a human or Codex with authority to extend the
+   file scope runs `supabase init && supabase start && supabase db reset`
+   locally and completes the sign-in → create supplier → register evidence
+   → run evaluation → reload walkthrough described in acceptance criterion 11.
+2. Adapter scoring rules (decision 6 above) are a documented, hardcoded
+   assumption for this first slice, not a configurable policy surface.
+3. No update/delete flow exists yet for suppliers or evidence (out of
+   scope per the task contract); status stays `draft` for every supplier
+   created in this slice.
+4. `supabase test db` (pgTAP) has no applicable target in this repository
+   regardless of the config.toml question, since no SQL test file here
+   (from TASK-002 onward) uses pgTAP conventions.
+
+### Recommended reviewer
+
+Codex, per the task's own instruction, for migration review, actor
+provenance, authorization, idempotency, and real/demo separation —
+plus explicit confirmation of the `supabase/config.toml` scope decision
+above before anyone attempts the outstanding browser walkthrough. Cursor
+finishes the visual experience only after Codex integrates this functional
+slice, per the task contract.
