@@ -172,3 +172,133 @@ commits, files changed, decisions and assumptions, exact checks and database
 assertions, browser verification, security/tenant/privacy/audit impact,
 migration and rollback/remediation, known limitations, and recommended
 independent reviewer. Do not merge or deploy.
+
+## Handoff — 2026-09-15
+
+### Outcome
+
+Implemented the database-first supplier final-decision boundary. An active
+same-tenant `tenant_admin` can record exactly one immutable `approve`, `review`,
+or `reject` decision for a completed supplier evaluation. The database derives
+tenant, supplier, policy version, actor, and timestamps from trusted persisted
+state; the decision and its audit event are atomic. Recommendation and final
+decision remain separate persisted and presented facts.
+
+The implementation and all local checks pass. Integration remains blocked
+pending the contractually required independent review: the independent agent
+was invoked twice but completed without returning a visible report, so no
+review approval is claimed.
+
+### Branch, base, and commits
+
+- Branch: `feat/claude-supplier-final-decision`
+- Base: `origin/preview/vercel-adapter` at `206d373`, which is after required
+  TASK-024 integration `83abe92` and includes this contract.
+- Implementation: `c907b0e feat(suppliers): add immutable final decision boundary`
+- Documentation: recorded by the commit containing this handoff.
+
+### Files changed
+
+- New forward migration: `supabase/migrations/20260915120000_supplier_final_decisions.sql`.
+- New direct database suite: `supabase/tests/050-supplier-final-decision.sql`.
+- New domain contract: `apps/web/lib/domain/supplier-final-decision.ts` and
+  export from `apps/web/lib/domain/index.ts`.
+- New request-scoped repository:
+  `apps/web/lib/supabase/supplier-final-decisions-repository.ts`.
+- Extended supplier Server Actions and detail route under
+  `apps/web/app/workspace/suppliers/**`.
+- New `supplier-final-decision-panel.tsx`; updated evaluation panel and journey.
+- Externalized English copy in `apps/web/lib/i18n/messages.ts`.
+- Domain, repository, action, component, and existing presentation tests under
+  `apps/web/tests/**`.
+- Manual checklist: `docs/security/TASK-025-manual-test-checklist.md`.
+
+No demo module, prototype route, existing migration, evaluation-engine
+contract, hosted configuration, or external service was changed.
+
+### Decisions and assumptions
+
+- A dedicated `supplier_final_decisions` record was used instead of the older
+  case-decision model because TASK-025 is linked directly to a supplier
+  evaluation and permits no case-workflow expansion.
+- Authority is the active `tenant_admin` role checked by
+  `app.is_active_tenant_admin()`, not `case.decide`, UI state, or platform-admin
+  status. The application performs membership and platform-admin checks, while
+  the database is independently authoritative.
+- Rationale is optional, trimmed, and limited to 500 characters. It is never
+  copied into audit metadata.
+- A tenant/evaluation advisory transaction lock serializes concurrent attempts.
+  An identical correlation replay returns the original row; changed payload or
+  a second correlation for the same evaluation returns stable SQLSTATE `23505`.
+- Users with `evaluation.view` may read a persisted decision. Only the active
+  tenant admin receives a form; all other authorized readers receive truthful
+  read-only presentation.
+
+### Checks and exact results
+
+- `./scripts/run-local-verification.sh` — not present in this repository
+  (`exit 127`). The established credential-free equivalent documented and used
+  since TASK-002 was run instead:
+  `./supabase/tests/run-local-verification.sh` — passed; every migration, seed,
+  and SQL suite completed with `==> all checks passed`.
+- TASK-025 SQL suite: 23 positive/negative assertions passed, covering pinned
+  actor, trimmed rationale, unchanged recommendation, atomic audit creation,
+  rationale exclusion from audit, admin authority, identical replay, duplicate
+  prevention, conflicting replay, one decision per evaluation, direct-write
+  denial, update/delete immutability, pending/missing non-disclosure, five
+  unauthorized identities, and inactive-admin denial.
+- `cd apps/web && npm test` — 222 passed, 0 failed, 0 skipped.
+- `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed with no diagnostics.
+- `cd apps/web && npm run build` — passed; supplier list/detail routes built.
+- `cd apps/web && npm run verify:vercel` — passed; Vercel Build Output API v3
+  output validated.
+- `./scripts/check-secrets.sh` — `Secret check passed.`
+- `./scripts/verify-web.sh` — oxlint and vinext build passed;
+  `Web verification passed.`
+- `git diff --check` — passed with no whitespace errors.
+
+### Browser verification
+
+Not executed. Safe authenticated browser access was unavailable without using
+ignored environment configuration or hosted services, both prohibited by the
+task. No credential or environment file was inspected. The manual checklist
+documents the isolated fictional-data walkthrough for a later authorized
+environment.
+
+### Security, tenant, privacy, audit, and integrity impact
+
+- Tenant isolation: every decision carries tenant ID and composite same-tenant
+  foreign keys; unauthorized and cross-tenant references fail closed.
+- Least privilege: no platform-admin bypass and no generic capability can grant
+  mutation authority. Direct authenticated insert/update/delete is denied.
+- Provenance: `decided_by = auth.uid()` and server/database UTC timestamps are
+  not RPC parameters.
+- Audit: the RPC inserts the immutable decision and append-only audit event in
+  one transaction. Audit contains stable IDs, action, recommendation, decision,
+  outcome, actor, time, and correlation; it excludes rationale and evidence.
+- Integrity: the completed evaluation and its recommendation are read only and
+  never modified or recomputed by this task.
+- Privacy: only fictional test data was used; no personal or hosted data was
+  accessed.
+
+### Migration and rollback/remediation
+
+The migration is forward-only and has not been applied to a hosted project.
+For a deployed rollback, revoke execute access and stop application calls in a
+forward remediation migration. Preserve the decisions table and append-only
+audit evidence; do not destructively drop previously written business records.
+
+### Known limitations and blocker
+
+- Authenticated browser walkthrough remains pending in an approved isolated
+  environment.
+- Independent review is not complete: the reviewer agent returned no visible
+  report in two attempts. This blocks integration but does not invalidate the
+  passing implementation checks.
+
+### Recommended independent reviewer
+
+A fresh security reviewer other than the implementation author, focused on SQL
+authorization, actor provenance, tenant isolation, concurrency/idempotency,
+immutability, audit atomicity, and recommendation/decision separation. High or
+medium findings must be corrected and re-reviewed before integration.
