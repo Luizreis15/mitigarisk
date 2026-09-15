@@ -38,11 +38,24 @@ function errorCode(error: unknown): string {
   return error instanceof Error ? error.name : 'UnknownError';
 }
 
+// Platform administrators receive no operational bypass through the real
+// workspace (docs/architecture/PLATFORM-ARCHITECTURE.md; docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md,
+// acceptance criterion 9: "No platform administrator ... produces a
+// successful result"). This must be an unconditional, explicit check here
+// — not an incidental consequence of platform admins usually holding no
+// tenant membership in seed/fixture data. A platform admin who also
+// happens to hold a real tenant membership must still never succeed at
+// creating a supplier, registering evidence, or running an evaluation
+// through this flow, exactly as /workspace/suppliers/page.tsx and
+// /workspace/suppliers/[supplierId]/page.tsx already gate on the read side.
+const PLATFORM_ADMIN_FORBIDDEN: SupplierActionResult = { status: 'error', code: 'ForbiddenError' };
+
 export async function createSupplierAction(
   _previousState: SupplierActionResult | null,
   formData: FormData,
 ): Promise<SupplierActionResult> {
   const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
   const client = await createServerSupabaseClient();
 
   const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
@@ -89,6 +102,7 @@ export async function createEvidenceAction(
   formData: FormData,
 ): Promise<SupplierActionResult> {
   const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
   const client = await createServerSupabaseClient();
 
   const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
@@ -133,6 +147,7 @@ export async function runEvaluationAction(
   formData: FormData,
 ): Promise<SupplierActionResult> {
   const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
   const client = await createServerSupabaseClient();
 
   const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
