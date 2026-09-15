@@ -147,3 +147,69 @@ commits, files changed, decisions and assumptions, exact check results,
 browser routes and viewport results, screenshots when available, accessibility
 notes, security/tenant/privacy/audit impact, migration/rollback notes, known
 limitations, and recommended reviewer. Do not merge or deploy.
+
+## Handoff
+
+**Outcome:** The authenticated supplier evaluation slice now presents a coherent four-step journey from supplier details through evidence readiness and deterministic recommendation to a visibly pending Company Admin decision. Wide tables have dedicated card layouts at narrow widths, forms are grouped and labelled, empty and error states remain truthful, and fictional-data plus metadata-only boundaries are shown where they matter.
+
+**Branch, base, and commits:** `feat/cursor-supplier-evaluation-visual-finish`, based on `origin/preview/vercel-adapter@84c9686` (including TASK-023 integration `b5a1dde`).
+
+- `958b974` — `feat(web): polish supplier evaluation journey`
+- `4b10831` — `docs(task): record TASK-024 handoff`
+- `db2279d` — `fix(web): present supplier evaluation states truthfully`
+- review-correction documentation commit recorded separately after this update
+
+**Files changed:**
+
+- `apps/web/app/workspace/suppliers/[supplierId]/page.tsx`
+- `apps/web/components/workspace/supplier-create-form.tsx`
+- `apps/web/components/workspace/supplier-evaluation-panel.tsx`
+- `apps/web/components/workspace/supplier-evidence-form.tsx`
+- `apps/web/components/workspace/supplier-evidence-list.tsx`
+- `apps/web/components/workspace/supplier-journey.tsx`
+- `apps/web/components/workspace/supplier-list.tsx`
+- `apps/web/components/workspace/supplier-summary.tsx`
+- `apps/web/components/workspace/workspace-real-entry.tsx`
+- `apps/web/components/workspace/workspace-real-frame.tsx`
+- `apps/web/lib/i18n/messages.ts`
+- `apps/web/tests/app/workspace-component-boundary.test.ts`
+- `docs/tasks/TASK-024-cursor-supplier-evaluation-visual-finish.md`
+
+**Decisions and assumptions:**
+
+- The four-step progress display is presentational only. It marks details, evidence presence, and a completed evaluation from server-provided props; the Company decision is always pending because this task does not implement it.
+- The engine recommendation and persisted score are displayed verbatim. Presentation code does not calculate scores, thresholds, decision bands, quality, missing factors, or reason codes.
+- The Company Admin decision boundary is always visible, including before an evaluation runs, and the completed result repeats that its recommendation is not a business decision.
+- Desktop tables remain available from the `sm` breakpoint; below it, supplier and evidence records use non-scrolling cards to avoid horizontal overflow around 375 px.
+- New and changed English copy is externalized in the typed message catalog.
+
+**Checks run and exact results:**
+
+- `cd apps/web && npm test` — passed after review corrections: 216 tests, 0 failed, 0 skipped.
+- `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed with no diagnostics.
+- `cd apps/web && npm run verify:vercel` — passed; generated and validated genuine Vercel Build Output API v3 output.
+- `./scripts/check-secrets.sh` — passed: `Secret check passed.`
+- `./scripts/verify-web.sh` — passed: oxlint clean and vinext production build complete; supplier list and detail routes present.
+- `git diff --check` — passed with no whitespace errors.
+
+**Browser routes and viewport results:** Browser review of authenticated states was not safely available. Starting the local runtime automatically detected an existing ignored local environment file, so the process was stopped immediately before opening a browser; no environment value was displayed or inspected. Because `/workspace/suppliers` is intentionally protected, the wide and 375 px authenticated journey could not be reached without using that configuration and a real session. No screenshots were captured. Responsive behavior is covered by explicit narrow/wide source-boundary assertions and the successful production builds.
+
+**Accessibility notes:** Heading and landmark relationships are explicit; progress uses an ordered list with a navigation label; forms retain programmatic labels and native required semantics while adding visible required/optional treatment; supporting disclosure text is connected through `aria-describedby`; action errors retain live alert semantics; decorative icons are hidden from assistive technology; keyboard focus rings are explicit on custom links; narrow cards preserve document order and minimum action height.
+
+**Security, tenant, privacy, audit, and engine impact:** Unchanged. No action, domain, repository, Supabase, migration, capability, tenant-selection, audit-event, or evaluation-engine file changed. Real reads and writes remain behind TASK-023 server boundaries. Platform administrators retain no operational tenant access. Only fictional demonstration records are permitted. Evidence remains metadata-only with no file input or storage. No hosted service, credential, secret, or customer data was accessed.
+
+**Migration and rollback:** No migration and no hosted state. Rollback is a revert of the two TASK-024 commits.
+
+**Known limitations:** Authenticated browser interaction, keyboard traversal in a live session, and visual screenshots remain pending for an approved non-production test environment that can be used without reading local secrets. Action success continues to use the existing server redirect behavior; no new success mutation or toast was introduced.
+
+**Recommended reviewer:** Codex merge owner for scope and visual acceptance, with a final authenticated 375 px/wide click-through in an approved isolated test environment before deployment.
+
+### Independent-review corrections
+
+All three P2 findings from the independent review were corrected within the TASK-024 presentation boundary:
+
+1. Persisted `pending` and `failed` evaluations now render distinct, truthful states. Neither state claims that no evaluation has run, and neither presents a recommendation.
+2. The journey and evidence count now describe evidence as recorded metadata, never as ready. A rejected metadata entry therefore cannot be presented as evidence readiness.
+3. Narrow evidence cards apply `min-w-0` to the flex container and display-name item plus safe word breaking, preventing a 200-character or unbroken name from forcing horizontal overflow beside the status badge.
+
+Regression coverage asserts both persisted non-completed evaluation branches, the absence of readiness language in the journey, and the mobile overflow classes. No domain, repository, action, Supabase, migration, or hosted-service behavior changed. All required checks were rerun after these corrections with the results recorded above.

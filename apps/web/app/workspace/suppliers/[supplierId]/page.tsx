@@ -7,13 +7,17 @@ import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { getSupplierById } from '@/lib/supabase/suppliers-repository';
 import { listSupplierEvidence } from '@/lib/supabase/supplier-evidence-repository';
-import { getLatestSupplierEvaluation, listEvaluationReasonCodes } from '@/lib/supabase/supplier-evaluations-repository';
+import {
+  getLatestSupplierEvaluation,
+  listEvaluationReasonCodes,
+} from '@/lib/supabase/supplier-evaluations-repository';
 import { isUuid, type TenantId } from '@/lib/domain/ids';
 import { SupplierSummary } from '@/components/workspace/supplier-summary';
 import { SupplierEvidenceList } from '@/components/workspace/supplier-evidence-list';
 import { SupplierEvidenceForm } from '@/components/workspace/supplier-evidence-form';
 import { SupplierEvaluationPanel } from '@/components/workspace/supplier-evaluation-panel';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
+import { SupplierJourney } from '@/components/workspace/supplier-journey';
 import { messages } from '@/lib/i18n/messages';
 
 // Real supplier detail: evidence registration, evaluation trigger, and the
@@ -51,7 +55,12 @@ export default async function SupplierDetailPage({
 
   let tenantId: TenantId;
   try {
-    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'supplier.view');
+    const context = await resolveAuthorizedTenantContext(
+      client,
+      identity,
+      requestedTenantId,
+      'supplier.view',
+    );
     tenantId = context.tenantId;
   } catch {
     redirect('/workspace');
@@ -60,23 +69,31 @@ export default async function SupplierDetailPage({
   // A malformed id (not the UUID shape the database column expects) must
   // fail the same generic way a well-formed but missing/cross-tenant id
   // does — never a raw database error surfaced to the browser.
-  const supplier = isUuid(supplierId) ? await getSupplierById(client, tenantId, supplierId) : null;
+  const supplier = isUuid(supplierId)
+    ? await getSupplierById(client, tenantId, supplierId)
+    : null;
   if (!supplier) {
     return (
-      <WorkspaceRealFrame title={messages.supplierWorkspace.missingTitle} intro={messages.supplierWorkspace.missingBody}>
+      <WorkspaceRealFrame
+        title={messages.supplierWorkspace.missingTitle}
+        intro={messages.supplierWorkspace.missingBody}
+      >
         <></>
       </WorkspaceRealFrame>
     );
   }
 
-  const [evidence, canManageSuppliers, canRunEvaluation, evaluation] = await Promise.all([
-    listSupplierEvidence(client, tenantId, supplierId),
-    hasCapability(client, tenantId, 'supplier.manage'),
-    hasCapability(client, tenantId, 'evaluation.run'),
-    getLatestSupplierEvaluation(client, tenantId, supplierId),
-  ]);
+  const [evidence, canManageSuppliers, canRunEvaluation, evaluation] =
+    await Promise.all([
+      listSupplierEvidence(client, tenantId, supplierId),
+      hasCapability(client, tenantId, 'supplier.manage'),
+      hasCapability(client, tenantId, 'evaluation.run'),
+      getLatestSupplierEvaluation(client, tenantId, supplierId),
+    ]);
 
-  const reasonCodes = evaluation ? await listEvaluationReasonCodes(client, tenantId, evaluation.id) : [];
+  const reasonCodes = evaluation
+    ? await listEvaluationReasonCodes(client, tenantId, evaluation.id)
+    : [];
   // A fresh idempotency/correlation id generated on every server render of
   // this page: a double-submit of the same rendered form (before
   // navigation) replays through the same correlation id
@@ -86,10 +103,21 @@ export default async function SupplierDetailPage({
   const correlationId = randomUUID();
 
   return (
-    <WorkspaceRealFrame title={supplier.displayName} intro={messages.supplierWorkspace.detailIntro}>
+    <WorkspaceRealFrame
+      title={supplier.displayName}
+      intro={messages.supplierWorkspace.detailIntro}
+      backHref={`/workspace/suppliers?tenant=${tenantId}`}
+      backLabel={messages.supplierWorkspace.backToSuppliers}
+    >
+      <SupplierJourney
+        evidenceCount={evidence.length}
+        hasEvaluation={evaluation?.status === 'completed'}
+      />
       <SupplierSummary supplier={supplier} />
       <SupplierEvidenceList evidence={evidence} />
-      {canManageSuppliers ? <SupplierEvidenceForm tenantId={tenantId} supplierId={supplierId} /> : null}
+      {canManageSuppliers ? (
+        <SupplierEvidenceForm tenantId={tenantId} supplierId={supplierId} />
+      ) : null}
       <SupplierEvaluationPanel
         tenantId={tenantId}
         supplierId={supplierId}
