@@ -67,12 +67,14 @@ void test('supplier presentation preserves the recommendation and evidence bound
     workspaceSources().map((file) => [file.name, file.source]),
   );
   const evaluation = sources['supplier-evaluation-panel.tsx'];
+  const finalDecision = sources['supplier-final-decision-panel.tsx'];
   const evidenceForm = sources['supplier-evidence-form.tsx'];
   const evidenceList = sources['supplier-evidence-list.tsx'];
 
   assert.match(evaluation, /recommendationNotice/);
-  assert.match(evaluation, /finalDecisionPending/);
-  assert.match(evaluation, /finalDecisionBody/);
+  assert.match(finalDecision, /evaluation\.decisionBand/);
+  assert.match(finalDecision, /decision\.decision/);
+  assert.match(finalDecision, /canDecide \?/);
   assert.match(evaluation, /evaluation\.score/);
   assert.match(evaluation, /evaluation\.decisionBand/);
   assert.match(evaluation, /evaluation\?\.status === 'pending'/);

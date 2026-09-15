@@ -4,12 +4,15 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
+import { resolveActiveTenantContext } from '@/lib/supabase/tenant-context';
 import { createSupplier, getSupplierById } from '@/lib/supabase/suppliers-repository';
 import { createSupplierEvidence } from '@/lib/supabase/supplier-evidence-repository';
 import { runSupplierEvaluation } from '@/lib/supabase/supplier-evaluations-repository';
 import { validateCreateSupplierInput, type CreateSupplierInput } from '@/lib/domain/supplier';
 import { validateCreateSupplierEvidenceInput, type CreateSupplierEvidenceInput } from '@/lib/domain/supplier-evidence';
-import { isUuid, type CorrelationId, type TenantId } from '@/lib/domain/ids';
+import { isUuid, type CorrelationId, type EvaluationId, type TenantId } from '@/lib/domain/ids';
+import { validateSupplierFinalDecision, validateSupplierDecisionRationale } from '@/lib/domain/supplier-final-decision';
+import { recordSupplierFinalDecision } from '@/lib/supabase/supplier-final-decisions-repository';
 
 // Server Actions for the real supplier evaluation slice
 // (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md). Same
@@ -186,6 +189,40 @@ export async function runEvaluationAction(
     // persisted supplier/evidence rows and the tenant's own current
     // published policy. This action only supplies identifying references.
     await runSupplierEvaluation(client, { tenantId, supplierId, correlationId });
+  } catch (error) {
+    return { status: 'error', code: errorCode(error) };
+  }
+
+  redirect(`/workspace/suppliers/${supplierId}?tenant=${tenantId}`);
+}
+
+export async function recordSupplierFinalDecisionAction(
+  _previousState: SupplierActionResult | null,
+  formData: FormData,
+): Promise<SupplierActionResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
+  const client = await createServerSupabaseClient();
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const supplierId = readFormValue(formData, 'supplierId');
+  const evaluationId = readFormValue(formData, 'evaluationId');
+  const correlationId = readFormValue(formData, 'correlationId');
+
+  let tenantId: TenantId;
+  try {
+    // Company Admin is a role boundary, not a generic capability. The DB RPC
+    // independently enforces active tenant_admin membership.
+    tenantId = (await resolveActiveTenantContext(client, identity, requestedTenantId)).tenantId;
+    if (!isUuid(supplierId) || !isUuid(evaluationId) || !isUuid(correlationId)) {
+      return { status: 'error', code: 'CompletedSupplierEvaluationNotFoundError' };
+    }
+    await recordSupplierFinalDecision(client, {
+      tenantId,
+      evaluationId: evaluationId as EvaluationId,
+      decision: validateSupplierFinalDecision(readFormValue(formData, 'decision')),
+      rationale: validateSupplierDecisionRationale(readFormValue(formData, 'rationale')),
+      correlationId: correlationId as CorrelationId,
+    });
   } catch (error) {
     return { status: 'error', code: errorCode(error) };
   }

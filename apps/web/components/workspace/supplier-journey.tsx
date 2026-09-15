@@ -4,9 +4,11 @@ import { messages } from '@/lib/i18n/messages';
 export function SupplierJourney({
   evidenceCount,
   hasEvaluation,
+  hasDecision = false,
 }: {
   evidenceCount: number;
   hasEvaluation: boolean;
+  hasDecision?: boolean;
 }) {
   const steps = [
     { label: messages.supplierWorkspace.journey.details, complete: true },
@@ -18,7 +20,7 @@ export function SupplierJourney({
       label: messages.supplierWorkspace.journey.evaluation,
       complete: hasEvaluation,
     },
-    { label: messages.supplierWorkspace.journey.decision, complete: false },
+    { label: messages.supplierWorkspace.journey.decision, complete: hasDecision },
   ];
 
   return (

@@ -12,7 +12,7 @@ import {
 } from '@/app/workspace/suppliers/actions';
 import type { TenantId } from '@/lib/domain/ids';
 import type { Evaluation, EvaluationReasonCode } from '@/lib/domain/evaluation';
-import { CheckCircle2Icon, InfoIcon, LockKeyholeIcon } from 'lucide-react';
+import { CheckCircle2Icon, InfoIcon } from 'lucide-react';
 
 const initialState: SupplierActionResult | null = null;
 
@@ -69,29 +69,6 @@ export function SupplierEvaluationPanel({
         </p>
       </div>
 
-      <div
-        id="evaluation-boundary"
-        className="rounded-xl border border-border bg-muted/30 p-5"
-      >
-        <div className="flex items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background">
-            <LockKeyholeIcon
-              aria-hidden="true"
-              className="size-4 text-muted-foreground"
-            />
-          </span>
-          <div>
-            <h3 className="font-medium">{t.finalDecisionTitle}</h3>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {t.finalDecisionPending}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {t.finalDecisionBody}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {state?.status === 'error' ? (
         <Alert variant="destructive" role="alert">
           <AlertTitle>
@@ -106,7 +83,6 @@ export function SupplierEvaluationPanel({
         <form
           action={formAction}
           className="space-y-2"
-          aria-describedby="evaluation-boundary"
         >
           <input type="hidden" name="tenantId" value={tenantId} />
           <input type="hidden" name="supplierId" value={supplierId} />

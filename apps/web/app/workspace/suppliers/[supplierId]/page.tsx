@@ -18,6 +18,8 @@ import { SupplierEvidenceForm } from '@/components/workspace/supplier-evidence-f
 import { SupplierEvaluationPanel } from '@/components/workspace/supplier-evaluation-panel';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
 import { SupplierJourney } from '@/components/workspace/supplier-journey';
+import { SupplierFinalDecisionPanel } from '@/components/workspace/supplier-final-decision-panel';
+import { canRecordSupplierFinalDecision, getSupplierFinalDecision } from '@/lib/supabase/supplier-final-decisions-repository';
 import { messages } from '@/lib/i18n/messages';
 
 // Real supplier detail: evidence registration, evaluation trigger, and the
@@ -94,6 +96,12 @@ export default async function SupplierDetailPage({
   const reasonCodes = evaluation
     ? await listEvaluationReasonCodes(client, tenantId, evaluation.id)
     : [];
+  const [canDecide, finalDecision] = evaluation?.status === 'completed'
+    ? await Promise.all([
+        canRecordSupplierFinalDecision(client, tenantId),
+        getSupplierFinalDecision(client, tenantId, evaluation.id),
+      ])
+    : [false, null];
   // A fresh idempotency/correlation id generated on every server render of
   // this page: a double-submit of the same rendered form (before
   // navigation) replays through the same correlation id
@@ -112,6 +120,7 @@ export default async function SupplierDetailPage({
       <SupplierJourney
         evidenceCount={evidence.length}
         hasEvaluation={evaluation?.status === 'completed'}
+        hasDecision={finalDecision !== null}
       />
       <SupplierSummary supplier={supplier} />
       <SupplierEvidenceList evidence={evidence} />
@@ -125,6 +134,14 @@ export default async function SupplierDetailPage({
         canRunEvaluation={canRunEvaluation}
         evaluation={evaluation}
         reasonCodes={reasonCodes}
+      />
+      <SupplierFinalDecisionPanel
+        tenantId={tenantId}
+        supplierId={supplierId}
+        correlationId={randomUUID()}
+        evaluation={evaluation}
+        decision={finalDecision}
+        canDecide={canDecide}
       />
     </WorkspaceRealFrame>
   );

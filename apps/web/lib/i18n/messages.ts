@@ -235,7 +235,7 @@ export const messages = {
     },
     evaluation: {
       title: 'Deterministic evaluation',
-      hint: 'Runs the published policy engine against this supplier and its recorded evidence. The result is a recommendation only; the Company Admin records the final decision in a later workflow.',
+      hint: 'Runs the published policy engine against this supplier and its recorded evidence. The result is a recommendation only and remains separate from the Company Admin decision.',
       runButton: 'Run evaluation',
       running: 'Running…',
       noEvaluationYet: 'No evaluation has run yet for this supplier.',
@@ -262,15 +262,31 @@ export const messages = {
       recommendationEyebrow: 'Engine recommendation',
       recommendationNotice:
         'This is a deterministic recommendation, not a recorded business decision.',
-      finalDecisionTitle: 'Final Company decision',
-      finalDecisionPending: 'Pending Company Admin review',
-      finalDecisionBody:
-        'Only a Company Admin may record the final approve, review, or reject decision in a future workflow.',
       recommendationValues: {
         approve: 'Approve',
         review: 'Review',
         reject: 'Reject',
       },
+    },
+    finalDecision: {
+      title: 'Final Company decision',
+      separation: 'This human business decision is recorded separately from the deterministic engine recommendation. The two may differ.',
+      recommendation: 'Engine recommendation',
+      decision: 'Company Admin decision',
+      pending: 'Not recorded',
+      requiresCompleted: 'A final decision can be recorded only after a deterministic evaluation completes.',
+      choose: 'Choose the final business decision',
+      values: { approve: 'Approve', review: 'Review', reject: 'Reject' },
+      rationale: 'Rationale',
+      rationaleOptional: 'Concise rationale (optional)',
+      rationaleHelp: 'Up to 500 characters. Do not include personal data or sensitive evidence details.',
+      submit: 'Record final decision',
+      submitting: 'Recording…',
+      recorded: 'Final decision recorded',
+      recordedAt: 'Recorded (UTC)',
+      immutable: 'This decision is immutable and cannot be changed or deleted in this workflow.',
+      readOnlyTitle: 'Read-only decision state',
+      readOnlyBody: 'Only an active Company Admin may record the final decision. You can still review the recommendation and any persisted decision.',
     },
     errors: {
       InvalidSupplierReferenceError:
@@ -297,6 +313,11 @@ export const messages = {
       SupplierNotFoundError:
         'This supplier could not be found in your active company.',
       SupplierWriteError: 'The supplier could not be saved. Try again.',
+      InvalidSupplierFinalDecisionError: 'Choose approve, review, or reject.',
+      InvalidSupplierDecisionRationaleError: 'Keep the rationale within 500 characters.',
+      CompletedSupplierEvaluationNotFoundError: 'A completed evaluation could not be found in this company.',
+      SupplierFinalDecisionConflictError: 'A final decision or correlation identifier has already been used.',
+      SupplierFinalDecisionWriteError: 'The final decision could not be recorded.',
       InvalidEvidenceTypeError: 'Choose a valid evidence type.',
       InvalidEvidenceDisplayNameError:
         'Enter a display name between 1 and 200 characters.',
