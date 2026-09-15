@@ -589,14 +589,141 @@ $ git diff --cached --check
 (no output — clean)
 ```
 
+### Second post-handoff correction — 2026-09-15: database-layer forgery and bypass gaps
+
+A second independent security review correctly rejected the first
+correction: it only guarded the Next.js Server Action layer, not the
+database boundary itself, so every issue below was still fully exploitable
+by any authenticated PostgREST/RPC caller bypassing the app entirely.
+Four required corrections, all implemented and verified directly against
+the database (not the application layer):
+
+1. **suppliers/supplier_evidence had a platform-admin bypass on select,
+   and a policy-gated (not RPC-only) insert path.** Fixed in
+   `20260914120100_suppliers.sql`: select policies now use a new
+   `app.has_tenant_capability_as_member()` helper
+   (`20260914120050_no_bypass_authorization_helpers.sql`) with no
+   platform-admin branch at all. The authenticated insert policies were
+   removed entirely and `insert/update/delete` revoked from
+   `authenticated`/`anon` outright. The only write path is now
+   `public.create_supplier()`/`public.create_supplier_evidence()`,
+   security-definer RPCs that check the same no-bypass helper, derive the
+   actor from `auth.uid()` themselves (no actor parameter exists to
+   forge), and record a mandatory `audit_events` row in the same
+   transaction — mirroring the existing `public.record_audit_event()`
+   pattern (no policy for authenticated at all; the RPC is the only door).
+
+2. **The evaluation RPC accepted a fully computed engine result as plain
+   parameters — completely forgeable.** The prior
+   `public.complete_supplier_evaluation(..., p_score, p_decision_band,
+   p_data_quality, p_normalized_input, p_reasons)` trusted whatever the
+   Server Action sent it; since this task explicitly cannot use a
+   service-role credential or shared secret, nothing distinguished "the
+   real app's computed result" from any other authenticated caller with
+   `evaluation.run` calling the RPC directly with an arbitrary score. Per
+   the reviewer's instruction, the only way to close this without a
+   trusted secret is for the database itself to compute the result. It
+   now does: `public.run_supplier_evaluation(tenant_id, supplier_id,
+   correlation_id)` — three identifying references, nothing else — looks
+   up the tenant's own current published policy itself (the caller no
+   longer even names a policy version), re-derives all six bounded facts
+   from persisted `suppliers`/`supplier_evidence` rows
+   (`app.derive_supplier_evaluation_facts()`, a line-for-line SQL port of
+   `apps/web/lib/domain/supplier-evaluation-adapter.ts`'s rules), computes
+   the weighted score, resolves the recommendation band against the
+   policy's thresholds (`resolveBand()`'s exact `[min, max)`/last-inclusive
+   semantics), computes data quality and reason codes, and persists all of
+   it atomically. The TS adapter is now dead code with nothing left to
+   call it, so it and its test were deleted rather than left as
+   misleading unused code; the pure engine
+   (`apps/web/lib/domain/evaluation-engine.ts`) remains untouched and
+   unmodified, simply no longer on this write path. The SQL suite asserts
+   the database's own computed score (36.90) and band (`review`) against
+   a hand-derived expected value from known fixture data, so it fails if
+   the SQL scoring ever diverges from the reference algorithm.
+
+   A second, easily-missed hole: even with the RPC fixed, `evaluations`
+   still had a *direct* authenticated insert/update policy (from
+   `20260912120800_security_and_english_first_hardening.sql`, shared with
+   non-supplier evaluation types and exercised by
+   `supabase/tests/020-integration-hardening.sql`) that would let a
+   caller skip the RPC entirely and insert a forged score straight into
+   the table. Narrowed both policies (and the matching select policies,
+   since the reviewer's test list also required blocking platform-admin
+   reads) to `supplier_id is null`, so a *supplier* evaluation can now
+   only ever be written or read through the security-definer RPC, while
+   every pre-existing non-supplier test and use case is untouched.
+
+3. **`case_decisions_insert` still allowed a platform-admin bypass and a
+   generic `case.decide`-capability route.** New migration
+   `20260914120300_case_decisions_tenant_admin_only.sql` replaces it with
+   `app.is_active_tenant_admin(tenant_id) and decided_by = auth.uid()` — a
+   new helper with no platform-admin branch and no capability check at
+   all, matching "Only the Company Admin records the final business
+   decision" as a *role*, not a capability grant some future seed change
+   could hand to anyone.
+
+4. `supabase/tests/040-supplier-evaluation.sql` was rewritten end to end
+   against the new RPCs, adding: platform admin cannot select or insert
+   suppliers/evidence/evaluations (six new assertions, one per
+   table/direction); a direct authenticated table insert has no grant at
+   all even for a caller who *does* hold the relevant capability (proving
+   the RPC is the only path, not just the capability-gated one); forging
+   a supplier evaluation score via direct insert is impossible; every
+   successful `create_supplier`/`create_supplier_evidence` call has its
+   `audit_events` row verified atomically; risk_analyst and platform admin
+   cannot record a case decision; an active tenant_admin can, and cannot
+   forge `decided_by`. 30 assertions total in this file now, all passing.
+
+Checks run and exact results after this correction:
+
+```
+$ ./supabase/tests/run-local-verification.sh
+==> all checks passed   (040-supplier-evaluation.sql: 30/30 assertions, including
+                          the hand-computed score/band cross-check)
+
+$ cd apps/web && npm test
+ℹ tests 212
+ℹ pass 212
+ℹ fail 0
+
+$ cd apps/web && npx tsc --noEmit -p tsconfig.json
+(no output — clean)
+
+$ cd apps/web && npm run lint -- --ignore-pattern 'components/ui/**' --ignore-pattern 'hooks/use-mobile.ts'
+(no output — clean)
+
+$ cd apps/web && npm run build
+✓ built; /workspace/suppliers and /workspace/suppliers/:supplierId both registered
+
+$ cd apps/web && npm run verify:vercel
+✓ .vercel/output/ is a genuine Vercel Build Output API v3 deployment
+
+$ ./scripts/check-secrets.sh
+Secret check passed.
+
+$ git diff --cached --check
+(no output — clean)
+```
+
+(212 vs. the prior 214: the deleted `supplier-evaluation-adapter.test.ts`
+removed 12 tests; `supplier-evidence-repository.test.ts`, not previously
+covered, added a new file's worth back.)
+
+No hosted service, credential, `.env` file, deployment, merge, push, or
+`supabase/config.toml` was read, created, or touched at any point in
+either correction.
+
 ### Exact commits
 
 ```
+a7d09bb fix(suppliers): close the database-layer forgery and bypass gaps
+4f765d2 docs(task): record post-handoff review correction
 e0cd604 fix(suppliers): reject platform administrators in every Server Action
 988a33f docs(task): record TASK-023 handoff
 00ca639 feat(suppliers): add real supplier evaluation slice
 8b3aaa7 docs(task): define real supplier evaluation slice   <- base (unchanged)
 ```
 
-Branch `feat/claude-real-supplier-evaluation-slice` is 3 commits ahead of
+Branch `feat/claude-real-supplier-evaluation-slice` is 5 commits ahead of
 base, working tree clean, nothing pushed to the remote.
