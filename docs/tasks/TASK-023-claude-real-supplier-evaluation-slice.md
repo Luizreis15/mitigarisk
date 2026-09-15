@@ -521,3 +521,82 @@ plus explicit confirmation of the `supabase/config.toml` scope decision
 above before anyone attempts the outstanding browser walkthrough. Cursor
 finishes the visual experience only after Codex integrates this functional
 slice, per the task contract.
+
+### Post-handoff correction — 2026-09-15
+
+Ran an independent self-review against exactly the dimensions Codex would
+check: tenant isolation, actor provenance, idempotency, immutable
+evaluations, purity of the deterministic engine, and real/demo separation.
+One real gap found and fixed (commit `e0cd604`):
+
+- **Gap**: `createSupplierAction`, `createEvidenceAction`, and
+  `runEvaluationAction` (`apps/web/app/workspace/suppliers/actions.ts`)
+  relied on `resolveAuthorizedTenantContext` alone. That call fails closed
+  for a platform administrator only as an *incidental* consequence of
+  seed data giving platform admins no tenant membership — not as a
+  guaranteed code-level rule. A platform admin who also held a real tenant
+  membership would have succeeded at creating a supplier, registering
+  evidence, or running an evaluation through this flow, contradicting
+  acceptance criterion 9 ("No platform administrator ... produces a
+  successful result") and the "no operational bypass through the real
+  workspace" principle already enforced correctly on the read side by
+  both supplier pages.
+- **Fix**: each action now checks `identity.isPlatformAdmin` immediately
+  after resolving identity and returns a `ForbiddenError` before
+  resolving tenant context or touching any data. Added
+  `apps/web/tests/app/supplier-actions-platform-admin-boundary.test.ts`,
+  a source-assertion regression test matching this repo's existing
+  convention for Server Action/route files that cannot easily be invoked
+  under `node --test` (`tests/app/auth-email-boundary.test.ts`).
+- **No other issue found** across the six dimensions. Details are in
+  commit `e0cd604`'s message; the DB-level `public.is_platform_admin()`
+  bypass inside `public.complete_supplier_evaluation()` and the two new
+  RLS policies was deliberately left as-is, since it exactly mirrors the
+  same defense-in-depth bypass every other capability-checked table/RPC
+  in this codebase already has — the actual "no operational bypass
+  through the real workspace" rule is, and always was, an
+  application-layer concern (see how `/workspace/page.tsx` itself gates
+  on `identity.isPlatformAdmin`), not something to special-case at the
+  database layer for this one RPC alone.
+
+Re-ran the complete check set after the fix; all pass:
+
+```
+$ ./supabase/tests/run-local-verification.sh
+==> all checks passed        (040-supplier-evaluation.sql: 22/22, unchanged)
+
+$ cd apps/web && npm test
+ℹ tests 214
+ℹ pass 214
+ℹ fail 0
+
+$ cd apps/web && npx tsc --noEmit -p tsconfig.json
+(no output — clean)
+
+$ cd apps/web && npm run lint -- --ignore-pattern 'components/ui/**' --ignore-pattern 'hooks/use-mobile.ts'
+(no output — clean)
+
+$ cd apps/web && npm run build
+✓ built; /workspace/suppliers and /workspace/suppliers/:supplierId both registered
+
+$ cd apps/web && npm run verify:vercel
+✓ .vercel/output/ is a genuine Vercel Build Output API v3 deployment
+
+$ ./scripts/check-secrets.sh
+Secret check passed.
+
+$ git diff --cached --check
+(no output — clean)
+```
+
+### Exact commits
+
+```
+e0cd604 fix(suppliers): reject platform administrators in every Server Action
+988a33f docs(task): record TASK-023 handoff
+00ca639 feat(suppliers): add real supplier evaluation slice
+8b3aaa7 docs(task): define real supplier evaluation slice   <- base (unchanged)
+```
+
+Branch `feat/claude-real-supplier-evaluation-slice` is 3 commits ahead of
+base, working tree clean, nothing pushed to the remote.
