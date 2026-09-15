@@ -138,7 +138,7 @@ export const messages = {
     journeyLabel: 'Evaluation progress',
     journey: {
       details: 'Supplier details',
-      evidence: 'Evidence readiness',
+      evidence: 'Evidence recorded',
       evaluation: 'Deterministic evaluation',
       decision: 'Company decision',
     },
@@ -202,8 +202,7 @@ export const messages = {
       emptyTitle: 'No evidence recorded yet',
       emptyBody:
         'Add metadata to show which fictional evidence would support this assessment.',
-      readinessLabel: 'Evidence readiness',
-      readinessRecorded: '{count} metadata entries recorded',
+      recordedCount: '{count} metadata entries recorded',
       metadataBadge: 'Metadata only',
       formTitle: 'Register evidence metadata',
       typeLabel: 'Evidence type',
@@ -242,6 +241,12 @@ export const messages = {
       noEvaluationYet: 'No evaluation has run yet for this supplier.',
       noEvaluationBody:
         'Run the deterministic engine when the supplier details and evidence metadata are ready.',
+      pendingTitle: 'Evaluation in progress',
+      pendingBody:
+        'The persisted evaluation is pending. No recommendation is available yet.',
+      failedTitle: 'Evaluation did not complete',
+      failedBody:
+        'The persisted evaluation failed. No recommendation or final Company decision was recorded.',
       resultTitle: 'Evaluation result',
       scoreLabel: 'Score',
       recommendationLabel: 'Recommendation',

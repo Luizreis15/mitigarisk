@@ -49,7 +49,7 @@ export function SupplierEvidenceList({
               aria-hidden="true"
               className="size-4 text-primary"
             />
-            {t.readinessRecorded.replace('{count}', String(evidence.length))}
+            {t.recordedCount.replace('{count}', String(evidence.length))}
           </div>
           <div className="hidden overflow-x-auto sm:block">
             <Table>
@@ -85,8 +85,10 @@ export function SupplierEvidenceList({
                 key={entry.id}
                 className="rounded-lg border border-border p-4"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-medium">{entry.displayName}</span>
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <span className="min-w-0 break-all font-medium">
+                    {entry.displayName}
+                  </span>
                   <Badge variant="outline">
                     {t.verificationStates[entry.verificationState]}
                   </Badge>

@@ -115,7 +115,7 @@ export function SupplierEvaluationPanel({
         </form>
       ) : null}
 
-      {evaluation && evaluation.status === 'completed' ? (
+      {evaluation?.status === 'completed' ? (
         <div className="space-y-6">
           <div className="rounded-xl border-2 border-primary/30 bg-primary/[0.04] p-5 sm:p-6">
             <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
@@ -208,6 +208,18 @@ export function SupplierEvaluationPanel({
             </div>
           ) : null}
         </div>
+      ) : evaluation?.status === 'pending' ? (
+        <div className="rounded-lg border border-border bg-muted/40 p-4">
+          <p className="text-sm font-medium">{t.pendingTitle}</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {t.pendingBody}
+          </p>
+        </div>
+      ) : evaluation?.status === 'failed' ? (
+        <Alert variant="destructive" role="alert">
+          <AlertTitle>{t.failedTitle}</AlertTitle>
+          <p className="text-sm text-destructive/90">{t.failedBody}</p>
+        </Alert>
       ) : (
         <div className="rounded-lg bg-muted/40 p-4">
           <p className="text-sm font-medium">{t.noEvaluationYet}</p>

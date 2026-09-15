@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { messages } from '../../lib/i18n/messages.ts';
 
 // TASK-018: workspace presentation components must not import Supabase
 // modules or privileged configuration. Values they render are server-derived.
@@ -74,11 +75,16 @@ void test('supplier presentation preserves the recommendation and evidence bound
   assert.match(evaluation, /finalDecisionBody/);
   assert.match(evaluation, /evaluation\.score/);
   assert.match(evaluation, /evaluation\.decisionBand/);
+  assert.match(evaluation, /evaluation\?\.status === 'pending'/);
+  assert.match(evaluation, /evaluation\?\.status === 'failed'/);
+  assert.match(evaluation, /pendingTitle/);
+  assert.match(evaluation, /failedTitle/);
   assert.doesNotMatch(evaluation, /calculate|compute|threshold/i);
 
   assert.doesNotMatch(evidenceForm, /type=["']file["']/);
   assert.match(evidenceForm, /evidence-form-disclosure/);
   assert.match(evidenceList, /metadataBadge/);
+  assert.match(evidenceList, /recordedCount/);
 });
 
 void test('supplier lists provide distinct narrow and wide presentations', () => {
@@ -88,4 +94,25 @@ void test('supplier lists provide distinct narrow and wide presentations', () =>
   assert.match(list, /hidden overflow-x-auto sm:block/);
   assert.match(list, /sm:hidden/);
   assert.match(list, /focus-visible:ring-2/);
+});
+
+void test('narrow evidence cards safely wrap long unbroken display names', () => {
+  const evidenceList =
+    workspaceSources().find(
+      (file) => file.name === 'supplier-evidence-list.tsx',
+    )?.source ?? '';
+  assert.match(evidenceList, /flex min-w-0 items-start justify-between/);
+  assert.match(evidenceList, /min-w-0 break-all font-medium/);
+});
+
+void test('supplier journey records metadata presence without claiming evidence readiness', () => {
+  const journey =
+    workspaceSources().find((file) => file.name === 'supplier-journey.tsx')
+      ?.source ?? '';
+  assert.match(journey, /evidenceCount > 0/);
+  assert.doesNotMatch(journey, /readiness/i);
+  assert.equal(
+    messages.supplierWorkspace.journey.evidence,
+    'Evidence recorded',
+  );
 });
