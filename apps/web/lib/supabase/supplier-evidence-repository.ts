@@ -1,13 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TenantId, UserId } from "../domain/ids";
 import type { SupplierEvidence, ValidatedCreateSupplierEvidenceInput } from "../domain/supplier-evidence";
+import { ForbiddenError } from "./authorization.ts";
 
 // Request-scoped supplier evidence repository (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md).
-// Same posture as suppliers-repository.ts: caller's own authenticated
-// client, supplier_evidence_insert/select RLS
-// (supabase/migrations/20260914120100_suppliers.sql) is the real
-// enforcement boundary, created_by/updated_by always come from the
-// verified actor, never a browser-supplied value.
+// Same security-definer-RPC posture as suppliers-repository.ts:
+// supplier_evidence has no authenticated insert policy or grant at all
+// (supabase/migrations/20260914120100_suppliers.sql) — the only path is
+// public.create_supplier_evidence(), which derives the actor from
+// auth.uid() itself and records a mandatory audit event atomically.
 
 export class SupplierEvidenceReadError extends Error {
   constructor(message: string) {
@@ -20,6 +21,13 @@ export class SupplierEvidenceWriteError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "SupplierEvidenceWriteError";
+  }
+}
+
+export class SupplierNotFoundForEvidenceError extends Error {
+  constructor(supplierId: string) {
+    super(`Supplier ${supplierId} was not found in this tenant`);
+    this.name = "SupplierNotFoundError";
   }
 }
 
@@ -64,27 +72,26 @@ export async function createSupplierEvidence(
   client: SupabaseClient,
   tenantId: TenantId,
   supplierId: string,
-  actorUserId: UserId,
   input: ValidatedCreateSupplierEvidenceInput,
 ): Promise<SupplierEvidence> {
-  const { data, error } = await client
-    .from("supplier_evidence")
-    .insert({
-      tenant_id: tenantId,
-      supplier_id: supplierId,
-      evidence_type: input.evidenceType,
-      display_name: input.displayName,
-      issuer_country_code: input.issuerCountryCode,
-      issue_date: input.issueDate,
-      verification_state: input.verificationState,
-      digest_sha256: input.digestSha256,
-      created_by: actorUserId,
-      updated_by: actorUserId,
-    })
-    .select(EVIDENCE_COLUMNS)
-    .single();
+  const { data, error } = await client.rpc("create_supplier_evidence", {
+    p_tenant_id: tenantId,
+    p_supplier_id: supplierId,
+    p_evidence_type: input.evidenceType,
+    p_display_name: input.displayName,
+    p_issuer_country_code: input.issuerCountryCode,
+    p_issue_date: input.issueDate,
+    p_verification_state: input.verificationState,
+    p_digest_sha256: input.digestSha256,
+  });
 
   if (error) {
+    if (error.code === "P0002") {
+      throw new SupplierNotFoundForEvidenceError(supplierId);
+    }
+    if (error.code === "42501") {
+      throw new ForbiddenError("supplier.manage", tenantId);
+    }
     throw new SupplierEvidenceWriteError(`Failed to register supplier evidence: ${error.message}`);
   }
 

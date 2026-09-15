@@ -9,6 +9,7 @@ import {
   SupplierWriteError,
   SupplierReadError,
 } from "../../lib/supabase/suppliers-repository.ts";
+import { ForbiddenError } from "../../lib/supabase/authorization.ts";
 import type { TenantId, UserId } from "../../lib/domain/ids.ts";
 import type { ValidatedCreateSupplierInput } from "../../lib/domain/supplier.ts";
 
@@ -51,19 +52,14 @@ const ROW = {
   updated_at: "2026-09-14T00:00:00.000Z",
 };
 
-function fakeInsertClient(result: { data: unknown; error: unknown }) {
-  const calls: { insertPayload?: unknown } = {};
-  const builder = Object.assign(Promise.resolve(result), {
-    select: (_columns: string) => builder,
-    single: () => Promise.resolve(result),
-  });
+function fakeRpcClient(result: { data: unknown; error: unknown }) {
+  const calls: { name?: string; params?: unknown } = {};
   const client = {
-    from: (_table: string) => ({
-      insert: (payload: unknown) => {
-        calls.insertPayload = payload;
-        return builder;
-      },
-    }),
+    rpc: (name: string, params: unknown) => {
+      calls.name = name;
+      calls.params = params;
+      return Promise.resolve(result);
+    },
   } as unknown as SupabaseClient;
   return { client, calls };
 }
@@ -83,31 +79,37 @@ function fakeSelectClient(result: { data: unknown; error: unknown }) {
   return { client, calls };
 }
 
-void test("createSupplier sends created_by/updated_by from the verified actor, never from input", async () => {
-  const { client, calls } = fakeInsertClient({ data: ROW, error: null });
-  await createSupplier(client, TENANT_ID, USER_ID, VALIDATED_INPUT);
-  const payload = calls.insertPayload as Record<string, unknown>;
-  assert.equal(payload.created_by, USER_ID);
-  assert.equal(payload.updated_by, USER_ID);
-  assert.equal(payload.tenant_id, TENANT_ID);
+void test("createSupplier calls the create_supplier RPC, never a direct table insert", async () => {
+  const { client, calls } = fakeRpcClient({ data: ROW, error: null });
+  await createSupplier(client, TENANT_ID, VALIDATED_INPUT);
+  assert.equal(calls.name, "create_supplier");
+  const params = calls.params as Record<string, unknown>;
+  assert.equal(params.p_tenant_id, TENANT_ID);
+  assert.equal(params.p_reference, VALIDATED_INPUT.reference);
+  // No actor id of any kind is sent: public.create_supplier() derives it
+  // from auth.uid() itself (supabase/migrations/20260914120100_suppliers.sql).
+  assert.equal("p_created_by" in params, false);
+  assert.equal("actorUserId" in params, false);
 });
 
 void test("createSupplier maps a unique-violation to DuplicateSupplierReferenceError", async () => {
-  const { client } = fakeInsertClient({ data: null, error: { code: "23505", message: "duplicate key" } });
-  await assert.rejects(
-    () => createSupplier(client, TENANT_ID, USER_ID, VALIDATED_INPUT),
-    DuplicateSupplierReferenceError,
-  );
+  const { client } = fakeRpcClient({ data: null, error: { code: "23505", message: "duplicate key" } });
+  await assert.rejects(() => createSupplier(client, TENANT_ID, VALIDATED_INPUT), DuplicateSupplierReferenceError);
+});
+
+void test("createSupplier maps a missing-capability error to ForbiddenError", async () => {
+  const { client } = fakeRpcClient({ data: null, error: { code: "42501", message: "insufficient_privilege" } });
+  await assert.rejects(() => createSupplier(client, TENANT_ID, VALIDATED_INPUT), ForbiddenError);
 });
 
 void test("createSupplier maps any other database error to SupplierWriteError", async () => {
-  const { client } = fakeInsertClient({ data: null, error: { code: "42501", message: "insufficient_privilege" } });
-  await assert.rejects(() => createSupplier(client, TENANT_ID, USER_ID, VALIDATED_INPUT), SupplierWriteError);
+  const { client } = fakeRpcClient({ data: null, error: { code: "08006", message: "connection failure" } });
+  await assert.rejects(() => createSupplier(client, TENANT_ID, VALIDATED_INPUT), SupplierWriteError);
 });
 
 void test("createSupplier maps the returned row back to the domain Supplier shape", async () => {
-  const { client } = fakeInsertClient({ data: ROW, error: null });
-  const supplier = await createSupplier(client, TENANT_ID, USER_ID, VALIDATED_INPUT);
+  const { client } = fakeRpcClient({ data: ROW, error: null });
+  const supplier = await createSupplier(client, TENANT_ID, VALIDATED_INPUT);
   assert.equal(supplier.reference, "SUP-ATLAS-001");
   assert.deepEqual(supplier.operatingCountryCodes, ["MT", "IT"]);
   assert.equal(supplier.status, "draft");

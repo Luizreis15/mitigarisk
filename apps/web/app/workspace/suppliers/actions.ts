@@ -5,13 +5,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
 import { createSupplier, getSupplierById } from '@/lib/supabase/suppliers-repository';
-import { createSupplierEvidence, listSupplierEvidence } from '@/lib/supabase/supplier-evidence-repository';
-import { getCurrentPublishedPolicy } from '@/lib/supabase/published-policy-repository';
-import { completeSupplierEvaluation } from '@/lib/supabase/supplier-evaluations-repository';
+import { createSupplierEvidence } from '@/lib/supabase/supplier-evidence-repository';
+import { runSupplierEvaluation } from '@/lib/supabase/supplier-evaluations-repository';
 import { validateCreateSupplierInput, type CreateSupplierInput } from '@/lib/domain/supplier';
 import { validateCreateSupplierEvidenceInput, type CreateSupplierEvidenceInput } from '@/lib/domain/supplier-evidence';
-import { deriveSupplierEvaluationFacts, computeSupplierEvaluationInputHash } from '@/lib/domain/supplier-evaluation-adapter';
-import { runEvaluation, EVALUATION_ENGINE_CONTRACT_VERSION } from '@/lib/domain/evaluation-engine';
 import { isUuid, type CorrelationId, type TenantId } from '@/lib/domain/ids';
 
 // Server Actions for the real supplier evaluation slice
@@ -22,10 +19,19 @@ import { isUuid, type CorrelationId, type TenantId } from '@/lib/domain/ids';
 // hidden form field is never authorization by itself: resolveAuthorizedTenantContext
 // re-proves it against the caller's own real active memberships and the
 // required capability on every call (docs/tasks/TASK-019-claude-tenant-authorization-boundary.md).
-// The pure evaluation engine (apps/web/lib/domain/evaluation-engine.ts) is
-// never modified or bypassed: this file only derives its input from
-// persisted records and persists its output, atomically, through
-// public.complete_supplier_evaluation().
+//
+// Security correction (post-review, 2026-09-15): every write below is now
+// a thin call to a security-definer, capability-checked, audited RPC
+// (public.create_supplier, public.create_supplier_evidence,
+// public.run_supplier_evaluation — supabase/migrations/20260914120100_suppliers.sql,
+// 20260914120200_supplier_evaluation.sql). This file no longer computes,
+// derives, or forwards a risk score, recommendation, or normalized input
+// of any kind: the database is the sole source of truth for a supplier
+// evaluation's result, so there is nothing left here for a forged Server
+// Action call (or a compromised browser) to influence beyond which
+// supplier/evidence is created and which supplier is evaluated — both
+// already re-checked server-side against real persisted records and the
+// caller's real tenant membership and capability.
 
 export type SupplierActionResult = { status: 'success' } | { status: 'error'; code: string };
 
@@ -47,7 +53,10 @@ function errorCode(error: unknown): string {
 // happens to hold a real tenant membership must still never succeed at
 // creating a supplier, registering evidence, or running an evaluation
 // through this flow, exactly as /workspace/suppliers/page.tsx and
-// /workspace/suppliers/[supplierId]/page.tsx already gate on the read side.
+// /workspace/suppliers/[supplierId]/page.tsx already gate on the read
+// side, and as every RPC this file calls also independently enforces at
+// the database layer with no platform-admin bypass of its own
+// (app.has_tenant_capability_as_member(), 20260914120050_no_bypass_authorization_helpers.sql).
 const PLATFORM_ADMIN_FORBIDDEN: SupplierActionResult = { status: 'error', code: 'ForbiddenError' };
 
 export async function createSupplierAction(
@@ -88,7 +97,7 @@ export async function createSupplierAction(
   let supplierId: string;
   try {
     const validated = validateCreateSupplierInput(input);
-    const supplier = await createSupplier(client, tenantId, identity.userId, validated);
+    const supplier = await createSupplier(client, tenantId, validated);
     supplierId = supplier.id;
   } catch (error) {
     return { status: 'error', code: errorCode(error) };
@@ -121,6 +130,10 @@ export async function createEvidenceAction(
   }
 
   try {
+    // Read-only lookup, still governed by suppliers_select RLS: only used
+    // here to build the evidence digest from the supplier's own reference.
+    // Authorization for the write itself is enforced entirely inside
+    // public.create_supplier_evidence().
     const supplier = await getSupplierById(client, tenantId, supplierId);
     if (!supplier) {
       return { status: 'error', code: 'SupplierNotFoundError' };
@@ -134,7 +147,7 @@ export async function createEvidenceAction(
       verificationState: readFormValue(formData, 'verificationState') as CreateSupplierEvidenceInput['verificationState'],
     };
     const validated = validateCreateSupplierEvidenceInput(supplier.reference, input);
-    await createSupplierEvidence(client, tenantId, supplierId, identity.userId, validated);
+    await createSupplierEvidence(client, tenantId, supplierId, validated);
   } catch (error) {
     return { status: 'error', code: errorCode(error) };
   }
@@ -168,44 +181,11 @@ export async function runEvaluationAction(
 
   try {
     // The browser never submits a factor score, recommendation, actor,
-    // policy version, or result field: every input to the engine below is
-    // re-read here from records this request just fetched under RLS.
-    const supplier = await getSupplierById(client, tenantId, supplierId);
-    if (!supplier) {
-      return { status: 'error', code: 'SupplierNotFoundError' };
-    }
-    const evidence = await listSupplierEvidence(client, tenantId, supplierId);
-    const policy = await getCurrentPublishedPolicy(client, tenantId);
-
-    const facts = deriveSupplierEvaluationFacts(supplier, evidence);
-    const inputHash = computeSupplierEvaluationInputHash({
-      policyVersionId: policy.policyVersionId,
-      supplierId,
-      facts,
-    });
-
-    const engineResult = runEvaluation({
-      contractVersion: EVALUATION_ENGINE_CONTRACT_VERSION,
-      policyVersionId: policy.policyVersionId,
-      correlationId,
-      factors: policy.factors,
-      thresholds: policy.thresholds,
-      facts,
-    });
-
-    await completeSupplierEvaluation(client, {
-      tenantId,
-      supplierId,
-      policyVersionId: policy.policyVersionId,
-      correlationId,
-      inputHash,
-      normalizedInput: facts,
-      score: engineResult.score,
-      decisionBand: engineResult.recommendation,
-      dataQuality: engineResult.dataQuality,
-      missingRequiredFactorKeys: engineResult.missingRequiredFactorKeys,
-      reasons: engineResult.reasons,
-    });
+    // policy version, or result field, and neither does this function:
+    // public.run_supplier_evaluation() derives everything itself from
+    // persisted supplier/evidence rows and the tenant's own current
+    // published policy. This action only supplies identifying references.
+    await runSupplierEvaluation(client, { tenantId, supplierId, correlationId });
   } catch (error) {
     return { status: 'error', code: errorCode(error) };
   }

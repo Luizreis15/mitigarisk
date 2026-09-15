@@ -3,14 +3,24 @@ import type { CorrelationId, EvaluationId, PolicyVersionId, TenantId, UserId } f
 import type { Evaluation, EvaluationReasonCode } from "../domain/evaluation";
 import type { DecisionBand } from "../domain/policy";
 import type { DataQualityStatus } from "../domain/evaluation-data-quality";
-import type { EvaluationReason } from "../domain/evaluation-reasons";
+import { ForbiddenError } from "./authorization.ts";
 
-// Request-scoped wrapper around public.complete_supplier_evaluation()
+// Request-scoped wrapper around public.run_supplier_evaluation()
 // (supabase/migrations/20260914120200_supplier_evaluation.sql), the one
-// atomic, capability-checked, audited write path for a completed
-// evaluation, plus the read paths for showing a persisted result back.
-// Caller's own authenticated client throughout; RLS is the real
-// enforcement boundary underneath this RPC and these reads.
+// atomic, capability-checked, audited evaluation path, plus the read paths
+// for showing a persisted result back.
+//
+// Security correction (post-review, 2026-09-15): this used to send a
+// fully computed score/decision_band/data_quality/normalized_input/reasons
+// to the RPC, trusting whatever the Server Action had computed — entirely
+// forgeable by any other authenticated caller with evaluation.run, since
+// no service-role credential exists to distinguish "the real app" from
+// any other caller. public.run_supplier_evaluation() now takes only
+// identifying references and derives everything else itself, from
+// persisted supplier/evidence rows and the tenant's own current published
+// policy; this repository function shrank to match — there is no longer
+// an "engine output" for a caller to supply or for this function to
+// forward.
 
 export class EvaluationReadError extends Error {
   constructor(message: string) {
@@ -38,6 +48,13 @@ export class SupplierNotFoundForEvaluationError extends Error {
   constructor(supplierId: string) {
     super(`Supplier ${supplierId} was not found in this tenant`);
     this.name = "SupplierNotFoundForEvaluationError";
+  }
+}
+
+export class NoPublishedPolicyError extends Error {
+  constructor(tenantId: TenantId) {
+    super(`Tenant ${tenantId} has no published policy version`);
+    this.name = "NoPublishedPolicyError";
   }
 }
 
@@ -85,42 +102,30 @@ function mapEvaluationRow(row: EvaluationRow): Evaluation {
   };
 }
 
-export interface CompleteSupplierEvaluationInput {
+export interface RunSupplierEvaluationInput {
   tenantId: TenantId;
   supplierId: string;
-  policyVersionId: PolicyVersionId;
   correlationId: CorrelationId;
-  inputHash: string;
-  normalizedInput: Record<string, unknown>;
-  score: number;
-  decisionBand: DecisionBand;
-  dataQuality: DataQualityStatus;
-  missingRequiredFactorKeys: readonly string[];
-  reasons: readonly EvaluationReason[];
 }
 
 /**
- * Persists one completed supplier evaluation via
- * public.complete_supplier_evaluation(), which inserts the evaluation and
- * its reason codes atomically, replays an identical prior correlation id,
- * and rejects a reused correlation id whose input differs.
+ * Runs one supplier evaluation via public.run_supplier_evaluation(), which
+ * re-derives every fact from persisted supplier/evidence rows, looks up
+ * the tenant's own current published policy itself, computes the score,
+ * recommendation, data quality, and reason codes, and persists atomically
+ * — replaying an identical prior correlation id or rejecting a reused one
+ * whose underlying data differs. No engine output is sent by this
+ * function because none exists to send: the caller supplies only
+ * identifying references.
  */
-export async function completeSupplierEvaluation(
+export async function runSupplierEvaluation(
   client: SupabaseClient,
-  input: CompleteSupplierEvaluationInput,
+  input: RunSupplierEvaluationInput,
 ): Promise<Evaluation> {
-  const { data, error } = await client.rpc("complete_supplier_evaluation", {
+  const { data, error } = await client.rpc("run_supplier_evaluation", {
     p_tenant_id: input.tenantId,
     p_supplier_id: input.supplierId,
-    p_policy_version_id: input.policyVersionId,
     p_correlation_id: input.correlationId,
-    p_input_hash: input.inputHash,
-    p_normalized_input: input.normalizedInput,
-    p_score: input.score,
-    p_decision_band: input.decisionBand,
-    p_data_quality: input.dataQuality,
-    p_missing_required_factor_keys: input.missingRequiredFactorKeys,
-    p_reasons: input.reasons,
   });
 
   if (error) {
@@ -130,7 +135,13 @@ export async function completeSupplierEvaluation(
     if (error.code === "P0002") {
       throw new SupplierNotFoundForEvaluationError(input.supplierId);
     }
-    throw new EvaluationWriteError(`Failed to complete supplier evaluation: ${error.message}`);
+    if (error.code === "P0003") {
+      throw new NoPublishedPolicyError(input.tenantId);
+    }
+    if (error.code === "42501") {
+      throw new ForbiddenError("evaluation.run", input.tenantId);
+    }
+    throw new EvaluationWriteError(`Failed to run supplier evaluation: ${error.message}`);
   }
 
   return mapEvaluationRow(data as EvaluationRow);

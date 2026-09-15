@@ -1,19 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TenantId, UserId } from "../domain/ids";
 import type { Supplier, ValidatedCreateSupplierInput } from "../domain/supplier";
+import { ForbiddenError } from "./authorization.ts";
 
 // Request-scoped supplier repository (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md).
-// Uses the caller's own authenticated client — never a service-role client
-// — so suppliers_insert/suppliers_select RLS
-// (supabase/migrations/20260914120100_suppliers.sql) is the real
-// enforcement boundary; the explicit tenant_id filters below are defense in
-// depth, matching every other repository in this codebase.
+// Uses the caller's own authenticated client — never a service-role client.
 //
-// created_by/updated_by are always the verified actorUserId passed in by
-// the caller (resolved server-side from RequestIdentity), never a
-// browser-supplied value — the suppliers_insert policy's
-// `created_by = auth.uid()` with-check is the database-level backstop if
-// this ever disagreed.
+// Security correction (post-review, 2026-09-15): creation no longer goes
+// through a direct table insert governed by RLS. suppliers has no
+// authenticated insert policy or grant at all
+// (supabase/migrations/20260914120100_suppliers.sql) — the only path is
+// public.create_supplier(), a security-definer RPC that derives the actor
+// from auth.uid() itself, checks supplier.manage via
+// app.has_tenant_capability_as_member() (no platform-admin bypass), and
+// records a mandatory audit event atomically. This repository no longer
+// accepts or forwards an actor id for creation; there is nothing left for
+// a caller to forge.
 
 export class SupplierReadError extends Error {
   constructor(message: string) {
@@ -88,33 +90,29 @@ const SUPPLIER_COLUMNS =
 export async function createSupplier(
   client: SupabaseClient,
   tenantId: TenantId,
-  actorUserId: UserId,
   input: ValidatedCreateSupplierInput,
 ): Promise<Supplier> {
-  const { data, error } = await client
-    .from("suppliers")
-    .insert({
-      tenant_id: tenantId,
-      reference: input.reference,
-      display_name: input.displayName,
-      registration_country_code: input.registrationCountryCode,
-      registration_identifier: input.registrationIdentifier,
-      industry_code: input.industryCode,
-      operating_country_codes: input.operatingCountryCodes,
-      relationship_purpose: input.relationshipPurpose,
-      annual_exposure_minor: input.annualExposureMinor,
-      annual_exposure_currency: input.annualExposureCurrency,
-      onboarding_channel: input.onboardingChannel,
-      website_domain: input.websiteDomain,
-      created_by: actorUserId,
-      updated_by: actorUserId,
-    })
-    .select(SUPPLIER_COLUMNS)
-    .single();
+  const { data, error } = await client.rpc("create_supplier", {
+    p_tenant_id: tenantId,
+    p_reference: input.reference,
+    p_display_name: input.displayName,
+    p_registration_country_code: input.registrationCountryCode,
+    p_registration_identifier: input.registrationIdentifier,
+    p_industry_code: input.industryCode,
+    p_operating_country_codes: input.operatingCountryCodes,
+    p_relationship_purpose: input.relationshipPurpose,
+    p_annual_exposure_minor: input.annualExposureMinor,
+    p_annual_exposure_currency: input.annualExposureCurrency,
+    p_onboarding_channel: input.onboardingChannel,
+    p_website_domain: input.websiteDomain,
+  });
 
   if (error) {
     if (error.code === "23505") {
       throw new DuplicateSupplierReferenceError(input.reference);
+    }
+    if (error.code === "42501") {
+      throw new ForbiddenError("supplier.manage", tenantId);
     }
     throw new SupplierWriteError(`Failed to create supplier: ${error.message}`);
   }

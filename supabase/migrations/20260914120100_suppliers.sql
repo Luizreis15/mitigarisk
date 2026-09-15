@@ -142,43 +142,164 @@ create trigger trg_supplier_evidence_identity_guard
   for each row execute function app.guard_supplier_evidence_identity();
 
 -- Row level security ----------------------------------------------------------
+--
+-- Security correction (post-review, 2026-09-15): platform administrators
+-- must receive no bypass here at all, for select or write
+-- (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md,
+-- acceptance criterion 9: "No platform administrator ... produces a
+-- successful result"; docs/architecture/PLATFORM-ARCHITECTURE.md,
+-- "Platform administrators receive no operational bypass through the real
+-- workspace"). Select policies below use app.has_tenant_capability_as_member()
+-- (20260914120050_no_bypass_authorization_helpers.sql), not app.has_capability(),
+-- specifically because the latter's platform-admin bypass is unconditional.
+-- There is no authenticated insert policy on either table at all: every
+-- write goes through the security-definer public.create_supplier()/
+-- public.create_supplier_evidence() RPCs below, which derive the actor
+-- from auth.uid() themselves and record a mandatory audit event in the
+-- same transaction. Direct INSERT is also revoked from authenticated so a
+-- raw PostgREST insert fails on the grant itself, not only on RLS.
 
 alter table public.suppliers enable row level security;
 alter table public.supplier_evidence enable row level security;
 
 create policy suppliers_select on public.suppliers
   for select to authenticated using (
-    app.is_platform_admin() or app.has_capability(tenant_id, 'supplier.view')
+    app.has_tenant_capability_as_member(tenant_id, 'supplier.view')
   );
 
-create policy suppliers_insert on public.suppliers
-  for insert to authenticated with check (
-    (app.is_platform_admin() or app.has_capability(tenant_id, 'supplier.manage'))
-    and created_by = auth.uid()
-    and updated_by = auth.uid()
-    and status = 'draft'
-  );
-
--- No update/delete policy for authenticated/anon in this slice: this task's
--- in-scope flow is create + read only (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md,
--- "Add request-scoped Supabase repositories and server actions for
--- create/read supplier, create/read evidence metadata, run evaluation, and
--- read the resulting evaluation."). RLS fails closed by omission.
+-- No insert/update/delete policy for authenticated/anon: writes are
+-- RPC-only (see below). RLS fails closed by omission.
 
 create policy supplier_evidence_select on public.supplier_evidence
   for select to authenticated using (
-    app.is_platform_admin() or app.has_capability(tenant_id, 'supplier.view')
+    app.has_tenant_capability_as_member(tenant_id, 'supplier.view')
   );
 
-create policy supplier_evidence_insert on public.supplier_evidence
-  for insert to authenticated with check (
-    (app.is_platform_admin() or app.has_capability(tenant_id, 'supplier.manage'))
-    and created_by = auth.uid()
-    and updated_by = auth.uid()
+-- No insert/update/delete policy: writes are RPC-only (see below).
+
+revoke insert, update, delete on public.suppliers from authenticated, anon;
+revoke insert, update, delete on public.supplier_evidence from authenticated, anon;
+
+-- Atomic, capability-checked, audited create RPCs ----------------------------
+-- security definer: with no authenticated insert policy or grant left on
+-- either table, these are now the *only* path a client can create a row
+-- through. Running as the defining role means the INSERT itself is not
+-- subject to RLS (there being no policy for authenticated would otherwise
+-- deny it unconditionally) and can resolve app.* helpers directly (a
+-- security-invoker function body cannot: authenticated has no USAGE on
+-- schema app, see 20260912120150_authorization_helpers.sql). The explicit
+-- app.has_tenant_capability_as_member() check is therefore the actual
+-- enforcement boundary, not a defense-in-depth convenience on top of RLS —
+-- mirroring public.record_audit_event() (20260912120700_audit.sql), the
+-- one other table in this codebase with no authenticated write policy at
+-- all.
+create or replace function public.create_supplier(
+  p_tenant_id uuid,
+  p_reference text,
+  p_display_name text,
+  p_registration_country_code text,
+  p_registration_identifier text,
+  p_industry_code text,
+  p_operating_country_codes text[],
+  p_relationship_purpose text,
+  p_annual_exposure_minor bigint,
+  p_annual_exposure_currency text,
+  p_onboarding_channel text,
+  p_website_domain text default null
+) returns public.suppliers
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_supplier public.suppliers;
+begin
+  if not app.has_tenant_capability_as_member(p_tenant_id, 'supplier.manage') then
+    raise exception 'Missing supplier.manage capability for tenant %', p_tenant_id using errcode = '42501';
+  end if;
+
+  insert into public.suppliers (
+    tenant_id, reference, display_name, registration_country_code, registration_identifier,
+    industry_code, operating_country_codes, relationship_purpose, annual_exposure_minor,
+    annual_exposure_currency, onboarding_channel, website_domain, created_by, updated_by
+  ) values (
+    p_tenant_id, p_reference, p_display_name, p_registration_country_code, p_registration_identifier,
+    p_industry_code, p_operating_country_codes, p_relationship_purpose, p_annual_exposure_minor,
+    p_annual_exposure_currency, p_onboarding_channel, p_website_domain, auth.uid(), auth.uid()
+  )
+  returning * into v_supplier;
+
+  -- Mandatory, atomic: if this fails, the whole create fails with it —
+  -- a supplier can never exist without a matching audit event.
+  perform public.record_audit_event(
+    p_tenant_id, 'supplier.created', 'supplier', v_supplier.id::text, null,
+    jsonb_build_object('reference', p_reference)
   );
 
--- No update/delete policy: evidence metadata is append-only for this slice.
+  return v_supplier;
+end;
+$$;
 
--- Rollback: drop the policies, triggers, and tables above (supplier_evidence,
--- suppliers) then drop the two guard functions. No data migration is
--- required because this migration only ever creates objects.
+comment on function public.create_supplier(uuid, text, text, text, text, text, text[], text, bigint, text, text, text) is
+  'Only path to create a supplier: security definer, checks supplier.manage via app.has_tenant_capability_as_member() (no platform-admin bypass), pins created_by/updated_by to auth.uid(), and records a mandatory audit event atomically.';
+
+revoke all on function public.create_supplier(uuid, text, text, text, text, text, text[], text, bigint, text, text, text) from public;
+grant execute on function public.create_supplier(uuid, text, text, text, text, text, text[], text, bigint, text, text, text) to authenticated;
+
+create or replace function public.create_supplier_evidence(
+  p_tenant_id uuid,
+  p_supplier_id uuid,
+  p_evidence_type text,
+  p_display_name text,
+  p_issuer_country_code text,
+  p_issue_date date,
+  p_verification_state text,
+  p_digest_sha256 text
+) returns public.supplier_evidence
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_evidence public.supplier_evidence;
+begin
+  if not app.has_tenant_capability_as_member(p_tenant_id, 'supplier.manage') then
+    raise exception 'Missing supplier.manage capability for tenant %', p_tenant_id using errcode = '42501';
+  end if;
+
+  if not exists (select 1 from public.suppliers s where s.id = p_supplier_id and s.tenant_id = p_tenant_id) then
+    raise exception 'Supplier % not found in tenant %', p_supplier_id, p_tenant_id using errcode = 'P0002';
+  end if;
+
+  insert into public.supplier_evidence (
+    tenant_id, supplier_id, evidence_type, display_name, issuer_country_code, issue_date,
+    verification_state, digest_sha256, created_by, updated_by
+  ) values (
+    p_tenant_id, p_supplier_id, p_evidence_type, p_display_name, p_issuer_country_code, p_issue_date,
+    p_verification_state, p_digest_sha256, auth.uid(), auth.uid()
+  )
+  returning * into v_evidence;
+
+  perform public.record_audit_event(
+    p_tenant_id, 'supplier_evidence.created', 'supplier_evidence', v_evidence.id::text, null,
+    jsonb_build_object('supplier_id', p_supplier_id, 'evidence_type', p_evidence_type)
+  );
+
+  return v_evidence;
+end;
+$$;
+
+comment on function public.create_supplier_evidence(uuid, uuid, text, text, text, date, text, text) is
+  'Only path to create a supplier evidence entry: security definer, checks supplier.manage via app.has_tenant_capability_as_member() (no platform-admin bypass), verifies the supplier belongs to the same tenant, pins created_by/updated_by to auth.uid(), and records a mandatory audit event atomically.';
+
+revoke all on function public.create_supplier_evidence(uuid, uuid, text, text, text, date, text, text) from public;
+grant execute on function public.create_supplier_evidence(uuid, uuid, text, text, text, date, text, text) to authenticated;
+
+-- Rollback: drop function public.create_supplier_evidence(...); drop
+-- function public.create_supplier(...); re-grant insert/update/delete on
+-- both tables to authenticated, anon if ever reverting to a policy-based
+-- write path; drop the policies, triggers, and tables above
+-- (supplier_evidence, suppliers) then drop the two guard functions. No
+-- data migration is required because this migration only ever creates
+-- objects (the two REVOKE statements above are the only exception, and
+-- both are trivially reversible with GRANT).

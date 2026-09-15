@@ -19,4 +19,3 @@ export * from "./auth-session";
 export * from "./workspace-access";
 export * from "./supplier";
 export * from "./supplier-evidence";
-export * from "./supplier-evaluation-adapter";
