@@ -50,7 +50,8 @@ export const messages = {
     submit: 'Send reset link',
     submitting: 'Sending…',
     successTitle: 'Check your email',
-    successBody: 'If that address matches an account, a password reset link is on its way.',
+    successBody:
+      'If that address matches an account, a password reset link is on its way.',
     backToSignIn: 'Back to sign in',
     configMissingTitle: 'Password reset is not available',
     configMissingBody:
@@ -63,7 +64,8 @@ export const messages = {
   },
   passwordUpdate: {
     title: 'Choose a new password',
-    intro: 'Use at least 8 characters. Your new password takes effect immediately.',
+    intro:
+      'Use at least 8 characters. Your new password takes effect immediately.',
     passwordLabel: 'New password',
     confirmationLabel: 'Confirm new password',
     submit: 'Save new password',
@@ -72,10 +74,14 @@ export const messages = {
     successBody: 'Your MITIGA password has been changed securely.',
     continue: 'Continue to workspace',
     errors: {
-      InvalidPasswordShapeError: 'Use at least 8 characters for your new password.',
-      PasswordConfirmationMismatchError: 'The password confirmation does not match.',
-      NoActiveSessionError: 'This secure link is no longer active. Request a new one.',
-      UnknownAuthError: 'The password could not be updated. Request a new secure link and try again.',
+      InvalidPasswordShapeError:
+        'Use at least 8 characters for your new password.',
+      PasswordConfirmationMismatchError:
+        'The password confirmation does not match.',
+      NoActiveSessionError:
+        'This secure link is no longer active. Request a new one.',
+      UnknownAuthError:
+        'The password could not be updated. Request a new secure link and try again.',
     },
   },
   authLinkError: {
@@ -125,11 +131,22 @@ export const messages = {
     backToSignIn: 'Back to sign-in',
   },
   supplierWorkspace: {
-    kicker: 'Real supplier workflow',
+    kicker: 'Supplier risk assessment',
+    fictionalNotice: 'Fictional demonstration data only',
+    backToWorkspace: 'Back to workspace',
+    backToSuppliers: 'All suppliers',
+    journeyLabel: 'Evaluation progress',
+    journey: {
+      details: 'Supplier details',
+      evidence: 'Evidence readiness',
+      evaluation: 'Deterministic evaluation',
+      decision: 'Company decision',
+    },
     listTitle: 'Suppliers',
     listIntro:
-      'Tenant-scoped supplier records for this real workflow. Every record here is server-validated and persisted; it is not the sample-data preview.',
+      'Create and assess fictional suppliers through a traceable, deterministic workflow.',
     emptyTitle: 'No suppliers yet',
+    emptyBody: 'Create the first fictional supplier to begin an evaluation.',
     reference: 'Reference',
     displayName: 'Display name',
     status: 'Status',
@@ -141,10 +158,17 @@ export const messages = {
       archived: 'Archived',
     },
     missingTitle: 'Supplier not found',
-    missingBody: 'This identifier is not a supplier in your active company, or it belongs to another tenant.',
-    detailIntro: 'Real, persisted record. Reloading this page reads the same data back from the server.',
+    missingBody:
+      'This identifier is not a supplier in your active company, or it belongs to another tenant.',
+    detailIntro:
+      'Review supplier details, evidence metadata, and the latest deterministic recommendation.',
     createFormTitle: 'Record a supplier',
-    createFormHint: 'All names, identifiers, and amounts must be fictional local test data.',
+    createFormHint:
+      'Use fictional names, identifiers, domains, and amounts. Fields marked required must be completed.',
+    required: 'Required',
+    optional: 'Optional',
+    identityGroup: 'Identity and registration',
+    relationshipGroup: 'Relationship and exposure',
     fields: {
       reference: 'Reference',
       displayName: 'Display name',
@@ -176,6 +200,11 @@ export const messages = {
       disclosure:
         'This is a fictional metadata manifest only. Evidence files are not uploaded in this first operational slice.',
       emptyTitle: 'No evidence recorded yet',
+      emptyBody:
+        'Add metadata to show which fictional evidence would support this assessment.',
+      readinessLabel: 'Evidence readiness',
+      readinessRecorded: '{count} metadata entries recorded',
+      metadataBadge: 'Metadata only',
       formTitle: 'Register evidence metadata',
       typeLabel: 'Evidence type',
       displayNameLabel: 'Display name',
@@ -207,11 +236,12 @@ export const messages = {
     },
     evaluation: {
       title: 'Deterministic evaluation',
-      hint:
-        'Runs the published policy engine against this supplier and its recorded evidence. The result is a recommendation only; the Company Admin records the final decision in a later workflow.',
+      hint: 'Runs the published policy engine against this supplier and its recorded evidence. The result is a recommendation only; the Company Admin records the final decision in a later workflow.',
       runButton: 'Run evaluation',
       running: 'Running…',
       noEvaluationYet: 'No evaluation has run yet for this supplier.',
+      noEvaluationBody:
+        'Run the deterministic engine when the supplier details and evidence metadata are ready.',
       resultTitle: 'Evaluation result',
       scoreLabel: 'Score',
       recommendationLabel: 'Recommendation',
@@ -219,9 +249,18 @@ export const messages = {
       missingFactorsLabel: 'Missing required factors',
       noneMissing: 'None',
       reasonsTitle: 'Reason codes',
+      reasonsHelp:
+        'These codes explain which policy signals shaped the recommendation.',
       policyLabel: 'Policy version',
       correlationLabel: 'Correlation',
       whenLabel: 'Completed (UTC)',
+      recommendationEyebrow: 'Engine recommendation',
+      recommendationNotice:
+        'This is a deterministic recommendation, not a recorded business decision.',
+      finalDecisionTitle: 'Final Company decision',
+      finalDecisionPending: 'Pending Company Admin review',
+      finalDecisionBody:
+        'Only a Company Admin may record the final approve, review, or reject decision in a future workflow.',
       recommendationValues: {
         approve: 'Approve',
         review: 'Review',
@@ -229,34 +268,53 @@ export const messages = {
       },
     },
     errors: {
-      InvalidSupplierReferenceError: 'Enter a reference between 1 and 64 characters.',
-      InvalidSupplierDisplayNameError: 'Enter a display name between 1 and 200 characters.',
+      InvalidSupplierReferenceError:
+        'Enter a reference between 1 and 64 characters.',
+      InvalidSupplierDisplayNameError:
+        'Enter a display name between 1 and 200 characters.',
       InvalidCountryCodeError: 'Enter a valid two-letter country code.',
-      InvalidRegistrationIdentifierError: 'Enter a registration identifier between 1 and 100 characters.',
-      InvalidIndustryCodeError: 'Enter an industry code between 1 and 100 characters.',
-      InvalidOperatingCountryCodesError: 'Enter at least one valid two-letter operating country code.',
-      InvalidRelationshipPurposeError: 'Enter a relationship purpose between 1 and 2000 characters.',
-      InvalidAnnualExposureError: 'Enter a non-negative whole number of minor currency units.',
+      InvalidRegistrationIdentifierError:
+        'Enter a registration identifier between 1 and 100 characters.',
+      InvalidIndustryCodeError:
+        'Enter an industry code between 1 and 100 characters.',
+      InvalidOperatingCountryCodesError:
+        'Enter at least one valid two-letter operating country code.',
+      InvalidRelationshipPurposeError:
+        'Enter a relationship purpose between 1 and 2000 characters.',
+      InvalidAnnualExposureError:
+        'Enter a non-negative whole number of minor currency units.',
       InvalidCurrencyCodeError: 'Enter a valid three-letter currency code.',
       InvalidOnboardingChannelError: 'Choose a valid onboarding channel.',
-      InvalidWebsiteDomainError: 'Enter a plausible domain name, or leave it blank.',
-      DuplicateSupplierReferenceError: 'A supplier with this reference already exists in this company.',
-      SupplierNotFoundError: 'This supplier could not be found in your active company.',
+      InvalidWebsiteDomainError:
+        'Enter a plausible domain name, or leave it blank.',
+      DuplicateSupplierReferenceError:
+        'A supplier with this reference already exists in this company.',
+      SupplierNotFoundError:
+        'This supplier could not be found in your active company.',
       SupplierWriteError: 'The supplier could not be saved. Try again.',
       InvalidEvidenceTypeError: 'Choose a valid evidence type.',
-      InvalidEvidenceDisplayNameError: 'Enter a display name between 1 and 200 characters.',
-      InvalidEvidenceIssuerCountryCodeError: 'Enter a valid two-letter issuer country code, or leave it blank.',
-      InvalidEvidenceIssueDateError: 'Enter a valid issue date, or leave it blank.',
+      InvalidEvidenceDisplayNameError:
+        'Enter a display name between 1 and 200 characters.',
+      InvalidEvidenceIssuerCountryCodeError:
+        'Enter a valid two-letter issuer country code, or leave it blank.',
+      InvalidEvidenceIssueDateError:
+        'Enter a valid issue date, or leave it blank.',
       InvalidVerificationStateError: 'Choose a valid verification state.',
-      SupplierEvidenceWriteError: 'The evidence entry could not be saved. Try again.',
-      NoPublishedPolicyError: 'This company has no published risk policy yet. An evaluation cannot run.',
-      SupplierNotFoundForEvaluationError: 'This supplier could not be found in your active company.',
-      EvaluationCorrelationConflictError: 'This evaluation attempt could not be completed. Reload the page and try again.',
+      SupplierEvidenceWriteError:
+        'The evidence entry could not be saved. Try again.',
+      NoPublishedPolicyError:
+        'This company has no published risk policy yet. An evaluation cannot run.',
+      SupplierNotFoundForEvaluationError:
+        'This supplier could not be found in your active company.',
+      EvaluationCorrelationConflictError:
+        'This evaluation attempt could not be completed. Reload the page and try again.',
       EvaluationWriteError: 'The evaluation could not be saved. Try again.',
       ForbiddenError: 'Your role does not have this capability.',
-      NoActiveTenantMembershipError: 'Your account is not a member of any company.',
+      NoActiveTenantMembershipError:
+        'Your account is not a member of any company.',
       TenantSelectionRequiredError: 'Choose a company before continuing.',
-      InvalidTenantSelectionError: 'That company selection could not be used. Start over.',
+      InvalidTenantSelectionError:
+        'That company selection could not be used. Start over.',
       UnknownError: 'Something went wrong. Try again.',
     },
   },
@@ -346,7 +404,8 @@ export const messages = {
   },
   empty: {
     evaluationsTitle: 'No evaluations in this band',
-    evaluationsBody: 'Change the risk filter to return to the fictional records.',
+    evaluationsBody:
+      'Change the risk filter to return to the fictional records.',
     tenantsTitle: 'No tenants in this state',
     tenantsBody: 'Clear the health filter to see the demonstration portfolio.',
     queueTitle: 'Queue is empty for this status',
@@ -364,7 +423,8 @@ export const messages = {
     toastExportTitle: 'Export simulated',
     toastExportBody: 'No file or customer data was generated.',
     evaluationsTitle: 'Evaluations',
-    evaluationsHint: 'Reasons, quality, and policy version are visible on every row.',
+    evaluationsHint:
+      'Reasons, quality, and policy version are visible on every row.',
     reference: 'Reference',
     score: 'Score',
     status: 'Status',
@@ -515,8 +575,7 @@ export const messages = {
     toastSuspendTitle: 'Suspension not executed',
     toastSuspendBody: 'The prototype does not change tenant state.',
     recentAudit: 'Recent audit',
-    auditHint:
-      'Demonstration evidence: actor, target, time, and correlation.',
+    auditHint: 'Demonstration evidence: actor, target, time, and correlation.',
     openDirectory: 'Open tenant directory',
   },
   platformGovernance: {
@@ -540,7 +599,8 @@ export const messages = {
     searchPlaceholder: 'Northstar or ten_northstar_gaming',
     lifecycleLabel: 'Tenant lifecycle',
     allLifecycles: 'All lifecycles',
-    filterHonesty: 'Search and filters stay in the URL. Nothing is queried remotely.',
+    filterHonesty:
+      'Search and filters stay in the URL. Nothing is queried remotely.',
     clearFilters: 'Clear local filters',
     tenant: 'Tenant',
     lifecycle: 'Lifecycle',
@@ -568,9 +628,12 @@ export const messages = {
     when: 'Recorded (UTC)',
     correlation: 'Correlation',
     conceptsTitle: 'Keep these concepts separate',
-    conceptAudit: 'An audit signal is a technical action token with actor, time, and correlation.',
-    conceptConfig: 'Configuration readiness is not data quality of an evaluation input set.',
-    conceptPolicy: 'A policy version is an immutable published contract, not a risk score.',
+    conceptAudit:
+      'An audit signal is a technical action token with actor, time, and correlation.',
+    conceptConfig:
+      'Configuration readiness is not data quality of an evaluation input set.',
+    conceptPolicy:
+      'A policy version is an immutable published contract, not a risk score.',
     conceptRecommendation:
       'A score is a recommendation produced later in evaluation. It is not tenant health.',
     conceptDecision:
@@ -603,13 +666,15 @@ export const messages = {
     toastReactivateTitle: 'Reactivation not saved',
     toastReactivateBody: 'Tenant lifecycle was not updated.',
     toastSupportTitle: 'Support access not granted',
-    toastSupportBody: 'No impersonation session was created and no email was sent.',
+    toastSupportBody:
+      'No impersonation session was created and no email was sent.',
     emptyFiltersTitle: 'No tenants match these filters',
     emptyFiltersBody:
       'Local fixtures are unchanged. Adjust search or lifecycle. This is not a customer directory miss.',
     loadingLabel: 'Loading tenant directory',
     loadingTitle: 'Loading tenant directory',
-    loadingBody: 'Local fixtures are being prepared. No platform API is called.',
+    loadingBody:
+      'Local fixtures are being prepared. No platform API is called.',
     errorTitle: 'Tenant directory could not load',
     errorBody:
       'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
@@ -874,7 +939,8 @@ export const messages = {
     validationEntity: 'Choose an entity record.',
     loadingLabel: 'Loading entity records',
     loadingTitle: 'Loading entity records',
-    loadingBody: 'Local fixtures are being prepared. No directory API is called.',
+    loadingBody:
+      'Local fixtures are being prepared. No directory API is called.',
     errorTitle: 'Entity records could not load',
     errorBody:
       'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
@@ -954,7 +1020,8 @@ export const messages = {
       openCase: 'Open linked case',
       createCase: 'Create case from evaluation',
       toastCaseTitle: 'Case stayed local',
-      toastCaseBody: 'No case record was written. Opening a fixture for the next step.',
+      toastCaseBody:
+        'No case record was written. Opening a fixture for the next step.',
     },
     case: {
       kicker: 'Operations case',

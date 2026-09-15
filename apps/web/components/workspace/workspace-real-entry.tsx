@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { messages } from '@/lib/i18n/messages';
 import type { TenantId } from '@/lib/domain/ids';
+import { ArrowRightIcon, ClipboardCheckIcon } from 'lucide-react';
 
 // The one link connecting the real, authenticated /workspace landing page
 // to the real supplier evaluation slice
@@ -13,16 +14,28 @@ import type { TenantId } from '@/lib/domain/ids';
 // context /workspace already resolved for itself.
 export function WorkspaceRealEntry({ tenantId }: { tenantId: TenantId }) {
   return (
-    <section aria-labelledby="workspace-real-entry" className="space-y-2 rounded-xl border border-border p-4">
-      <h2 id="workspace-real-entry" className="text-sm font-medium tracking-[0.04em] text-muted-foreground uppercase">
+    <section
+      aria-labelledby="workspace-real-entry"
+      className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-sm)] sm:p-6"
+    >
+      <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <ClipboardCheckIcon aria-hidden="true" className="size-5" />
+      </div>
+      <h2 id="workspace-real-entry" className="text-lg font-medium">
         {messages.supplierWorkspace.listTitle}
       </h2>
-      <p className="text-sm leading-6 text-muted-foreground">{messages.supplierWorkspace.listIntro}</p>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+        {messages.supplierWorkspace.listIntro}
+      </p>
+      <p className="mt-3 text-xs font-medium text-muted-foreground">
+        {messages.supplierWorkspace.fictionalNotice}
+      </p>
       <Button
-        className="h-11 w-full sm:w-auto"
+        className="mt-5 h-11 w-full sm:w-auto"
         render={<Link href={`/workspace/suppliers?tenant=${tenantId}`} />}
       >
         {messages.supplierWorkspace.open} {messages.supplierWorkspace.listTitle}
+        <ArrowRightIcon aria-hidden="true" />
       </Button>
     </section>
   );
