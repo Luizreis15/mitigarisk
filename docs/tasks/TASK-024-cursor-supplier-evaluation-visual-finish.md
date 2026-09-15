@@ -155,7 +155,9 @@ limitations, and recommended reviewer. Do not merge or deploy.
 **Branch, base, and commits:** `feat/cursor-supplier-evaluation-visual-finish`, based on `origin/preview/vercel-adapter@84c9686` (including TASK-023 integration `b5a1dde`).
 
 - `958b974` — `feat(web): polish supplier evaluation journey`
-- documentation commit recorded separately after this handoff was appended
+- `4b10831` — `docs(task): record TASK-024 handoff`
+- `db2279d` — `fix(web): present supplier evaluation states truthfully`
+- review-correction documentation commit recorded separately after this update
 
 **Files changed:**
 
@@ -183,7 +185,7 @@ limitations, and recommended reviewer. Do not merge or deploy.
 
 **Checks run and exact results:**
 
-- `cd apps/web && npm test` — passed: 214 tests, 0 failed, 0 skipped.
+- `cd apps/web && npm test` — passed after review corrections: 216 tests, 0 failed, 0 skipped.
 - `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed with no diagnostics.
 - `cd apps/web && npm run verify:vercel` — passed; generated and validated genuine Vercel Build Output API v3 output.
 - `./scripts/check-secrets.sh` — passed: `Secret check passed.`
@@ -201,3 +203,13 @@ limitations, and recommended reviewer. Do not merge or deploy.
 **Known limitations:** Authenticated browser interaction, keyboard traversal in a live session, and visual screenshots remain pending for an approved non-production test environment that can be used without reading local secrets. Action success continues to use the existing server redirect behavior; no new success mutation or toast was introduced.
 
 **Recommended reviewer:** Codex merge owner for scope and visual acceptance, with a final authenticated 375 px/wide click-through in an approved isolated test environment before deployment.
+
+### Independent-review corrections
+
+All three P2 findings from the independent review were corrected within the TASK-024 presentation boundary:
+
+1. Persisted `pending` and `failed` evaluations now render distinct, truthful states. Neither state claims that no evaluation has run, and neither presents a recommendation.
+2. The journey and evidence count now describe evidence as recorded metadata, never as ready. A rejected metadata entry therefore cannot be presented as evidence readiness.
+3. Narrow evidence cards apply `min-w-0` to the flex container and display-name item plus safe word breaking, preventing a 200-character or unbroken name from forcing horizontal overflow beside the status badge.
+
+Regression coverage asserts both persisted non-completed evaluation branches, the absence of readiness language in the journey, and the mobile overflow classes. No domain, repository, action, Supabase, migration, or hosted-service behavior changed. All required checks were rerun after these corrections with the results recorded above.
