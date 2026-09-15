@@ -184,10 +184,11 @@ tenant, supplier, policy version, actor, and timestamps from trusted persisted
 state; the decision and its audit event are atomic. Recommendation and final
 decision remain separate persisted and presented facts.
 
-The implementation and all local checks pass. Integration remains blocked
-pending the contractually required independent review: the independent agent
-was invoked twice but completed without returning a visible report, so no
-review approval is claimed.
+The implementation and all local checks pass. An independent review reported
+one blocking P1 (a dual-role platform administrator could satisfy the active
+tenant-admin check). Commit `046a1aa` closes it explicitly at every database
+surface and adds direct regression coverage. Independent re-review remains an
+integration gate; this branch is not merged or published.
 
 ### Branch, base, and commits
 
@@ -195,6 +196,7 @@ review approval is claimed.
 - Base: `origin/preview/vercel-adapter` at `206d373`, which is after required
   TASK-024 integration `83abe92` and includes this contract.
 - Implementation: `c907b0e feat(suppliers): add immutable final decision boundary`
+- Security correction: `046a1aa fix(suppliers): deny dual-role platform administrators`
 - Documentation: recorded by the commit containing this handoff.
 
 ### Files changed
@@ -241,13 +243,14 @@ contract, hosted configuration, or external service was changed.
   since TASK-002 was run instead:
   `./supabase/tests/run-local-verification.sh` — passed; every migration, seed,
   and SQL suite completed with `==> all checks passed`.
-- TASK-025 SQL suite: 23 positive/negative assertions passed, covering pinned
+- TASK-025 SQL suite: 26 positive/negative assertions passed, covering pinned
   actor, trimmed rationale, unchanged recommendation, atomic audit creation,
   rationale exclusion from audit, admin authority, identical replay, duplicate
   prevention, conflicting replay, one decision per evaluation, direct-write
   denial, update/delete immutability, pending/missing non-disclosure, five
-  unauthorized identities, and inactive-admin denial.
-- `cd apps/web && npm test` — 222 passed, 0 failed, 0 skipped.
+  unauthorized identities, explicit dual-role platform-admin authority/read/
+  write denial, and inactive-admin denial.
+- `cd apps/web && npm test` — 223 passed, 0 failed, 0 skipped.
 - `cd apps/web && npx tsc --noEmit -p tsconfig.json` — passed with no diagnostics.
 - `cd apps/web && npm run build` — passed; supplier list/detail routes built.
 - `cd apps/web && npm run verify:vercel` — passed; Vercel Build Output API v3
@@ -292,9 +295,8 @@ audit evidence; do not destructively drop previously written business records.
 
 - Authenticated browser walkthrough remains pending in an approved isolated
   environment.
-- Independent review is not complete: the reviewer agent returned no visible
-  report in two attempts. This blocks integration but does not invalidate the
-  passing implementation checks.
+- Independent review found one P1 and it was corrected. A separate confirmation
+  that the P1 is closed remains required before integration.
 
 ### Recommended independent reviewer
 
@@ -302,3 +304,22 @@ A fresh security reviewer other than the implementation author, focused on SQL
 authorization, actor provenance, tenant isolation, concurrency/idempotency,
 immutability, audit atomicity, and recommendation/decision separation. High or
 medium findings must be corrected and re-reviewed before integration.
+
+### Independent-review correction — 2026-09-15
+
+The review identified that `app.is_active_tenant_admin()` alone did not reject
+an identity that was also present in `platform_admins`. The database boundary
+now requires `not app.is_platform_admin()` in all three relevant places:
+
+1. the `supplier_final_decisions_select` RLS policy;
+2. `public.can_record_supplier_final_decision()`;
+3. `public.record_supplier_final_decision()` before evaluation lookup.
+
+The SQL suite creates a deliberate dual-role fixture — platform administrator
+plus active `tenant_admin` membership in the same tenant — and proves that it
+cannot resolve write authority, cannot read the operational decision, and
+cannot record one. A source-boundary application test prevents accidental
+removal of both explicit write checks. All required checks were rerun after the
+correction: 26 TASK-025 SQL assertions, 223 application tests, TypeScript,
+build, Vercel output verification, secrets scan, web verification, and
+`git diff --check` all passed.
