@@ -83,12 +83,20 @@ export default async function WorkspacePage({
   let invalidTenantSelection = false;
   let tenantOptions: TenantOptionView[] = [];
   let selectedTenantName: string | null = null;
+  // Set only on a fully server-verified tenant selection, exactly the same
+  // context used to render "active_member" below — never a raw query
+  // param. Powers the one link into the real supplier evaluation slice
+  // (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md); kept
+  // outside WorkspaceViewModel so that existing TASK-015/019 presentation
+  // contract is untouched.
+  let activeTenantId: TenantId | null = null;
 
   try {
     const context = await resolveActiveTenantContext(client, identity, requestedTenantId);
     activeMembershipCount = context.memberships.length;
     selectedTenantName =
       context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
+    activeTenantId = context.tenantId;
   } catch (error) {
     const classification = classifyTenantSelectionError(error);
     switch (classification.kind) {
@@ -125,6 +133,7 @@ export default async function WorkspacePage({
         tenantOptions,
         selectedTenantName,
       })}
+      realEntryTenantId={activeTenantId}
     />
   );
 }
