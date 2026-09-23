@@ -84,3 +84,94 @@ Use the standard template. It must include:
 - a before and after of each policy;
 - the per-suite counts;
 - the SHA.
+
+## Inventory (item 1, done before implementation)
+
+`grep -n "app\.is_platform_admin()\|app\.has_capability(" supabase/migrations/*.sql`, resolved to each object's **live** definition (the last migration that `drop policy`/`create or replace function`s it — several objects were redefined more than once before this task).
+
+### Flagged: one surface does not fit D4, D5, or D6 — not implemented
+
+**`public.record_audit_event(...)`** (write path, live in `20260912120800_security_and_english_first_hardening.sql`): both branches still let a platform administrator write an audit event into **any** tenant with no membership at all —
+- `p_tenant_id is null and not app.is_platform_admin()` → raise 42501 (so a platform admin *may* write a platform-level event — arguably D6-shaped, but D6's decision text names only the `select` policy, not this write path);
+- `p_tenant_id is not null and not app.is_platform_admin() and not exists(active membership) then` → raise 42501 (so a platform admin may **also** write into a tenant they do not belong to — not covered by D4's table list, not covered by D5).
+
+This does not cleanly match any of the three approved decisions as literally scoped, so per item 1 ("if a surface does not fit the table, stop and report it without implementing it") it is **left unchanged** in `20260922140000_platform_admin_operational_boundary.sql`. It is not currently known to be exploitable end-to-end the way probe G was (every existing caller of `record_audit_event` is itself already gated by an authorized RPC before the audit call), but a platform administrator can call `public.record_audit_event` directly (it is `grant`ed to `authenticated`) and forge an attributed-to-themselves, but arbitrary-content, audit row into any tenant. Recommend a follow-up task, the same way probe G became this one.
+
+### D4 — moved to `app.has_tenant_capability_as_member(...)`, no platform bypass
+
+| Table | Policy | Before | After |
+|---|---|---|---|
+| `policy_versions` | `policy_versions_select` | `app.is_platform_admin() or app.has_capability(tenant_id,'policy.view')` | `app.has_tenant_capability_as_member(tenant_id,'policy.view')` |
+| `policy_versions` | `policy_versions_insert` | `app.is_platform_admin() or app.has_capability(tenant_id,'policy.manage')` | `app.has_tenant_capability_as_member(tenant_id,'policy.manage')` |
+| `policy_versions` | `policy_versions_update` | using: same as insert; with check: `app.is_platform_admin() or (app.has_capability(tenant_id,'policy.manage') and (status is distinct from 'published' or app.has_capability(tenant_id,'policy.publish')))` | using: `app.has_tenant_capability_as_member(tenant_id,'policy.manage')`; with check: `app.has_tenant_capability_as_member(tenant_id,'policy.manage') and (status is distinct from 'published' or app.has_tenant_capability_as_member(tenant_id,'policy.publish'))` |
+| `policy_versions` | `policy_versions_delete` | `app.is_platform_admin() or app.has_capability(tenant_id,'policy.manage')` | `app.has_tenant_capability_as_member(tenant_id,'policy.manage')` |
+| `policy_factors` | `policy_factors_select` | same shape as policy_versions_select, `policy.view` | member-only, `policy.view` |
+| `policy_factors` | `policy_factors_write` (for all) | `app.is_platform_admin() or app.has_capability(tenant_id,'policy.manage')` (using + check) | member-only, `policy.manage` (using + check) |
+| `policy_thresholds` | `policy_thresholds_select` | same shape, `policy.view` | member-only, `policy.view` |
+| `policy_thresholds` | `policy_thresholds_write` (for all) | same shape, `policy.manage` | member-only, `policy.manage` |
+| `cases` | `cases_select` | `app.is_platform_admin() or app.has_capability(tenant_id,'case.view')` | member-only, `case.view` |
+| `cases` | `cases_insert` | `(app.is_platform_admin() or app.has_capability(tenant_id,'case.manage')) and opened_by=auth.uid()` | `app.has_tenant_capability_as_member(tenant_id,'case.manage') and opened_by=auth.uid()` |
+| `cases` | `cases_update` | using+check `app.is_platform_admin() or app.has_capability(tenant_id,'case.manage')` | member-only, `case.manage` |
+| `case_evidence` | `case_evidence_select` | same shape, `case.view` | member-only, `case.view` |
+| `case_evidence` | `case_evidence_insert` | `(app.is_platform_admin() or app.has_capability(tenant_id,'case.manage')) and uploaded_by=auth.uid()` | member-only + `uploaded_by=auth.uid()` |
+| `case_decisions` | `case_decisions_select` | `app.is_platform_admin() or app.has_capability(tenant_id,'case.view')` | member-only, `case.view` |
+| `case_decisions` | `case_decisions_insert` | — already fixed by `20260914120300_case_decisions_tenant_admin_only.sql` (`app.is_active_tenant_admin(tenant_id)`, no capability route, no bypass) | unchanged; not touched here |
+| `api_clients` | `api_clients_select` | `app.is_platform_admin() or app.has_capability(tenant_id,'integration.view')` | member-only, `integration.view` |
+| `api_clients` | `api_clients_insert` | `(... or has_capability(...,'integration.manage')) and created_by=auth.uid()` | member-only + `created_by=auth.uid()` |
+| `api_clients` | `api_clients_update` | using+check `app.is_platform_admin() or app.has_capability(tenant_id,'integration.manage')` | member-only, `integration.manage` |
+| `webhook_endpoints` | `webhook_endpoints_select` | same shape, `integration.view` | member-only |
+| `webhook_endpoints` | `webhook_endpoints_insert` | same shape + `created_by=auth.uid()` | member-only + `created_by=auth.uid()` |
+| `webhook_endpoints` | `webhook_endpoints_update` | same shape | member-only |
+| `webhook_deliveries` | `webhook_deliveries_select` | same shape, `integration.view` | member-only |
+| `webhook_deliveries` | `webhook_deliveries_insert` | same shape, `integration.manage` | member-only |
+| `webhook_deliveries` | `webhook_deliveries_update` | — does not exist (dropped by `20260912120800...` with no replacement; retention-only, worker/service_role writes only) | unchanged; nothing to rewrite |
+| `notification_requests` | `notification_requests_select` | `app.is_platform_admin() or app.has_capability(tenant_id,'notification.view')` | member-only |
+| `notification_requests` | `notification_requests_insert` | same shape, `notification.manage` | member-only |
+| `notification_requests` | `notification_requests_update` | — does not exist (dropped by `20260912120800...` with no replacement) | unchanged; nothing to rewrite |
+
+### D4 + D5 (mixed) — `notification_templates` only
+
+`notification_templates.tenant_id` is nullable by design: a null-tenant row is a platform-wide template, not tenant-owned data (its own table comment says so). Its `select` policy's `tenant_id is null` branch was already unconditionally open to *any* authenticated caller — never gated by `app.is_platform_admin()` at all — so applying D4's member-only helper to the whole policy without preserving that branch would have made platform-wide templates unreadable by everyone, including the platform admins who are supposed to manage them. That branch is left exactly as it was; only the tenant-owned branch's redundant `app.is_platform_admin()` disjunct is removed. The write policies already split this way; only the bypass call site changes.
+
+| Policy | Before | After |
+|---|---|---|
+| `notification_templates_select` | `tenant_id is null or app.is_platform_admin() or app.has_capability(tenant_id,'notification.view')` | `tenant_id is null or app.has_tenant_capability_as_member(tenant_id,'notification.view')` |
+| `notification_templates_insert` | `((tenant_id is null and app.is_platform_admin()) or (tenant_id is not null and app.has_capability(tenant_id,'notification.manage'))) and created_by=auth.uid()` | `((tenant_id is null and app.is_platform_governance_actor()) or (tenant_id is not null and app.has_tenant_capability_as_member(tenant_id,'notification.manage'))) and created_by=auth.uid()` |
+| `notification_templates_update` | same dual shape (using + check) | same dual shape, `is_platform_governance_actor()` / member-only |
+
+### D5 — kept, only through `app.is_platform_governance_actor()`
+
+New helper: `app.is_platform_governance_actor()` — `security definer`, thin wrapper `select app.is_platform_admin();`, `stable`, granted to `authenticated`.
+
+| Table/function | Policy/object | Before | After |
+|---|---|---|---|
+| `platform_admins` | `platform_admins_select` | `app.is_platform_admin()` | `app.is_platform_governance_actor()` |
+| `tenants` | `tenants_select` | `app.is_platform_admin() or id in (select app.current_tenant_ids())` | `app.is_platform_governance_actor() or id in (select app.current_tenant_ids())` |
+| `tenants` | `tenants_insert` | `app.is_platform_admin()` | `app.is_platform_governance_actor()` |
+| `tenants` | `tenants_update` | using+check `app.is_platform_admin() or app.has_capability(id,'tenant.manage_settings')` | using+check `app.is_platform_governance_actor() or app.has_capability(id,'tenant.manage_settings')` |
+| `memberships` | `memberships_select` | `app.is_platform_admin() or user_id=auth.uid() or app.has_capability(tenant_id,'tenant.view')` | `app.is_platform_governance_actor() or user_id=auth.uid() or app.has_capability(tenant_id,'tenant.view')` |
+| `memberships` | `memberships_insert` (live version from `20260913090000_auth_tenant_bootstrap.sql`) | `(app.is_platform_admin() or app.has_capability(tenant_id,'tenant.manage_members')) and (invited_by is null or invited_by=auth.uid())` | `(app.is_platform_governance_actor() or app.has_capability(tenant_id,'tenant.manage_members')) and (invited_by is null or invited_by=auth.uid())` |
+| `memberships` | `memberships_update` (same live migration) | using+check with `app.is_platform_admin() or app.has_capability(...) or (user_id=auth.uid() and/or status='invited')` | same shape, `app.is_platform_governance_actor()` |
+| `app.guard_membership_transition()` (trigger fn, security definer) | backs `memberships_update` | `v_is_admin := app.is_platform_admin() or app.has_capability(old.tenant_id,'tenant.manage_members');` | `v_is_admin := app.is_platform_governance_actor() or app.has_capability(old.tenant_id,'tenant.manage_members');` |
+| `roles`, `capabilities`, `role_capabilities` | `*_select` | `using (true)` — no bypass reference at all | unchanged; open read to any authenticated caller is the intended shape for reference catalogs |
+
+**Left unchanged, out of AC2's literal scope ("every reference … in RLS"), and documented here as a judgment call:**
+- `public.is_platform_admin()` (PostgREST wrapper, `20260913090000_auth_tenant_bootstrap.sql`): a plain identity-resolution query exposed to the client, not an authorization condition in a `WHERE`/`CHECK` clause. Still calls `app.is_platform_admin()` directly.
+- `public.bootstrap_tenant(...)`: `security invoker`, not a `security definer` function (item 1's inventory scope is RLS policies and *security definer* functions), and its precondition (`if not public.is_platform_admin() then raise`) is a plpgsql check inside an RPC body, not RLS. Still calls `public.is_platform_admin()`.
+- `app.has_capability(uuid, text)` and its PostgREST wrapper `public.has_capability(uuid, text)`: unchanged, security definer, still embeds `app.is_platform_admin()` in its own body — this is the same *deliberate, documented* platform-admin bypass TASK-026 already left in place for "everywhere else" (`20260914120050_no_bypass_authorization_helpers.sql`). After this migration it is reachable only from D5 call sites (`tenants_update`, `memberships_select/insert/update`, `app.guard_membership_transition()`) and the D5 branch of `notification_templates`; no D4 policy calls it anymore. `070-platform-admin-operational-boundary.sql` asserts this with a `pg_policies` introspection query.
+- `app.is_platform_admin()` itself (`20260912120150_authorization_helpers.sql`): the base primitive; unchanged, still the thing `app.is_platform_governance_actor()` wraps.
+- The D1/D2 **denial** checks approved in TASK-025/026 — `app.has_tenant_capability_as_member`, `app.is_active_tenant_admin`, `public.can_record_supplier_final_decision`, `public.record_supplier_final_decision`, `supplier_final_decisions_select` — all contain `not app.is_platform_admin()`. These exclude a platform administrator; they are not a bypass, so they correctly keep calling `app.is_platform_admin()` directly rather than the new governance-actor wrapper (using the wrapper there would be semantically backwards — the wrapper means "this identity is allowed a bypass," not "this identity is denied").
+
+### D6 — `audit_events`
+
+| Policy | Before | After |
+|---|---|---|
+| `audit_events_select` | `app.is_platform_admin() or (tenant_id is not null and app.has_capability(tenant_id,'audit.view'))` | `(tenant_id is null and app.is_platform_governance_actor()) or (tenant_id is not null and app.has_tenant_capability_as_member(tenant_id,'audit.view'))` |
+
+### Already fixed by TASK-026, superseded — no action
+
+`evaluations_insert`, `evaluations_update`, `evaluations_select`, `evaluation_reason_codes_select` (live definitions are entirely from `20260922130000_uniform_tenant_authorization.sql`, zero `app.is_platform_admin()`/`app.has_capability(` references remaining); `public.create_supplier`, `public.create_supplier_evidence`, `suppliers_select`, `supplier_evidence_select`, `public.record_supplier_final_decision`, `public.can_record_supplier_final_decision`, `supplier_final_decisions_select` (all call the D1/D2-safe member-only helpers already).
+
+### Documentation errata (item 5)
+
+The header of `20260914120200_supplier_evaluation.sql` and the header/comments of `20260922130000_uniform_tenant_authorization.sql` both name `apps/web/lib/domain/supplier-evaluation-adapter.ts` as the TypeScript reference their SQL fact-derivation mirrors. That file does not exist in this repository — `apps/web/lib/domain/` has `evaluation-engine.ts`, `evaluation-engine-errors.ts`, `supplier.ts`, `supplier-evidence.ts`, and `supplier-final-decision.ts`, but no `supplier-evaluation-adapter.ts`. Both migrations are applied and immutable, so this is recorded here only, not edited in either file.
