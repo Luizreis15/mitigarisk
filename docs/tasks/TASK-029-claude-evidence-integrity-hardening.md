@@ -117,3 +117,120 @@ apps/web/lib/domain/audit.ts:23:export interface RecordAuditEventInput {
 ```
 
 Two hits, neither a call: line 5 is a code comment, line 23 is an unrelated TypeScript interface name (`RecordAuditEventInput`, a domain type for the audit event shape, not an RPC invocation). No `.rpc("record_audit_event"...)` or equivalent call exists anywhere in `apps/web`. Every audit event apps/web ever causes to be written goes through a business Server Action calling a security-definer RPC (`create_supplier`, `create_supplier_evidence`, `run_supplier_evaluation`, `record_supplier_final_decision`, `bootstrap_tenant`, `invite_member`, `accept_invitation`, `set_membership_status`), each of which calls `public.record_audit_event()` internally as its own (elevated) role — unaffected by revoking `EXECUTE` from `authenticated`/`anon`.
+
+## D7 premise correction, found during implementation
+
+D7's own text states audit events are "written only by the business RPCs, which are `security definer`." Verified false for four of the eight: `bootstrap_tenant`, `invite_member`, `accept_invitation`, and `set_membership_status` (all in `20260913090000_auth_tenant_bootstrap.sql`) are `security invoker`. Applying the revoke as specified broke `supabase/tests/030-auth-tenant-bootstrap.sql` (`permission denied for function record_audit_event`) — an invoker function's internal call to `record_audit_event` executes as the *original calling role*, which no longer has `EXECUTE` once D7 applies.
+
+Reported to, and resolved with, the human owner (mid-task): make all four `security definer` too, moving each one's authorization out of the RLS policy it implicitly relied on (as an invoker function, subject to RLS as the calling role) into an explicit, equivalent check in the function body — the same pattern this codebase already uses for every other write RPC. No RLS protection is silently bypassed for anyone: each explicit check reproduces exactly the condition the RLS policy it replaces would have evaluated.
+
+| Function | Before | After | Authorization now lives in |
+|---|---|---|---|
+| `public.bootstrap_tenant` | `security invoker`; single explicit `if not public.is_platform_admin()` check already gated the whole function | `security definer` | Unchanged — the existing check already matched D5's `tenants_insert`/`memberships_insert` bypass exactly |
+| `public.invite_member` | `security invoker`; relied entirely on `memberships_insert`'s RLS (`is_platform_governance_actor() or has_capability(tenant_id,'tenant.manage_members')`) | `security definer` | New explicit `if not (app.is_platform_governance_actor() or app.has_capability(p_tenant_id,'tenant.manage_members'))` check before the insert |
+| `public.accept_invitation` | `security invoker`; relied on `memberships_update`'s self-accept RLS branch | `security definer` | Unchanged — its own `where id = p_membership_id and user_id = auth.uid() and status = 'invited'` is already the entire boundary, self-scoped by construction; `app.guard_membership_transition()` (already definer) remains an independent backstop |
+| `public.set_membership_status` | `security invoker`; relied entirely on `memberships_update`'s admin RLS branch | `security definer` | New: looks up the target's `tenant_id` first (fails closed with `P0002` if missing, unchanged), then an explicit `if not (app.is_platform_governance_actor() or app.has_capability(v_tenant_id,'tenant.manage_members'))` check before the update |
+
+Regression for the new explicit checks is in `080-evidence-integrity.sql` (`invite_member` still rejects a caller without `tenant.manage_members`) and exercised positively by the legitimate-flow tests for all four RPCs.
+
+## Handoff
+
+**Outcome:** Implemented. Finding R (evaluation-reason-code forgery) and finding AU (forgeable audit writes) are both closed for every identity. D7's own premise was found to be wrong for four RPCs during implementation; fixed with the human owner's approval (see above) so D7 works as intended rather than breaking tenant bootstrap and membership management. During implementation, D7 was also found to break two existing tests outside the contract's file-allowance (`010-rls-tenant-isolation.sql`, and `070-platform-admin-operational-boundary.sql` from TASK-028); extending the same superuser-scaffolding treatment already approved for `020` to those two was confirmed with the human owner before making the change. All required verification passed.
+
+**Branch and commits:** `fix/authz-evidence-integrity`, created from `integration/audit-and-task-019` at `f2492e9`.
+
+```text
+c077ad7 docs(task): approve TASK-029 evidence integrity hardening
+de72835 docs(task): record TASK-029 trigger inventory and record_audit_event grep
+931d987 fix(authz): close evaluation-reason-code forgery and lock audit writes
+0d9f668 fix(authz): make invoker membership/bootstrap RPCs security definer
+e34c2c4 test(authz): move D7/D8-blocked scaffolding to the superuser connection
+d0e1239 test(authz): move 070's D6 audit fixture to the superuser connection
+e8636bd test(authz): add permanent evidence-integrity SQL suite
+```
+
+**Files changed:**
+- `supabase/migrations/20260923100000_evidence_integrity_hardening.sql` (new)
+- `supabase/tests/080-evidence-integrity.sql` (new)
+- `supabase/tests/020-integration-hardening.sql` (D8 scaffolding move, justified per test in its own commit)
+- `supabase/tests/010-rls-tenant-isolation.sql` (D7 scaffolding move, extended by explicit approval — see above)
+- `supabase/tests/070-platform-admin-operational-boundary.sql` (D7 scaffolding move, same extension)
+- `docs/tasks/TASK-029-claude-evidence-integrity-hardening.md` (new; this file)
+
+No UI, seed, dependency, or lockfile file was touched.
+
+### R and AU results, by identity
+
+| Scenario | Identity | Result |
+|---|---|---|
+| R: unqualified `UPDATE evaluation_reason_codes SET description='TAMPERED'` | dual-role platform admin | DENIED — `insufficient_privilege` (42501, grant revoked) |
+| R: same | tenant_admin | DENIED — 42501 |
+| R: same | risk_analyst | DENIED — 42501 |
+| R: same | platform admin, no membership | DENIED — 42501 |
+| R: forged `INSERT` into a completed evaluation's reason codes | dual-role platform admin | DENIED — 42501 |
+| R: same | tenant_admin | DENIED — 42501 |
+| R: same | risk_analyst | DENIED — 42501 |
+| R: same | platform admin, no membership | DENIED — 42501 |
+| R: superuser row-count proof | — | 0 rows carry `description='TAMPERED'`; the attacked evaluation still has exactly its original 7 reason codes |
+| AU1: `record_audit_event` called directly | platform admin | DENIED — 42501 |
+| AU2: `record_audit_event` called directly to forge `supplier.final_decision_recorded` | risk_analyst, own tenant | DENIED — 42501 |
+| AU: business RPCs still write audit events atomically | `create_supplier`, `create_supplier_evidence`, `run_supplier_evaluation`, `record_supplier_final_decision`, `bootstrap_tenant`, `invite_member`, `accept_invitation`, `set_membership_status` | ALLOWED — each produces its audit_events row in the same call |
+| Guard-trigger fail-closed: reason code with a nonexistent parent evaluation | superuser (the one role that can still reach the write path) | DENIED — `23001` |
+| Guard-trigger fail-closed: reason code for a real, completed evaluation | superuser | DENIED — `23001` |
+| Guard-trigger fail-closed: mutate a completed evaluation's score | tenant_admin (holds `evaluation.run`, would otherwise pass RLS) | DENIED — `23001` |
+| Regression: `invite_member` without `tenant.manage_members` | operator | DENIED — 42501 (now the explicit in-body check, not RLS) |
+
+### Suites 010–070: two justified scaffolding moves, otherwise unmodified
+
+`030-auth-tenant-bootstrap.sql`, `040-supplier-evaluation.sql`, `050-supplier-final-decision.sql`, `060-uniform-authorization.sql` are byte-for-byte unchanged and pass with their exact prior counts.
+
+- `020-integration-hardening.sql` (contract-authorized): D8 revokes `INSERT`/`UPDATE` on `evaluation_reason_codes` from `authenticated` outright. Two direct writes in this file — a legacy-evaluation reason-code fixture insert, and an update meant to exercise the append-only trigger's own reparenting guard — moved to the superuser connection the harness runs as. Both still exercise exactly what they did before (the trigger fires for any role); only the write path changed, from `authenticated` to the one role D8 leaves able to write this table directly.
+- `010-rls-tenant-isolation.sql` and `070-platform-admin-operational-boundary.sql` (extension confirmed with the human owner mid-task, since the contract's files-allowed list named only `020`): each calls `public.record_audit_event(...)` directly — `010` to prove actor-stamping, `070` as a D6 read-side fixture. D7 revokes `EXECUTE` from `authenticated` entirely, so both now fail on the grant itself regardless of caller. Both assertions' actual targets (actor stamping; D6 read visibility) are independent of *who* writes the row, so both moved to the superuser connection; `auth.uid()` there still resolves correctly because `request.jwt.claim.sub` is a session-local GUC, untouched by `reset role`.
+
+### Checks run and exact results
+
+SQL harness (`./supabase/tests/run-local-verification.sh`, `set -o pipefail`): **SQL=0**, `==> all checks passed`.
+
+| Suite | `ok -` assertions | Failures |
+|---|---|---|
+| 010-rls-tenant-isolation.sql | 16 | 0 |
+| 020-integration-hardening.sql | 21 | 0 |
+| 030-auth-tenant-bootstrap.sql | 18 | 0 |
+| 040-supplier-evaluation.sql | 43 | 0 |
+| 050-supplier-final-decision.sql | 26 | 0 |
+| 060-uniform-authorization.sql | 28 | 0 |
+| 070-platform-admin-operational-boundary.sql | 40 | 0 |
+| 080-evidence-integrity.sql | 26 | 0 |
+| **Total** | **218** | **0** |
+
+Application checks (`apps/web`):
+
+| Check | Command | Result |
+|---|---|---|
+| Install | `npm ci` | exit 0 — 0 vulnerabilities |
+| Tests | `npm test` | **TEST=0** — 223 passed, 0 failed, 0 skipped, 0 cancelled, 0 todo |
+| Type check | `npx tsc --noEmit -p tsconfig.json` | **TSC=0** — no diagnostics |
+| Lint | `npm run lint -- --ignore-pattern 'components/ui/**' --ignore-pattern 'hooks/use-mobile.ts'` | **LINT=0** |
+| Build | `npm run build` | **BUILD=0** |
+| Vercel build | `npm run build:vercel` | exit 0 |
+| Vercel verify | `npm run verify:vercel` | **VERCEL=0** — genuine Vercel Build Output API v3 |
+| Secrets | `./scripts/check-secrets.sh` | **SECRETS=0** — "Secret check passed." |
+| Diff whitespace | `git diff --check` | **DIFF=0** |
+
+Test counts unchanged from the pre-TASK-029 baseline (223/223) — no `apps/web` file was touched.
+
+### Security/tenant/audit impact
+
+Closes finding R completely: no identity — tenant member, platform admin, or dual-role — can alter or forge evaluation reason codes, for any evaluation, in any status, through the database. Closes finding AU completely: no identity can write an audit event directly; every audit event is now produced only as a side effect of an authorized business action, atomically, by a security-definer RPC. The systemic pattern (finding S) was swept exhaustively via live `pg_proc`/`pg_trigger` introspection, not assumed: exactly one additional trigger (`forbid_reason_code_mutation_after_completion`) had the vulnerable shape, and it is fixed. No data was deleted. No secret, credential, or hosted service was touched.
+
+### Migration and rollback notes
+
+The migration (`20260923100000_evidence_integrity_hardening.sql`) is forward-only and touches no table, column, or data: it revokes two grants (`record_audit_event` EXECUTE; `evaluation_reason_codes` INSERT/UPDATE), drops two policies, and redefines six existing functions (`CREATE OR REPLACE FUNCTION`: the two guard triggers, plus the four newly-definer RPCs). Rollback is documented in the migration's own trailing comment: re-grant both revoked privileges, re-create the two dropped policies from `20260912120300_evaluation.sql`, and re-apply the six functions' prior bodies from `20260912120300_evaluation.sql`/`20260912120800_security_and_english_first_hardening.sql` and `20260913090000_auth_tenant_bootstrap.sql`.
+
+### Known limitations
+
+- No browser or Server Action walkthrough was run; this task's scope is the database boundary only, and no `apps/web` file was changed.
+- The D7 premise correction and the 010/070 scope extension were both real, unplanned discoveries made mid-implementation; both were surfaced to and resolved with the human owner before proceeding, rather than decided unilaterally.
+- Hosted Supabase and Vercel were not accessed; all verification ran against the disposable local Postgres cluster and local build output only.
+
+**Recommended reviewer:** Codex (orchestrator), for independent review per `docs/governance/MULTI-AGENT-DEVELOPMENT.md` — author and reviewer must differ for this security-sensitive change.
