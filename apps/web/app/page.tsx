@@ -1,12 +1,5 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
-import { InfoIcon, KeyRoundIcon } from 'lucide-react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -14,20 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { demoEmail, demoPasswordPlaceholder } from '@/lib/demo/data';
-import { roleLabels, rolePaths } from '@/lib/demo/labels';
-import type { DemoRole } from '@/lib/demo/types';
+import { Button } from '@/components/ui/button';
 import { messages } from '@/lib/i18n/messages';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
-import { usePrototypeFeedback } from '@/components/prototype/use-prototype-feedback';
+import { ConfigMissingNotice } from '@/components/auth/config-missing-notice';
+import { SignInForm } from '@/components/auth/sign-in-form';
+import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 
+// Server Component: whether the real sign-in form or the "not configured"
+// state renders is decided here, server-side, from process.env — never in
+// client code (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
+// "absence of privileged configuration in client code"). The interactive
+// form itself is the separate client component SignInForm.
 export default function LoginPage() {
-  const router = useRouter();
-  const notify = usePrototypeFeedback();
-  const [email, setEmail] = useState(demoEmail);
-  const [submitted, setSubmitted] = useState(false);
+  const configured = hasPublicSupabaseConfig();
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[image:var(--gradient-canvas)]">
@@ -62,92 +55,26 @@ export default function LoginPage() {
               <CardDescription>{messages.login.subtitle}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <Alert className="border-[#c5d4dc] bg-[#e4edf2]">
-                <InfoIcon />
-                <AlertTitle>{messages.prototype.environmentBanner}</AlertTitle>
-                <AlertDescription>{messages.prototype.notice}</AlertDescription>
-              </Alert>
-
-              <form
-                className="space-y-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  setSubmitted(true);
-                  notify(messages.login.toastSessionTitle, messages.login.toastSessionBody);
-                  router.push('/tenants');
-                }}
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="email">{messages.login.emailLabel}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="username"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">{messages.login.passwordLabel}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    defaultValue={demoPasswordPlaceholder}
-                    className="h-11"
-                  />
-                </div>
-                {submitted ? (
-                  <output className="block text-sm text-muted-foreground">
-                    {messages.login.submitting}
-                  </output>
-                ) : null}
-                <Button type="submit" className="h-11 w-full">
-                  {messages.login.continue}
-                </Button>
-              </form>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11"
-                  onClick={() =>
-                    notify(messages.login.toastSsoTitle, messages.login.toastSsoBody)
-                  }
-                >
-                  <KeyRoundIcon />
-                  {messages.login.sso}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-11"
-                  onClick={() =>
-                    notify(messages.login.toastRecoverTitle, messages.login.toastRecoverBody)
-                  }
-                >
-                  {messages.login.recover}
-                </Button>
-              </div>
+              {configured ? (
+                <SignInForm />
+              ) : (
+                <ConfigMissingNotice
+                  title={messages.login.configMissingTitle}
+                  body={messages.login.configMissingBody}
+                />
+              )}
 
               <nav
                 aria-label={messages.login.shortcutsLabel}
-                className="flex flex-wrap gap-3 text-sm"
+                className="space-y-2 border-t border-border pt-4"
               >
-                <Link className="underline-offset-4 hover:underline" href="/tenants">
-                  {messages.nav.workspaces}
-                </Link>
-                {(Object.keys(rolePaths) as DemoRole[]).map((role) => (
-                  <Link
-                    key={role}
-                    className="underline-offset-4 hover:underline"
-                    href={rolePaths[role]}
-                  >
-                    {roleLabels[role]}
-                  </Link>
-                ))}
+                <p className="text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+                  {messages.login.demoEntryTitle}
+                </p>
+                <Button variant="outline" className="h-11 w-full" render={<Link href="/tenants" />}>
+                  {messages.login.demoEntry}
+                </Button>
+                <p className="text-xs text-muted-foreground">{messages.login.demoEntryHint}</p>
               </nav>
             </CardContent>
           </Card>

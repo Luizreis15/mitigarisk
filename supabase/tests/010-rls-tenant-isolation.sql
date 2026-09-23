@@ -133,6 +133,19 @@ select pg_temp.assert(
   'public.has_capability wrapper grants auditor (A) audit.view on their own tenant'
 );
 
+-- TASK-029 D7: public.record_audit_event's EXECUTE grant to authenticated
+-- is revoked (20260923100000_evidence_integrity_hardening.sql) -- audit
+-- events are now written only from inside the security-definer business
+-- RPCs, never by a direct client call, closing the TASK-028 review's
+-- finding AU. This assertion's own target is the actor-stamping behavior
+-- of record_audit_event itself (it always sets actor_id = auth.uid(),
+-- never a caller-supplied value), which is unrelated to who may call it;
+-- exercised here as the superuser connection the harness runs as (the same
+-- role a hosted project's service_role plays), the one caller still able
+-- to invoke it directly, so the assertion keeps testing what it always
+-- tested. D7's actual "authenticated cannot call this at all" behavior is
+-- covered directly in supabase/tests/080-evidence-integrity.sql.
+reset role;
 do $$
 declare
   v_event_id uuid;
@@ -140,12 +153,19 @@ begin
   v_event_id := public.record_audit_event(
     '10000000-0000-0000-0000-000000000001', 'test.action', 'test.target', null, null, '{}'::jsonb
   );
+  -- request.jwt.claim.sub is a session-local GUC, untouched by `reset
+  -- role`, so auth.uid() here still resolves to the auditor's own id set
+  -- above -- record_audit_event is itself security definer, which changes
+  -- the effective role for privilege checks, not this GUC.
   perform pg_temp.assert(
     (select actor_id from public.audit_events where id = v_event_id) = auth.uid(),
     'public.record_audit_event stamps actor_id = auth.uid(), not a caller-supplied value'
   );
 end;
 $$;
+set role authenticated;
+set local "request.jwt.claim.role" = 'authenticated';
+set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000005';
 
 savepoint sp_auditor_membership_insert;
 do $$

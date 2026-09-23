@@ -1,4 +1,4 @@
-export type DemoRole = 'company' | 'super-admin' | 'operator';
+export type DemoRole = 'company' | 'company-admin' | 'super-admin' | 'operator';
 
 export type RiskBand = 'low' | 'medium' | 'high';
 export type CaseStatus =
@@ -107,7 +107,10 @@ export type Capability =
   | 'company.evaluate'
   | 'operator.queue'
   | 'platform.admin'
-  | 'policy.view';
+  | 'policy.view'
+  | 'tenant.view'
+  | 'tenant.manage_settings'
+  | 'tenant.manage_members';
 
 export type MembershipStatus = 'active' | 'invited' | 'onboarding';
 
@@ -137,7 +140,19 @@ export type PrototypeScenarioId =
   | 'empty-company'
   | 'empty-operator'
   | 'empty-admin'
-  | 'denied-admin';
+  | 'denied-admin'
+  | 'empty-members'
+  | 'denied-members'
+  | 'loading-admin'
+  | 'error-admin'
+  | 'empty-entities'
+  | 'denied-evaluate'
+  | 'loading-entities'
+  | 'error-entities'
+  | 'empty-governance'
+  | 'denied-governance'
+  | 'loading-governance'
+  | 'error-governance';
 
 export type PrototypeScenario = {
   id: PrototypeScenarioId;

@@ -15,3 +15,8 @@ export * from "./evaluation-scoring";
 export * from "./evaluation-data-quality";
 export * from "./evaluation-reasons";
 export * from "./evaluation-engine";
+export * from "./auth-session";
+export * from "./workspace-access";
+export * from "./supplier";
+export * from "./supplier-evidence";
+export * from "./supplier-final-decision";

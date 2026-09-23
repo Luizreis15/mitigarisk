@@ -8,6 +8,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: messages.meta.title,
   description: messages.meta.description,
+  icons: {
+    icon: '/mitiga-symbol.png',
+    apple: '/mitiga-symbol.png',
+  },
 };
 
 export default function RootLayout({

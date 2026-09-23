@@ -60,3 +60,22 @@ jobs:
         run: echo "$(pg_config --bindir)" >> "$GITHUB_PATH"
       - name: Run disposable local PostgreSQL verification
         run: ./supabase/tests/run-local-verification.sh
+
+  vercel-preview-quality:
+    name: Vercel preview build (Nitro adapter)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install locked dependencies
+        working-directory: apps/web
+        run: npm ci
+      - name: Build for Vercel and verify Build Output API v3 shape
+        working-directory: apps/web
+        run: npm run verify:vercel

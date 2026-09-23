@@ -1,5 +1,6 @@
 export const messages = {
   brand: 'MITIGA',
+  brandMarkAlt: 'MITIGA symbol',
   meta: {
     title: 'MITIGA — risk management prototype',
     description:
@@ -14,31 +15,345 @@ export const messages = {
     kicker: 'Risk field',
     headline: 'Quiet confidence for auditable decisions.',
     intro:
-      'This login does not authenticate anyone. It opens workspace selection, onboarding, and role views with fictional data.',
-    footer: 'MITIGA · frontend demonstration',
-    title: 'Enter the prototype',
-    subtitle: 'Use any value. No credential is validated or sent.',
-    emailLabel: 'Demonstration email',
-    passwordLabel: 'Password (not verified)',
-    submitting: 'Opening workspace selection…',
-    continue: 'Continue in the prototype',
-    sso: 'Sign in with SSO',
-    recover: 'Recover password',
-    shortcutsLabel: 'Prototype shortcuts',
-    toastSessionTitle: 'Demonstration session started',
-    toastSessionBody: 'No real authentication ran.',
-    toastSsoTitle: 'SSO unavailable',
-    toastSsoBody: 'Federated access is not part of this prototype.',
-    toastRecoverTitle: 'Recovery unavailable',
-    toastRecoverBody: 'This prototype does not send email or run a 2FA flow.',
+      'Sign in with your MITIGA Development account, or continue with sample data to review the interface with no real session.',
+    footer: 'MITIGA',
+    title: 'Sign in',
+    subtitle: 'Use your MITIGA Development account email and password.',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
+    submit: 'Sign in',
+    submitting: 'Signing in…',
+    recover: 'Forgot your password?',
+    demoEntryTitle: 'Development preview',
+    demoEntry: 'Continue with sample data',
+    demoEntryHint:
+      'Opens fictional workspace, case, and policy screens. No real session is created and no backend is called.',
+    shortcutsLabel: 'Development preview shortcuts',
+    configMissingTitle: 'Sign-in is not available',
+    configMissingBody:
+      'This environment is missing its public Supabase configuration (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY). Sample data is still available below.',
+    errors: {
+      InvalidEmailError: 'Enter a valid email address.',
+      InvalidPasswordShapeError: 'Enter your password.',
+      InvalidCredentialsError: 'That email or password is incorrect.',
+      EmailNotConfirmedError: 'Confirm your email address before signing in.',
+      AuthRateLimitedError: 'Too many attempts. Try again in a few minutes.',
+      UnknownAuthError: 'Sign-in failed. Try again.',
+    },
+  },
+  passwordReset: {
+    kicker: 'Account recovery',
+    title: 'Reset your password',
+    intro:
+      'Enter your account email. If it matches a MITIGA account, we send a password reset link to it.',
+    emailLabel: 'Email',
+    submit: 'Send reset link',
+    submitting: 'Sending…',
+    successTitle: 'Check your email',
+    successBody:
+      'If that address matches an account, a password reset link is on its way.',
+    backToSignIn: 'Back to sign in',
+    configMissingTitle: 'Password reset is not available',
+    configMissingBody:
+      'This environment is missing its public Supabase configuration (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).',
+    errors: {
+      InvalidEmailError: 'Enter a valid email address.',
+      AuthRateLimitedError: 'Too many attempts. Try again in a few minutes.',
+      UnknownAuthError: 'Something went wrong. Try again.',
+    },
+  },
+  passwordUpdate: {
+    title: 'Choose a new password',
+    intro:
+      'Use at least 8 characters. Your new password takes effect immediately.',
+    passwordLabel: 'New password',
+    confirmationLabel: 'Confirm new password',
+    submit: 'Save new password',
+    submitting: 'Saving…',
+    successTitle: 'Password updated',
+    successBody: 'Your MITIGA password has been changed securely.',
+    continue: 'Continue to workspace',
+    errors: {
+      InvalidPasswordShapeError:
+        'Use at least 8 characters for your new password.',
+      PasswordConfirmationMismatchError:
+        'The password confirmation does not match.',
+      NoActiveSessionError:
+        'This secure link is no longer active. Request a new one.',
+      UnknownAuthError:
+        'The password could not be updated. Request a new secure link and try again.',
+    },
+  },
+  authLinkError: {
+    title: 'Secure link unavailable',
+    notice: 'This link cannot be used',
+    body: 'It may be incomplete, expired, or already used. Request a new password reset link to continue securely.',
+    action: 'Request a new link',
+  },
+  workspace: {
+    kicker: 'Signed in',
+    title: 'Your MITIGA account',
+    signedInAs: 'Signed in as {email}.',
+    platformAdminNotice: 'You have platform administrator access.',
+    platformAdminBody:
+      'This screen confirms a verified platform session. It does not open tenant operations.',
+    noMembershipTitle: 'No workspace yet',
+    noMembershipBody:
+      'Your account is not a member of any company yet. Ask a company administrator to invite you, or a platform administrator to set up your company.',
+    membershipCountOne: '{count} active company membership.',
+    membershipCountOther: '{count} active company memberships.',
+    membershipBody:
+      'This tenant context was selected and verified by the server against your own active memberships.',
+    selectedTenantNotice: 'Selected company: {tenantName}.',
+    tenantSelectionTitle: 'Choose a company',
+    tenantSelectionBody:
+      'Your account has more than one active company membership. Select one to continue; the server re-verifies this choice on every request.',
+    invalidSelectionTitle: 'That company selection could not be used',
+    invalidSelectionBody:
+      'The requested company is not one of your active memberships. This can happen with an old link, a bookmark, or a membership that has changed. Start over to choose again.',
+    tryAgainLink: 'Start over',
+    tenantContextUnavailable:
+      'Tenant-specific Operator and policy workspaces are unavailable until this task connects them. This page does not list roles or capabilities.',
+    buildingNotice:
+      'Full workspace views are still being connected to this real session.',
+    demoPreviewTitle: 'Sample data preview',
+    demoPreviewLink: 'Open sample data preview',
+    demoPreviewHint:
+      'The sample-data preview is fictional demonstration content. It is not this account, not a real tenant workspace, and not authorization.',
+    signOut: 'Sign out',
+    skipToContent: 'Skip to workspace status',
+    configUnavailableTitle: 'Workspace is not configured',
+    configUnavailableBody:
+      'Public Supabase configuration is missing. This screen does not sign anyone in and does not fall back to a fictional session.',
+    readFailureTitle: 'Workspace details could not be read',
+    readFailureBody:
+      'The signed-in session is still valid, but membership details could not be loaded. No tenant context is assumed. Try again or sign out.',
+    backToSignIn: 'Back to sign-in',
+  },
+  supplierWorkspace: {
+    kicker: 'Supplier risk assessment',
+    fictionalNotice: 'Fictional demonstration data only',
+    backToWorkspace: 'Back to workspace',
+    backToSuppliers: 'All suppliers',
+    journeyLabel: 'Evaluation progress',
+    journey: {
+      details: 'Supplier details',
+      evidence: 'Evidence recorded',
+      evaluation: 'Deterministic evaluation',
+      decision: 'Company decision',
+    },
+    listTitle: 'Suppliers',
+    listIntro:
+      'Create and assess fictional suppliers through a traceable, deterministic workflow.',
+    emptyTitle: 'No suppliers yet',
+    emptyBody: 'Create the first fictional supplier to begin an evaluation.',
+    reference: 'Reference',
+    displayName: 'Display name',
+    status: 'Status',
+    open: 'Open',
+    statusValues: {
+      draft: 'Draft',
+      ready: 'Ready',
+      evaluated: 'Evaluated',
+      archived: 'Archived',
+    },
+    missingTitle: 'Supplier not found',
+    missingBody:
+      'This identifier is not a supplier in your active company, or it belongs to another tenant.',
+    detailIntro:
+      'Review supplier details, evidence metadata, and the latest deterministic recommendation.',
+    createFormTitle: 'Record a supplier',
+    createFormHint:
+      'Use fictional names, identifiers, domains, and amounts. Fields marked required must be completed.',
+    required: 'Required',
+    optional: 'Optional',
+    identityGroup: 'Identity and registration',
+    relationshipGroup: 'Relationship and exposure',
+    fields: {
+      reference: 'Reference',
+      displayName: 'Display name',
+      registrationCountryCode: 'Registration country (ISO 3166-1 alpha-2)',
+      registrationIdentifier: 'Registration identifier',
+      industryCode: 'Industry code',
+      operatingCountryCodes: 'Operating countries (comma-separated ISO codes)',
+      relationshipPurpose: 'Relationship purpose',
+      annualExposureMinor: 'Estimated annual exposure (integer minor units)',
+      annualExposureCurrency: 'Currency (ISO 4217)',
+      onboardingChannel: 'Onboarding channel',
+      websiteDomain: 'Website domain (optional)',
+    },
+    onboardingChannels: {
+      web: 'Web',
+      api: 'API',
+      assisted: 'Assisted',
+    },
+    submit: 'Create supplier',
+    submitting: 'Creating…',
+    summaryTitle: 'Supplier record',
+    relationshipPurposeLabel: 'Relationship purpose',
+    exposureLabel: 'Estimated annual exposure',
+    operatingCountriesLabel: 'Operating countries',
+    onboardingChannelLabel: 'Onboarding channel',
+    recordedLabel: 'Recorded (UTC)',
+    evidence: {
+      title: 'Evidence metadata',
+      disclosure:
+        'This is a fictional metadata manifest only. Evidence files are not uploaded in this first operational slice.',
+      emptyTitle: 'No evidence recorded yet',
+      emptyBody:
+        'Add metadata to show which fictional evidence would support this assessment.',
+      recordedCount: '{count} metadata entries recorded',
+      metadataBadge: 'Metadata only',
+      formTitle: 'Register evidence metadata',
+      typeLabel: 'Evidence type',
+      displayNameLabel: 'Display name',
+      issuerCountryLabel: 'Issuer country (optional, ISO 3166-1 alpha-2)',
+      issueDateLabel: 'Issue date (optional)',
+      verificationStateLabel: 'Verification state',
+      submit: 'Register evidence',
+      submitting: 'Registering…',
+      columns: {
+        type: 'Type',
+        displayName: 'Display name',
+        issuerCountry: 'Issuer country',
+        issueDate: 'Issue date',
+        verificationState: 'Verification state',
+        recorded: 'Recorded (UTC)',
+      },
+      types: {
+        incorporation_record: 'Incorporation record',
+        ownership_declaration: 'Ownership declaration',
+        address_confirmation: 'Address confirmation',
+        bank_account_confirmation: 'Bank account confirmation',
+        compliance_questionnaire: 'Compliance questionnaire',
+      },
+      verificationStates: {
+        provided: 'Provided',
+        reviewed: 'Reviewed',
+        rejected: 'Rejected',
+      },
+    },
+    evaluation: {
+      title: 'Deterministic evaluation',
+      hint: 'Runs the published policy engine against this supplier and its recorded evidence. The result is a recommendation only and remains separate from the Company Admin decision.',
+      runButton: 'Run evaluation',
+      running: 'Running…',
+      noEvaluationYet: 'No evaluation has run yet for this supplier.',
+      noEvaluationBody:
+        'Run the deterministic engine when the supplier details and evidence metadata are ready.',
+      pendingTitle: 'Evaluation in progress',
+      pendingBody:
+        'The persisted evaluation is pending. No recommendation is available yet.',
+      failedTitle: 'Evaluation did not complete',
+      failedBody:
+        'The persisted evaluation failed. No recommendation or final Company decision was recorded.',
+      resultTitle: 'Evaluation result',
+      scoreLabel: 'Score',
+      recommendationLabel: 'Recommendation',
+      qualityLabel: 'Data quality',
+      missingFactorsLabel: 'Missing required factors',
+      noneMissing: 'None',
+      reasonsTitle: 'Reason codes',
+      reasonsHelp:
+        'These codes explain which policy signals shaped the recommendation.',
+      policyLabel: 'Policy version',
+      correlationLabel: 'Correlation',
+      whenLabel: 'Completed (UTC)',
+      recommendationEyebrow: 'Engine recommendation',
+      recommendationNotice:
+        'This is a deterministic recommendation, not a recorded business decision.',
+      recommendationValues: {
+        approve: 'Approve',
+        review: 'Review',
+        reject: 'Reject',
+      },
+    },
+    finalDecision: {
+      title: 'Final Company decision',
+      separation: 'This human business decision is recorded separately from the deterministic engine recommendation. The two may differ.',
+      recommendation: 'Engine recommendation',
+      decision: 'Company Admin decision',
+      pending: 'Not recorded',
+      requiresCompleted: 'A final decision can be recorded only after a deterministic evaluation completes.',
+      choose: 'Choose the final business decision',
+      values: { approve: 'Approve', review: 'Review', reject: 'Reject' },
+      rationale: 'Rationale',
+      rationaleOptional: 'Concise rationale (optional)',
+      rationaleHelp: 'Up to 500 characters. Do not include personal data or sensitive evidence details.',
+      submit: 'Record final decision',
+      submitting: 'Recording…',
+      recorded: 'Final decision recorded',
+      recordedAt: 'Recorded (UTC)',
+      immutable: 'This decision is immutable and cannot be changed or deleted in this workflow.',
+      readOnlyTitle: 'Read-only decision state',
+      readOnlyBody: 'Only an active Company Admin may record the final decision. You can still review the recommendation and any persisted decision.',
+    },
+    errors: {
+      InvalidSupplierReferenceError:
+        'Enter a reference between 1 and 64 characters.',
+      InvalidSupplierDisplayNameError:
+        'Enter a display name between 1 and 200 characters.',
+      InvalidCountryCodeError: 'Enter a valid two-letter country code.',
+      InvalidRegistrationIdentifierError:
+        'Enter a registration identifier between 1 and 100 characters.',
+      InvalidIndustryCodeError:
+        'Enter an industry code between 1 and 100 characters.',
+      InvalidOperatingCountryCodesError:
+        'Enter at least one valid two-letter operating country code.',
+      InvalidRelationshipPurposeError:
+        'Enter a relationship purpose between 1 and 2000 characters.',
+      InvalidAnnualExposureError:
+        'Enter a non-negative whole number of minor currency units.',
+      InvalidCurrencyCodeError: 'Enter a valid three-letter currency code.',
+      InvalidOnboardingChannelError: 'Choose a valid onboarding channel.',
+      InvalidWebsiteDomainError:
+        'Enter a plausible domain name, or leave it blank.',
+      DuplicateSupplierReferenceError:
+        'A supplier with this reference already exists in this company.',
+      SupplierNotFoundError:
+        'This supplier could not be found in your active company.',
+      SupplierWriteError: 'The supplier could not be saved. Try again.',
+      InvalidSupplierFinalDecisionError: 'Choose approve, review, or reject.',
+      InvalidSupplierDecisionRationaleError: 'Keep the rationale within 500 characters.',
+      CompletedSupplierEvaluationNotFoundError: 'A completed evaluation could not be found in this company.',
+      SupplierFinalDecisionConflictError: 'A final decision or correlation identifier has already been used.',
+      SupplierFinalDecisionWriteError: 'The final decision could not be recorded.',
+      InvalidEvidenceTypeError: 'Choose a valid evidence type.',
+      InvalidEvidenceDisplayNameError:
+        'Enter a display name between 1 and 200 characters.',
+      InvalidEvidenceIssuerCountryCodeError:
+        'Enter a valid two-letter issuer country code, or leave it blank.',
+      InvalidEvidenceIssueDateError:
+        'Enter a valid issue date, or leave it blank.',
+      InvalidVerificationStateError: 'Choose a valid verification state.',
+      SupplierEvidenceWriteError:
+        'The evidence entry could not be saved. Try again.',
+      NoPublishedPolicyError:
+        'This company has no published risk policy yet. An evaluation cannot run.',
+      SupplierNotFoundForEvaluationError:
+        'This supplier could not be found in your active company.',
+      EvaluationCorrelationConflictError:
+        'This evaluation attempt could not be completed. Reload the page and try again.',
+      EvaluationWriteError: 'The evaluation could not be saved. Try again.',
+      ForbiddenError: 'Your role does not have this capability.',
+      NoActiveTenantMembershipError:
+        'Your account is not a member of any company.',
+      TenantSelectionRequiredError: 'Choose a company before continuing.',
+      InvalidTenantSelectionError:
+        'That company selection could not be used. Start over.',
+      UnknownError: 'Something went wrong. Try again.',
+    },
   },
   views: {
     company: 'Company',
+    'company-admin': 'Company admin',
     'super-admin': 'Super admin',
     operator: 'Operator',
   },
   nav: {
     overview: 'Overview',
+    companyProfile: 'Company profile',
+    members: 'Members',
     evaluations: 'Evaluations',
     alerts: 'Alerts',
     cases: 'Cases',
@@ -51,6 +366,8 @@ export const messages = {
     skipToContent: 'Skip to content',
     primary: 'Primary navigation',
     mobileRoutes: 'Primary routes',
+    tenantDirectory: 'Tenant directory',
+    entities: 'Entities',
     openMenu: 'Open menu',
     searchLabel: 'Search demonstration data',
     searchPlaceholder: 'Search a fictional reference',
@@ -113,7 +430,8 @@ export const messages = {
   },
   empty: {
     evaluationsTitle: 'No evaluations in this band',
-    evaluationsBody: 'Change the risk filter to return to the fictional records.',
+    evaluationsBody:
+      'Change the risk filter to return to the fictional records.',
     tenantsTitle: 'No tenants in this state',
     tenantsBody: 'Clear the health filter to see the demonstration portfolio.',
     queueTitle: 'Queue is empty for this status',
@@ -131,7 +449,8 @@ export const messages = {
     toastExportTitle: 'Export simulated',
     toastExportBody: 'No file or customer data was generated.',
     evaluationsTitle: 'Evaluations',
-    evaluationsHint: 'Reasons, quality, and policy version are visible on every row.',
+    evaluationsHint:
+      'Reasons, quality, and policy version are visible on every row.',
     reference: 'Reference',
     score: 'Score',
     status: 'Status',
@@ -145,11 +464,112 @@ export const messages = {
     openCasesHint: '{count} items in {tenant} operations.',
     open: 'Open',
     toastCaseTitle: 'Case opened in the demonstration',
+    openAdministration: 'Open company administration',
+    openEntities: 'Open entity records',
     dimensions: {
       identity: 'Identity',
       fraud: 'Fraud',
       regulatory: 'Regulatory',
       financial: 'Financial',
+    },
+  },
+  companyAdmin: {
+    kicker: 'Company administration',
+    profileTitle: 'Company profile',
+    profileIntro:
+      'Northstar is a fictional tenant for reviewing membership administration. Settings on this screen are not saved.',
+    membersTitle: 'Members',
+    membersIntro:
+      'Roles are convenience bundles. Capabilities are what a member can actually do in a live product. This list is local demonstration data.',
+    backToCompany: 'Back to company workspace',
+    tenantScope: 'Tenant scope',
+    tenantId: 'Tenant identifier',
+    tenantSlug: 'Slug',
+    environment: 'Environment',
+    companyStatus: 'Company status',
+    plan: 'Plan',
+    policyVersion: 'Policy version',
+    identity: 'Company identity',
+    member: 'Member',
+    email: 'Demonstration email',
+    role: 'Role bundle',
+    status: 'Membership status',
+    capabilities: 'Capabilities',
+    updated: 'Last local update',
+    invitedAt: 'Invitation shown at',
+    inviteTitle: 'Invite a member',
+    inviteHint:
+      'The form stays on this device. No email is delivered and no membership is created.',
+    inviteEmail: 'Demonstration email',
+    inviteRole: 'Role bundle to preview',
+    inviteSubmit: 'Preview invitation',
+    inviteConfirmTitle: 'Invitation will not be sent',
+    inviteConfirmBody:
+      'Confirming only shows a local toast. No email is delivered, no membership is stored, and Northstar is unchanged.',
+    changeRole: 'Change role',
+    changeRoleTitle: 'Role will not be updated',
+    changeRoleBody:
+      'Selecting a different bundle only previews the conversation. Capabilities and membership stay as local fixtures. Nothing is saved.',
+    newRole: 'Preview role bundle',
+    suspend: 'Suspend',
+    reactivate: 'Reactivate',
+    suspendTitle: 'Suspension will not be saved',
+    suspendBody:
+      'This confirmation does not suspend the member or write an audit event. The fixture status stays as shown.',
+    reactivateTitle: 'Reactivation will not be saved',
+    reactivateBody:
+      'This confirmation does not restore access. The fixture status stays as shown.',
+    confirm: 'Show local confirmation',
+    cancel: 'Cancel',
+    toastInviteTitle: 'Invitation not sent',
+    toastInviteBody: 'No email was delivered and no membership was created.',
+    toastRoleTitle: 'Role not changed',
+    toastRoleBody: 'The member still has the fixture role and capabilities.',
+    toastSuspendTitle: 'Suspension not saved',
+    toastSuspendBody: 'The member status was not updated.',
+    toastReactivateTitle: 'Reactivation not saved',
+    toastReactivateBody: 'The member status was not updated.',
+    loadingLabel: 'Loading company administration demonstration',
+    loadingTitle: 'Loading company administration',
+    loadingBody: 'Local fixtures are being prepared. No tenant API is called.',
+    errorTitle: 'Company administration could not load',
+    errorBody:
+      'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
+    retry: 'Retry local view',
+    deniedTitle: 'Member administration is not available',
+    deniedBody:
+      'This view needs the tenant.manage_members capability. UI hiding is not authorization; a live product must enforce this server-side.',
+    emptyTitle: 'No members in this demonstration',
+    emptyBody:
+      'When the company is live, invitations and memberships appear here. Nothing is provisioned from this empty state.',
+    capabilityHint:
+      'Capability keys are authoritative. Role names do not grant access by themselves.',
+    selfLabel: 'Signed-in membership',
+    companyStatusActive: 'Active',
+    statusValues: {
+      active: 'Active',
+      invited: 'Invitation pending',
+      suspended: 'Suspended',
+      removed: 'Removed',
+    },
+    roles: {
+      tenant_admin: 'Company admin',
+      risk_analyst: 'Risk analyst',
+      operator: 'Operator',
+      auditor: 'Auditor',
+    },
+    memberCapabilities: {
+      'tenant.view': 'View this company',
+      'tenant.manage_settings': 'Manage company settings',
+      'tenant.manage_members': 'Manage members',
+      'policy.view': 'View policies',
+      'policy.manage': 'Draft policy changes',
+      'evaluation.run': 'Run evaluations',
+      'evaluation.view': 'View evaluations',
+      'case.manage': 'Manage cases',
+      'case.decide': 'Record case decisions',
+      'case.view': 'View cases',
+      'audit.view': 'View audit evidence',
     },
   },
   admin: {
@@ -181,8 +601,138 @@ export const messages = {
     toastSuspendTitle: 'Suspension not executed',
     toastSuspendBody: 'The prototype does not change tenant state.',
     recentAudit: 'Recent audit',
-    auditHint:
-      'Demonstration evidence: actor, target, time, and correlation.',
+    auditHint: 'Demonstration evidence: actor, target, time, and correlation.',
+    openDirectory: 'Open tenant directory',
+  },
+  platformGovernance: {
+    kicker: 'Platform tenant governance',
+    title: 'Tenant directory',
+    intro:
+      'Govern fictional MITIGA tenants: lifecycle, membership health, policy posture, configuration readiness, and audit signals. This view does not open entity, evaluation, case, or evidence records.',
+    boundaryTitle: 'Platform boundary',
+    boundaryBody:
+      'Platform Super Admin may govern tenant access on the platform. It does not browse a tenant’s operational cases or evaluations from this workspace. UI visibility is not authorization; a live product enforces platform.admin on the server.',
+    contextsTitle: 'Three operating contexts',
+    contextPlatform:
+      'Platform Super Admin governs tenants and access. It is not a Company or Operator queue.',
+    contextCompany:
+      'Company records entities, policies, and evaluation intake for one tenant.',
+    contextOperator:
+      'Operator and auditor work cases and evidence inside an authorized tenant. That work is not shown here.',
+    openCompanyContext: 'Open Company context',
+    openOperatorContext: 'Open Operator context',
+    searchLabel: 'Search tenant name or identifier',
+    searchPlaceholder: 'Northstar or ten_northstar_gaming',
+    lifecycleLabel: 'Tenant lifecycle',
+    allLifecycles: 'All lifecycles',
+    filterHonesty:
+      'Search and filters stay in the URL. Nothing is queried remotely.',
+    clearFilters: 'Clear local filters',
+    tenant: 'Tenant',
+    lifecycle: 'Lifecycle',
+    visibility: 'Platform visibility',
+    memberships: 'Membership health',
+    policyPosture: 'Policy posture',
+    configuration: 'Configuration readiness',
+    auditSignal: 'Audit signal',
+    open: 'Open governance',
+    missingTitle: 'Tenant not in this prototype',
+    missingBody:
+      'This identifier is not in the local governance fixtures. No tenant store was queried and no customer records were opened.',
+    detailIntro:
+      'Counts and posture only. No entity names, evaluation scores, case notes, or evidence files are included.',
+    identity: 'Tenant identity',
+    slug: 'Slug',
+    environment: 'Environment',
+    policyVersion: 'Policy version',
+    noPolicy: 'No published policy version',
+    membershipActive: 'Active memberships',
+    membershipInvited: 'Pending invitations',
+    membershipSuspended: 'Suspended memberships',
+    lastAction: 'Last audit action',
+    actor: 'Actor',
+    when: 'Recorded (UTC)',
+    correlation: 'Correlation',
+    conceptsTitle: 'Keep these concepts separate',
+    conceptAudit:
+      'An audit signal is a technical action token with actor, time, and correlation.',
+    conceptConfig:
+      'Configuration readiness is not data quality of an evaluation input set.',
+    conceptPolicy:
+      'A policy version is an immutable published contract, not a risk score.',
+    conceptRecommendation:
+      'A score is a recommendation produced later in evaluation. It is not tenant health.',
+    conceptDecision:
+      'A human customer decision is recorded on a case. This workspace does not approve or reject risk.',
+    actionsTitle: 'Local governance actions',
+    actionsHint:
+      'Each confirmation only shows a toast. Nothing is saved, no email is sent, and no support access is granted.',
+    provision: 'Provision tenant',
+    suspend: 'Suspend tenant',
+    reactivate: 'Reactivate tenant',
+    supportAccess: 'Request support access',
+    provisionTitle: 'Provision will not run',
+    provisionBody:
+      'This confirmation does not create a tenant, send email, or write memberships. The draft fixture is unchanged.',
+    suspendTitle: 'Suspension will not be saved',
+    suspendBody:
+      'This confirmation does not suspend the tenant or notify anyone. Lifecycle stays as shown.',
+    reactivateTitle: 'Reactivation will not be saved',
+    reactivateBody:
+      'This confirmation does not restore access. Lifecycle stays as shown.',
+    supportTitle: 'Support access will not be granted',
+    supportBody:
+      'A live product would require a time-limited, reason-bound, visibly indicated, and audited grant. This prototype creates no impersonation session and sends no email.',
+    confirm: 'Show local confirmation',
+    cancel: 'Cancel',
+    toastProvisionTitle: 'Provision not executed',
+    toastProvisionBody: 'No tenant was created and no email was sent.',
+    toastSuspendTitle: 'Suspension not saved',
+    toastSuspendBody: 'Tenant lifecycle was not updated.',
+    toastReactivateTitle: 'Reactivation not saved',
+    toastReactivateBody: 'Tenant lifecycle was not updated.',
+    toastSupportTitle: 'Support access not granted',
+    toastSupportBody:
+      'No impersonation session was created and no email was sent.',
+    emptyFiltersTitle: 'No tenants match these filters',
+    emptyFiltersBody:
+      'Local fixtures are unchanged. Adjust search or lifecycle. This is not a customer directory miss.',
+    loadingLabel: 'Loading tenant directory',
+    loadingTitle: 'Loading tenant directory',
+    loadingBody:
+      'Local fixtures are being prepared. No platform API is called.',
+    errorTitle: 'Tenant directory could not load',
+    errorBody:
+      'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
+    retry: 'Retry local view',
+    deniedTitle: 'Tenant governance is not available',
+    deniedBody:
+      'This view needs the platform.admin capability. In a live product the backend checks this. Hiding the screen is not authorization.',
+    emptyTitle: 'No tenants in this demonstration',
+    emptyBody:
+      'When the platform is live, governed tenants appear here. This empty state does not provision a company.',
+    countLabel: '{count} local tenants',
+    backDirectory: 'Back to tenant directory',
+    backSuperAdmin: 'Back to Super admin',
+    lifecycleValues: {
+      draft: 'Draft',
+      active: 'Active',
+      suspended: 'Suspended',
+    },
+    visibilityValues: {
+      listed: 'Listed on the platform',
+      restricted: 'Restricted platform visibility',
+    },
+    policyValues: {
+      published: 'Published version in force',
+      draft_only: 'Draft only · not in force',
+      none: 'No policy version yet',
+    },
+    configurationValues: {
+      ready: 'Configuration ready',
+      incomplete: 'Configuration incomplete',
+      blocked: 'Configuration blocked',
+    },
   },
   operator: {
     kicker: 'Operations queue',
@@ -229,6 +779,9 @@ export const messages = {
       'operator.queue': 'Work the operations queue',
       'platform.admin': 'Administer the platform',
       'policy.view': 'View risk policy versions',
+      'tenant.view': 'View this company',
+      'tenant.manage_settings': 'Manage company settings',
+      'tenant.manage_members': 'Manage company members',
     },
   },
   tenants: {
@@ -254,6 +807,18 @@ export const messages = {
       'empty-operator': 'Empty operator queue',
       'empty-admin': 'Empty platform view',
       'denied-admin': 'Missing platform capability',
+      'empty-members': 'Empty company members list',
+      'denied-members': 'Missing member administration capability',
+      'loading-admin': 'Company admin loading state',
+      'error-admin': 'Company admin error state',
+      'empty-entities': 'Empty entity records',
+      'denied-evaluate': 'Missing evaluation capability',
+      'loading-entities': 'Entity records loading state',
+      'error-entities': 'Entity records error state',
+      'empty-governance': 'Empty tenant directory',
+      'denied-governance': 'Missing platform governance capability',
+      'loading-governance': 'Tenant directory loading state',
+      'error-governance': 'Tenant directory error state',
     },
   },
   onboarding: {
@@ -328,8 +893,114 @@ export const messages = {
     adminTitle: 'No tenants to govern',
     adminBody:
       'Platform health and audit appear after the first company is provisioned. Support access stays empty until justified.',
+    companyAdminTitle: 'No company profile yet',
+    companyAdminBody:
+      'Company administration appears after a tenant exists. This empty state does not create members or send invitations.',
     ctaOnboarding: 'Start company setup',
     ctaWorkspaces: 'Choose another workspace',
+  },
+  entityIntake: {
+    kicker: 'Entity intake',
+    listTitle: 'Entity records',
+    listIntro:
+      'Prepare a fictional Northstar client or partner record, then start an evaluation intake. Nothing here writes to a tenant store.',
+    recordTitle: 'Entity record',
+    missingTitle: 'Entity not in this prototype',
+    missingBody:
+      'This identifier is not in the local Northstar fixtures. No customer directory was queried.',
+    startIntake: 'Start evaluation intake',
+    openRecord: 'Open entity record',
+    identity: 'Identity and reference',
+    relationship: 'Relationship',
+    signals: 'Operational signals',
+    facts: 'Declared facts',
+    completeness: 'Data completeness',
+    provenance: 'Provenance',
+    recorded: 'Recorded (UTC)',
+    updated: 'Last local update (UTC)',
+    contactEmail: 'Demonstration contact',
+    tenantScope: 'Tenant scope',
+    policyChoice: 'Policy version',
+    policyHint:
+      'Only local published policy versions can be selected. Policy, locale, currency, and time zone are presentation and configuration choices. They are not authorization.',
+    presentationHint:
+      'Locale, currency, and time zone below configure how this screen is shown. They do not grant access and are not a jurisdiction decision.',
+    conceptsTitle: 'Keep these concepts separate',
+    factsConcept: 'Facts are what the company entered for this entity.',
+    qualityConcept:
+      'Completeness describes whether those facts are enough to evaluate. It is not a score.',
+    recommendationConcept:
+      'A score and recommendation appear only after an evaluation result exists. They are not entered here.',
+    decisionConcept:
+      'A human decision is recorded later on a case. This intake does not approve, reject, or persist an outcome.',
+    intakeTitle: 'Evaluation intake',
+    intakeIntro:
+      'Declare facts against a Northstar entity and a published policy version. No engine runs and no score is shown on this screen.',
+    entityLabel: 'Entity record',
+    displayName: 'Display name',
+    reference: 'External reference',
+    channel: 'Operating channel',
+    activityBand: 'Declared activity band',
+    declaredFacts: 'Declared facts',
+    required: 'Required',
+    review: 'Review intake',
+    backToEdit: 'Back to facts',
+    submit: 'Acknowledge local submission',
+    reviewTitle: 'Review before acknowledgement',
+    reviewIntro:
+      'Check the facts, completeness, selected policy, and that no score or human decision is being recorded.',
+    ackTitle: 'Intake was not saved',
+    ackBody:
+      'This prototype did not save the entity, send an evaluation, call the scoring engine, or write an audit event.',
+    toastTitle: 'Intake not persisted',
+    toastBody: 'No evaluation was created and no score was calculated.',
+    exampleResult: 'Open a separate demonstration result',
+    exampleResultHint:
+      'The linked evaluation is an existing fixture. It was not produced from the facts on this form.',
+    validationTitle: 'Complete the required fields',
+    validationName: 'Enter a display name.',
+    validationReference: 'Enter an external reference.',
+    validationFacts: 'Enter declared facts (at least a short description).',
+    validationPolicy: 'Choose a published policy version.',
+    validationEntity: 'Choose an entity record.',
+    loadingLabel: 'Loading entity records',
+    loadingTitle: 'Loading entity records',
+    loadingBody:
+      'Local fixtures are being prepared. No directory API is called.',
+    errorTitle: 'Entity records could not load',
+    errorBody:
+      'This is a demonstration error state. Retry reloads the local screen. No backend was contacted.',
+    retry: 'Retry local view',
+    deniedTitle: 'Evaluation intake is not available',
+    deniedBody:
+      'Starting an evaluation needs the company.evaluate capability. In a live product the backend checks this. Hiding this screen is not authorization.',
+    emptyTitle: 'No entity records in this demonstration',
+    emptyBody:
+      'When the company is live, client and partner records appear here. This empty state does not create an entity.',
+    relationships: {
+      customer: 'Customer',
+      partner: 'Partner',
+      supplier: 'Supplier',
+    },
+    channels: {
+      web: 'Web',
+      api: 'API',
+      assisted: 'Assisted',
+    },
+    activityBands: {
+      low: 'Low',
+      moderate: 'Moderate',
+      elevated: 'Elevated',
+    },
+    provenanceValues: {
+      customer_declaration: 'Customer declaration',
+      staff_entry: 'Staff entry',
+    },
+    policyLifecycle: {
+      published: 'Published',
+      archived: 'Archived · not selectable',
+      draft: 'Draft · not selectable',
+    },
   },
   flow: {
     recommendationTitle: 'Score is a recommendation',
@@ -375,7 +1046,8 @@ export const messages = {
       openCase: 'Open linked case',
       createCase: 'Create case from evaluation',
       toastCaseTitle: 'Case stayed local',
-      toastCaseBody: 'No case record was written. Opening a fixture for the next step.',
+      toastCaseBody:
+        'No case record was written. Opening a fixture for the next step.',
     },
     case: {
       kicker: 'Operations case',

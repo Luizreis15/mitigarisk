@@ -18,6 +18,8 @@ export const CAPABILITY_KEYS = [
   "case.manage",
   "case.decide",
   "case.view",
+  "supplier.manage",
+  "supplier.view",
   "audit.view",
   "integration.manage",
   "integration.view",

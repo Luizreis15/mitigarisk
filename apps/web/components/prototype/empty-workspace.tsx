@@ -33,6 +33,11 @@ const copy: Record<
     body: messages.emptyWorkspace.adminBody,
     icon: ShieldOffIcon,
   },
+  'company-admin': {
+    title: messages.emptyWorkspace.companyAdminTitle,
+    body: messages.emptyWorkspace.companyAdminBody,
+    icon: ShieldOffIcon,
+  },
 };
 
 export function EmptyWorkspace({ view }: { view: DemoRole }) {

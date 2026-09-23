@@ -56,6 +56,8 @@ import { memberships } from '@/lib/demo/session';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { formatDateTime, formatNumber, formatScore } from '@/lib/i18n/presentation';
 import { caseHrefFromQueue } from '@/lib/demo/workbench';
+import { canManageCompanyMembers } from '@/lib/demo/company-admin';
+import type { Capability } from '@/lib/demo/types';
 
 export default function CompanyPage() {
   return (
@@ -69,8 +71,16 @@ function CompanyContent() {
   const notify = usePrototypeFeedback();
   const params = useSearchParams();
   const empty = params.get('state') === 'empty';
-  const capabilities = memberships.find((item) => item.id === 'mem_helix_company')
-    ?.capabilities;
+  const capabilities = Array.from(
+    new Set(
+      memberships
+        .filter(
+          (item) =>
+            item.id === 'mem_helix_company' || item.id === 'mem_northstar_admin',
+        )
+        .flatMap((item) => item.capabilities),
+    ),
+  ) as Capability[];
   const [band, setBand] = useState<RiskBand | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtered = useMemo(
@@ -132,6 +142,13 @@ function CompanyContent() {
                   >
                     {messages.company.createEvaluation}
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
+                    render={<Link href="/entities" />}
+                  >
+                    {messages.company.openEntities}
+                  </Button>
                   {capabilities?.includes('policy.view') ? (
                     <Button
                       variant="outline"
@@ -139,6 +156,15 @@ function CompanyContent() {
                       render={<Link href="/policies" />}
                     >
                       {messages.policy.openFromCompany}
+                    </Button>
+                  ) : null}
+                  {canManageCompanyMembers(capabilities) ? (
+                    <Button
+                      variant="outline"
+                      className="h-11 border-white/30 bg-transparent text-white hover:bg-white/10"
+                      render={<Link href="/company/admin" />}
+                    >
+                      {messages.company.openAdministration}
                     </Button>
                   ) : null}
                   <Button

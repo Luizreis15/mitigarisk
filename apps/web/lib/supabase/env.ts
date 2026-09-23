@@ -19,6 +19,16 @@ export function getPublicSupabaseConfig(): { url: string; anonKey: string } {
   };
 }
 
+/**
+ * Non-throwing check for a UI that must render a clear, non-sensitive
+ * "not configured" state instead of crashing when the Development
+ * environment is missing its public Supabase configuration
+ * (docs/tasks/TASK-015-claude-real-auth-route-integration.md).
+ */
+export function hasPublicSupabaseConfig(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) && Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+}
+
 /** Server-only: the service role key must never reach a browser bundle. */
 export function getServiceRoleSupabaseConfig(): { url: string; serviceRoleKey: string } {
   return {

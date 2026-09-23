@@ -49,6 +49,7 @@ type NavItem = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  href?: string;
 };
 
 const navigation: Record<DemoRole, NavItem[]> = {
@@ -58,7 +59,33 @@ const navigation: Record<DemoRole, NavItem[]> = {
     { id: 'alerts', label: messages.nav.alerts, icon: BellIcon },
     { id: 'cases', label: messages.nav.cases, icon: InboxIcon },
   ],
+  'company-admin': [
+    {
+      id: 'profile',
+      label: messages.nav.companyProfile,
+      icon: Building2Icon,
+      href: '/company/admin',
+    },
+    {
+      id: 'members',
+      label: messages.nav.members,
+      icon: UsersIcon,
+      href: '/company/admin/members',
+    },
+    {
+      id: 'company-workspace',
+      label: messages.companyAdmin.backToCompany,
+      icon: LayoutDashboardIcon,
+      href: '/company',
+    },
+  ],
   'super-admin': [
+    {
+      id: 'directory',
+      label: messages.nav.tenantDirectory,
+      icon: Building2Icon,
+      href: '/super-admin/tenants',
+    },
     { id: 'tenants', label: messages.nav.tenants, icon: Building2Icon },
     { id: 'health', label: messages.nav.health, icon: ActivityIcon },
     { id: 'audit', label: messages.nav.audit, icon: ShieldIcon },
@@ -79,15 +106,18 @@ export function AppShell({
   children,
   onOpenFilters,
   capabilities,
+  workspace,
 }: {
   view: DemoRole;
   children: ReactNode;
   onOpenFilters?: () => void;
   capabilities?: Capability[];
+  workspace?: { name: string; environment: string; policyVersion: string };
 }) {
   const items = navigation[view];
   const [query, setQuery] = useState('');
   const notify = usePrototypeFeedback();
+  const tenant = workspace ?? currentTenant;
 
   return (
     <div className="min-h-screen bg-[image:var(--gradient-canvas)] text-foreground">
@@ -111,16 +141,15 @@ export function AppShell({
           </div>
           <nav className="flex flex-1 flex-col gap-1 p-3">
             {items.map((item) => (
-              <button
+              <ShellNavControl
                 key={item.id}
-                type="button"
-                onClick={() => scrollToSection(item.id)}
+                item={item}
                 className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm text-white/80 transition-[background-color,color] duration-[var(--duration-fast)] hover:bg-white/10 hover:text-white focus-visible:bg-white/10"
               >
                 <item.icon className="size-4 shrink-0" aria-hidden="true" />
                 <span className="hidden lg:inline">{item.label}</span>
                 <span className="sr-only lg:hidden">{item.label}</span>
-              </button>
+              </ShellNavControl>
             ))}
           </nav>
           <p className="hidden px-5 pb-5 text-xs leading-5 text-white/55 lg:block">
@@ -159,12 +188,20 @@ export function AppShell({
                     <SheetTrigger
                       key={item.id}
                       render={
-                        <button
-                          type="button"
-                          aria-label={item.label}
-                          className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm text-white/85"
-                          onClick={() => scrollToSection(item.id)}
-                        />
+                        item.href ? (
+                          <Link
+                            href={item.href}
+                            aria-label={item.label}
+                            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm text-white/85"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            aria-label={item.label}
+                            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm text-white/85"
+                            onClick={() => scrollToSection(item.id)}
+                          />
+                        )
                       }
                     >
                       <item.icon className="size-4" aria-hidden="true" />
@@ -177,12 +214,12 @@ export function AppShell({
 
             <div className="min-w-0 flex-1">
               <p className="text-[0.7rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">
-                {currentTenant.name} · {currentTenant.environment}
+                {tenant.name} · {tenant.environment}
               </p>
               <p className="truncate text-sm text-foreground">
                 {interpolate(messages.nav.viewPolicy, {
                   view: roleLabels[view],
-                  policy: currentTenant.policyVersion,
+                  policy: tenant.policyVersion,
                 })}
               </p>
             </div>
@@ -259,15 +296,14 @@ export function AppShell({
         className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 backdrop-blur-md md:hidden"
       >
         {items.slice(0, 3).map((item) => (
-          <button
+          <ShellNavControl
             key={item.id}
-            type="button"
+            item={item}
             className="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.65rem] text-muted-foreground"
-            onClick={() => scrollToSection(item.id)}
           >
             <item.icon className="size-4" aria-hidden="true" />
             {item.label}
-          </button>
+          </ShellNavControl>
         ))}
         <Link
           href="/"
@@ -281,6 +317,34 @@ export function AppShell({
   );
 }
 
+function ShellNavControl({
+  item,
+  className,
+  children,
+}: {
+  item: NavItem;
+  className: string;
+  children: ReactNode;
+}) {
+  if (item.href) {
+    return (
+      <Link href={item.href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={() => scrollToSection(item.id)}
+    >
+      {children}
+    </button>
+  );
+}
+
 function RoleSwitcher({
   current,
   capabilities,
@@ -290,6 +354,7 @@ function RoleSwitcher({
 }) {
   const required: Record<DemoRole, Capability> = {
     company: 'company.view',
+    'company-admin': 'tenant.manage_members',
     operator: 'operator.queue',
     'super-admin': 'platform.admin',
   };
@@ -331,6 +396,16 @@ function RoleSwitcher({
         {canViewPolicies(capabilities) ? (
           <DropdownMenuItem render={<Link href="/policies" />}>
             {messages.nav.policies}
+          </DropdownMenuItem>
+        ) : null}
+        {capabilities?.includes('company.view') ? (
+          <DropdownMenuItem render={<Link href="/entities" />}>
+            {messages.nav.entities}
+          </DropdownMenuItem>
+        ) : null}
+        {capabilities?.includes('platform.admin') ? (
+          <DropdownMenuItem render={<Link href="/super-admin/tenants" />}>
+            {messages.nav.tenantDirectory}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem render={<Link href="/" />}>
