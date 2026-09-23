@@ -300,15 +300,25 @@ rollback to sp_d5_suspend;
 reset role;
 
 -- 6. D6: platform admin sees platform events, not tenant events -----------
-set role authenticated; set local "request.jwt.claim.role"='authenticated'; set local "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000001';
+-- TASK-029 D7: record_audit_event's EXECUTE grant to authenticated is
+-- revoked (20260923100000_evidence_integrity_hardening.sql); it is no
+-- longer callable directly by any authenticated identity, platform admin
+-- included. This fixture's own target is D6's read-side behavior (does a
+-- platform admin see platform-level rows and not tenant rows), which is
+-- independent of who wrote the row, so the write moves to the superuser
+-- connection -- auth.uid() there still resolves to platform admin 001 via
+-- the still-set request.jwt.claim.sub session GUC, so the event is
+-- correctly attributed either way.
+set local "request.jwt.claim.role"='authenticated'; set local "request.jwt.claim.sub"='00000000-0000-0000-0000-000000000001';
 do $$
 declare v_id uuid;
 begin
   v_id := public.record_audit_event(null, 'platform.test_event', 'platform_test', 'fixture', null, '{}'::jsonb);
-  perform pg_temp.assert(v_id is not null, 'D6 fixture: platform admin can write a platform-level (tenant_id is null) audit event');
+  perform pg_temp.assert(v_id is not null, 'D6 fixture: a platform-level (tenant_id is null) audit event is recorded, attributed to the platform admin');
 end;
 $$;
 
+set role authenticated;
 select pg_temp.assert(
   (select count(*) from public.audit_events where tenant_id is null and action = 'platform.test_event') = 1,
   'D6: platform admin can read platform-level audit events'
