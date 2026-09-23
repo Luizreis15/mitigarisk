@@ -219,3 +219,115 @@ Every row is either (a) one of the two newly flagged `evaluation_reason_codes` w
 ### Documentation errata (item 5)
 
 The header of `20260914120200_supplier_evaluation.sql` and the header/comments of `20260922130000_uniform_tenant_authorization.sql` both name `apps/web/lib/domain/supplier-evaluation-adapter.ts` as the TypeScript reference their SQL fact-derivation mirrors. That file does not exist in this repository — `apps/web/lib/domain/` has `evaluation-engine.ts`, `evaluation-engine-errors.ts`, `supplier.ts`, `supplier-evidence.ts`, and `supplier-final-decision.ts`, but no `supplier-evaluation-adapter.ts`. Both migrations are applied and immutable, so this is recorded here only, not edited in either file.
+
+## Handoff
+
+**Outcome:** Implemented D4, D5, D6, the publication-integrity trigger, and the `run_supplier_evaluation` SQLSTATE fix. Probe G is closed end to end. Two additional surfaces were discovered during implementation that do not fit D4/D5/D6 as approved — `public.record_audit_event`'s tenant-scoped write bypass, and (found only via the **live** `pg_policies` grep, not the text grep) `evaluation_reason_codes_insert`/`evaluation_reason_codes_update`, which were missed by both this task's first-draft inventory and by TASK-026 itself. Both are reported above, in the "Flagged" section, and deliberately left unimplemented, per the contract's stop-and-report instruction. All required verification passed.
+
+**Branch and commits:** `fix/authz-platform-admin-operational-surfaces`, created from `integration/audit-and-task-019` at `81fcf41`.
+
+```text
+a2a74ed docs(task): approve TASK-028 platform-admin operational boundary
+639a597 docs(task): record TASK-028 platform-admin bypass inventory
+7ff8e8a fix(authz): close platform-admin bypass on remaining operational surfaces
+3712c58 fix(authz): make forbid_children_when_not_draft security definer
+fc59d29 test(authz): add TASK-028 SQL suite; fix a stale platform-admin assumption
+ff858e0 docs(task): correct TASK-028 inventory with the live-state grep
+```
+SHA (branch tip): `ff858e0` — full: run `git rev-parse fix/authz-platform-admin-operational-surfaces` (recorded exactly in the reply to this handoff, since this document cannot know the hash of its own commit before it is made).
+
+**Files changed:**
+- `supabase/migrations/20260922140000_platform_admin_operational_boundary.sql` (new)
+- `supabase/tests/070-platform-admin-operational-boundary.sql` (new)
+- `supabase/tests/030-auth-tenant-bootstrap.sql` (one assertion rewritten; justified below)
+- `docs/tasks/TASK-028-claude-platform-admin-operational-boundary.md` (new; this file)
+
+No UI, seed, dependency, or lockfile file was touched.
+
+**Decisions and assumptions:**
+- D4/D5/D6 implemented exactly as approved; see the inventory tables above for the full before/after of every policy.
+- `notification_templates` is D4+D5 mixed (tenant-owned rows member-only; the pre-existing, unconditionally-open `tenant_id is null` read branch for platform-wide templates is left as it was, since it never checked `is_platform_admin()` at all and D4-only rewrite would have made platform templates unreadable by everyone).
+- `public.is_platform_admin()`, `public.bootstrap_tenant(...)`, `app.has_capability()`, and `public.has_capability()` are deliberately left calling `app.is_platform_admin()`/embedding its bypass directly rather than the new `app.is_platform_governance_actor()` wrapper — none is literally "in RLS" (item 1's inventory scope) or a `security definer` bypass gate in the sense AC2 cares about; reasoning is in the D5 table's footnote.
+- `app.forbid_children_when_not_draft()` made `security definer` — a correctness fix (wrong SQLSTATE, not a privilege escalation) discovered as a direct side effect of `policy_versions_select` losing its platform-admin bypass; documented in its own commit and in the migration.
+- Two surfaces flagged, not implemented: `public.record_audit_event`'s tenant-scoped write bypass, and `evaluation_reason_codes_insert`/`_update`'s full, untouched bypass (the more urgent of the two — a live direct-write forgery path on evaluation evidence). Both recommended as follow-up tasks.
+
+**Scenario-by-scenario result (probe G and friends):**
+
+| Scenario | Result |
+|---|---|
+| G, no membership: `policy_versions` insert | DENIED — `insufficient_privilege` (42501) |
+| G, no membership: `cases` insert | DENIED — 42501 |
+| G, dual role: `policy_versions` insert | DENIED — 42501 |
+| G, dual role: `policy_factors` insert (into a real draft) | DENIED — 42501 |
+| G, dual role: `policy_thresholds` insert (into a real draft) | DENIED — 42501 |
+| G, dual role: `policy_versions` publish (UPDATE) | DENIED — 0 rows affected (RLS `USING`-clause omission, not an exception; row unchanged, still `draft`) |
+| G, dual role: `cases` update | DENIED — 0 rows affected (same "denied by omission" shape as the pre-existing self-suspend test in `030-auth-tenant-bootstrap.sql`) |
+| Tenant evaluation after both G attempts | Still resolves to the tenant's one legitimate published policy (`20000000-…-0010`) |
+| Future-dated `published_at` (`now() + 10 days`) | Overwritten with `now()` by the new trigger |
+| Suspended tenant: `policy_versions`/`cases` read | DENIED — 0 rows |
+| Suspended tenant: `policy_versions`/`cases` insert | DENIED — 42501 |
+| D5: platform admin lists tenants | ALLOWED |
+| D5: platform admin lists memberships | ALLOWED |
+| D5: platform admin suspends a tenant | ALLOWED |
+| D6: platform admin writes/reads a platform-level (`tenant_id is null`) audit event | ALLOWED |
+| D6: platform admin reads tenant-scoped audit events | DENIED — 0 rows |
+| D6 regression: auditor reads tenant-scoped audit events | ALLOWED |
+| Regression: tenant_admin creates+publishes a policy version, manages notification templates | ALLOWED |
+| Regression: risk_analyst reads published policy, cases, case_evidence | ALLOWED |
+| Regression: operator opens a case and attaches evidence | ALLOWED |
+| Regression: auditor reads integrations (`integration.view`) and notification templates | ALLOWED |
+
+Note on AC1's exact wording ("fails … with 42501"): `INSERT`-shaped denials do raise 42501/`insufficient_privilege` as stated. `UPDATE`-shaped denials (publish, case status change) are filtered by the policy's `USING` clause and so affect **zero rows** with no exception — the same "denied by omission" behavior this codebase's own `030-auth-tenant-bootstrap.sql` self-suspend test already documents as the expected RLS shape for a denied `UPDATE`. Both are captured in the table above and in `070-platform-admin-operational-boundary.sql`; TASK-026's own acceptance criterion used the more precise "returns 42501 **or zero rows**" phrasing for exactly this reason.
+
+### Suites 010–060: unmodified except one justified change
+
+`010-rls-tenant-isolation.sql`, `020-integration-hardening.sql`, `040-supplier-evaluation.sql`, `050-supplier-final-decision.sql`, `060-uniform-authorization.sql` are byte-for-byte unchanged and pass with their exact prior assertion counts (see the table below).
+
+`030-auth-tenant-bootstrap.sql`, one assertion changed: `bootstrap_tenant`'s test asserted that the calling platform administrator could immediately read back the `tenant.bootstrapped` audit event for the tenant they had just created. D6 correctly removes a platform administrator's read bypass on tenant-scoped `audit_events` rows, and the bootstrapping admin is never themselves a member of the new tenant (the initial `tenant_admin` membership goes to `p_initial_admin_user_id`, a different, specified user) — so that read is now, correctly, denied. This is exactly the behavior D6 was approved to produce, not a bug. The assertion is rewritten to check (as the connecting superuser, bypassing RLS) that the event was recorded at all — which is what the test's name and intent actually cover; audit-read visibility for real tenant members is already exercised directly by `010`, `040`, `050`, and the new `070`.
+
+### Checks run and exact results
+
+SQL harness (`./supabase/tests/run-local-verification.sh`, `set -o pipefail`): **SQL=0**, `==> all checks passed`.
+
+| Suite | `ok -` assertions | Failures |
+|---|---|---|
+| 010-rls-tenant-isolation.sql | 16 | 0 |
+| 020-integration-hardening.sql | 21 | 0 |
+| 030-auth-tenant-bootstrap.sql | 18 | 0 |
+| 040-supplier-evaluation.sql | 43 | 0 |
+| 050-supplier-final-decision.sql | 26 | 0 |
+| 060-uniform-authorization.sql | 28 | 0 |
+| 070-platform-admin-operational-boundary.sql | 40 | 0 |
+| **Total** | **192** | **0** |
+
+Application checks (`apps/web`):
+
+| Check | Command | Result |
+|---|---|---|
+| Install | `npm ci` | exit 0 — 586 packages, 0 vulnerabilities |
+| Tests | `npm test` | **TEST=0** — 223 passed, 0 failed, 0 skipped, 0 cancelled, 0 todo |
+| Type check | `npx tsc --noEmit -p tsconfig.json` | **TSC=0** — no diagnostics |
+| Lint | `npm run lint -- --ignore-pattern 'components/ui/**' --ignore-pattern 'hooks/use-mobile.ts'` | **LINT=0** |
+| Build | `npm run build` | **BUILD=0** |
+| Vercel build | `npm run build:vercel` | exit 0 |
+| Vercel verify | `npm run verify:vercel` | **VERCEL=0** — genuine Vercel Build Output API v3 |
+| Secrets | `./scripts/check-secrets.sh` | **SECRETS=0** — "Secret check passed." |
+| Diff whitespace | `git diff --check` | **DIFF=0** |
+
+Test counts are unchanged from the pre-TASK-028 baseline (223/223) — no `apps/web` file was touched.
+
+### Security/tenant/audit impact
+
+Closes probe G completely: a platform administrator, with or without a dual-role tenant membership, can no longer create, modify, or publish a policy in any tenant, nor open or modify a case, nor read either — the exact indirect risk-recommendation manipulation the TASK-026 review found. Closes the future-dated `published_at` ordering-manipulation gap for every tenant, not just an attacker scenario. Tenant-scoped audit evidence is no longer readable by a non-member platform administrator (D6). Two related gaps were found and explicitly **not** closed here (see "Flagged" above) — both are write-forgery-shaped and recommended as urgent follow-up work. No data was deleted. No secret, credential, or real customer data was read, touched, or written.
+
+### Migration and rollback notes
+
+Both new migrations (`20260922140000_platform_admin_operational_boundary.sql`, plus its own follow-up commit for the `forbid_children_when_not_draft` fix — both in the same file) are forward-only and touch no table, column, or data: they create one new function (`app.is_platform_governance_actor()`) and one new trigger (`trg_policy_versions_publication_integrity` / `app.enforce_policy_publication_integrity()`), and otherwise only redefine existing functions (`CREATE OR REPLACE FUNCTION`) and policies (`DROP POLICY` + `CREATE POLICY` on unchanged tables). Rollback is documented in the migration's own trailing comment: drop the two new objects, and re-apply the exact prior function/policy bodies from the nine migrations it lists.
+
+### Known limitations
+
+- Two surfaces (`record_audit_event`'s tenant-scoped write bypass; `evaluation_reason_codes_insert`/`_update`'s full, untouched bypass) are explicitly out of this task's approved scope and were left unimplemented, per instruction. Recommend both as follow-up tasks, the second more urgently.
+- No browser or Server Action walkthrough was run; this task's scope and allowed-files list are the database boundary only.
+- Hosted Supabase and Vercel were not accessed; all verification ran against the disposable local Postgres cluster and local build output only.
+
+**Recommended reviewer:** Codex (orchestrator), for independent review per `docs/governance/MULTI-AGENT-DEVELOPMENT.md` — author and reviewer must differ for this security-sensitive change.
