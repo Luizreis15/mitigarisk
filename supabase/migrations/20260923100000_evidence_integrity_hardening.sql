@@ -20,29 +20,211 @@
 --        and anon. Verified by grep (recorded in the TASK-029 handoff):
 --        no apps/web code calls this RPC directly; only a code comment and
 --        an unrelated TypeScript type name (RecordAuditEventInput)
---        reference it by name. Every audit event is already written from
---        inside a security-definer business RPC
---        (create_supplier/create_supplier_evidence/run_supplier_evaluation/
---        record_supplier_final_decision/bootstrap_tenant/invite_member/
---        accept_invitation/set_membership_status), which will keep working
---        because those RPCs call public.record_audit_event() as their own
---        (definer) role, unaffected by a revoke against authenticated/anon.
+--        reference it by name.
+--
+--        D7's own text assumes every business RPC that calls
+--        record_audit_event is security definer. That is true for four of
+--        them (create_supplier, create_supplier_evidence,
+--        run_supplier_evaluation, record_supplier_final_decision) but
+--        false for the other four
+--        (20260913090000_auth_tenant_bootstrap.sql's bootstrap_tenant,
+--        invite_member, accept_invitation, set_membership_status are all
+--        security INVOKER) -- discovered when this migration's first draft
+--        broke supabase/tests/030-auth-tenant-bootstrap.sql with
+--        "permission denied for function record_audit_event", since an
+--        invoker function's internal call to record_audit_event executes
+--        as the ORIGINAL calling (authenticated) role, not an elevated
+--        one. Reported to, and resolved with, the human owner: the fix
+--        approved is to make these four RPCs security definer too (item 0
+--        below), moving each one's authorization out of the RLS policies
+--        it relied on (as an invoker function, subject to RLS as the
+--        calling role) into an explicit, equivalent in-body check -- the
+--        same "explicit check is the real boundary once RLS no longer
+--        applies" pattern this codebase already uses for every other
+--        security-definer write RPC (e.g. public.create_supplier()).
 --   D8 - revoke INSERT and UPDATE on evaluation_reason_codes from
 --        authenticated and anon, and drop the
 --        evaluation_reason_codes_insert/update policies. Reason codes are
 --        then written only by public.run_supplier_evaluation(), itself
 --        security definer.
 
+-- 0. Prerequisite for D7: make every business RPC that calls
+-- record_audit_event security definer, not just the four that already
+-- were. Each function's authorization is unchanged in effect -- only
+-- where it is checked moves from an implicit RLS policy (evaluated against
+-- the calling role, invoker-style) to an explicit check in the function
+-- body (evaluated once, up front, exactly mirroring the RLS condition it
+-- replaces) -- since a security-definer function's own writes bypass RLS
+-- entirely, and no other RLS protection is being removed for anyone else.
+
+-- bootstrap_tenant: its one explicit check (`if not
+-- public.is_platform_admin()`) already gates the entire function and
+-- already exactly matches D5's tenants_insert/memberships_insert bypass
+-- (a platform administrator's own governance action); nothing else to add.
+create or replace function public.bootstrap_tenant(
+  p_name text,
+  p_slug text,
+  p_initial_admin_user_id uuid
+) returns public.tenants
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_tenant public.tenants;
+begin
+  if not public.is_platform_admin() then
+    raise exception 'Only a platform administrator can bootstrap a tenant' using errcode = '42501';
+  end if;
+
+  insert into public.tenants (name, slug) values (p_name, p_slug)
+  returning * into v_tenant;
+
+  insert into public.memberships (tenant_id, user_id, role_key, status)
+  values (v_tenant.id, p_initial_admin_user_id, 'tenant_admin', 'active');
+
+  perform public.record_audit_event(
+    v_tenant.id, 'tenant.bootstrapped', 'tenant', v_tenant.id::text, null,
+    jsonb_build_object('initial_admin_user_id', p_initial_admin_user_id)
+  );
+
+  return v_tenant;
+end;
+$$;
+
+-- invite_member: previously relied entirely on memberships_insert's RLS
+-- (app.is_platform_governance_actor() or app.has_capability(tenant_id,
+-- 'tenant.manage_members')) -- that exact condition is now an explicit
+-- check, evaluated before the insert. invited_by is still pinned to
+-- auth.uid() in the insert itself (unchanged), so the RLS with-check's
+-- "invited_by is null or invited_by = auth.uid()" half of the old
+-- condition is preserved by construction, not by a separate check.
+create or replace function public.invite_member(
+  p_tenant_id uuid,
+  p_user_id uuid,
+  p_role_key text
+) returns public.memberships
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_membership public.memberships;
+begin
+  if p_role_key = 'platform_super_admin' then
+    raise exception 'platform_super_admin cannot be granted through a tenant invitation'
+      using errcode = '23001';
+  end if;
+
+  if not (app.is_platform_governance_actor() or app.has_capability(p_tenant_id, 'tenant.manage_members')) then
+    raise exception 'Missing tenant.manage_members capability for tenant %', p_tenant_id using errcode = '42501';
+  end if;
+
+  insert into public.memberships (tenant_id, user_id, role_key, status, invited_by)
+  values (p_tenant_id, p_user_id, p_role_key, 'invited', auth.uid())
+  returning * into v_membership;
+
+  perform public.record_audit_event(
+    p_tenant_id, 'membership.invited', 'membership', v_membership.id::text, null,
+    jsonb_build_object('user_id', p_user_id, 'role_key', p_role_key)
+  );
+
+  return v_membership;
+end;
+$$;
+
+-- accept_invitation: its own WHERE clause (id = p_membership_id and
+-- user_id = auth.uid() and status = 'invited') is already the entire
+-- authorization boundary -- self-scoped by construction, not by RLS -- so
+-- bypassing RLS changes nothing reachable. app.guard_membership_transition()
+-- (already security definer, TASK-028) still fires regardless and remains
+-- the independent backstop on what shape of change is allowed.
+create or replace function public.accept_invitation(p_membership_id uuid)
+returns public.memberships
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_membership public.memberships;
+begin
+  update public.memberships
+  set status = 'active'
+  where id = p_membership_id
+    and user_id = auth.uid()
+    and status = 'invited'
+  returning * into v_membership;
+
+  if v_membership.id is null then
+    raise exception 'Invitation not found or already handled' using errcode = 'P0002';
+  end if;
+
+  perform public.record_audit_event(
+    v_membership.tenant_id, 'membership.activated', 'membership', v_membership.id::text, null, '{}'::jsonb
+  );
+
+  return v_membership;
+end;
+$$;
+
+-- set_membership_status: previously relied entirely on memberships_update's
+-- RLS to filter which row(s) were even visible to the UPDATE (admin, or
+-- self with status still 'invited' -- but this RPC is for admin-driven
+-- suspend/reactivate/remove, not self-accept, which is
+-- accept_invitation's own job). The target row's tenant_id is not known
+-- until it is looked up, so the lookup happens first (failing closed with
+-- P0002 if missing, exactly as before), then the same
+-- is_platform_governance_actor()/tenant.manage_members condition RLS used
+-- to apply is checked explicitly before the write.
+create or replace function public.set_membership_status(
+  p_membership_id uuid,
+  p_status text
+) returns public.memberships
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_membership public.memberships;
+  v_tenant_id uuid;
+begin
+  if p_status not in ('active', 'suspended', 'removed') then
+    raise exception 'Unsupported membership status %', p_status using errcode = '22023';
+  end if;
+
+  select tenant_id into v_tenant_id from public.memberships where id = p_membership_id;
+  if v_tenant_id is null then
+    raise exception 'Membership not found or not permitted' using errcode = 'P0002';
+  end if;
+
+  if not (app.is_platform_governance_actor() or app.has_capability(v_tenant_id, 'tenant.manage_members')) then
+    raise exception 'Missing tenant.manage_members capability for tenant %', v_tenant_id using errcode = '42501';
+  end if;
+
+  update public.memberships
+  set status = p_status
+  where id = p_membership_id
+  returning * into v_membership;
+
+  perform public.record_audit_event(
+    v_membership.tenant_id, 'membership.status_changed', 'membership', v_membership.id::text, null,
+    jsonb_build_object('status', p_status)
+  );
+
+  return v_membership;
+end;
+$$;
+
 -- 1. D7: audit writes are server-internal only -------------------------------
 -- Note what this does NOT change: public.record_audit_event() keeps its
 -- own internal is_platform_admin()/membership check (defense in depth,
 -- now unreachable from a direct authenticated call but still guarding the
 -- function itself), and every business RPC that calls it internally is
--- unaffected -- a security-definer function's internal `perform
--- public.record_audit_event(...)` call resolves and executes as that
--- RPC's own (elevated) role, which still holds EXECUTE because this
--- REVOKE only removes it from authenticated/anon, not from the function's
--- owner.
+-- unaffected -- now that all eight (item 0 above, plus the four that
+-- already were security definer) run as their own elevated role, each
+-- internal `perform public.record_audit_event(...)` call executes as that
+-- role, which still holds EXECUTE, because this REVOKE only removes it
+-- from authenticated/anon, not from the functions' owner.
 
 revoke execute on function public.record_audit_event(uuid, text, text, text, uuid, jsonb) from authenticated, anon;
 
