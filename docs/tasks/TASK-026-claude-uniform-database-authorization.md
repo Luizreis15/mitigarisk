@@ -97,13 +97,14 @@ Use the standard handoff template in `docs/governance/MULTI-AGENT-DEVELOPMENT.md
 
 **Outcome:** Implemented. The database is now the uniform authorization boundary for D1 (dual-role platform admin), D2 (suspended tenant), and D3 (legacy evaluation bypass). A policy-validation guard, a deterministic factor order, and an advisory lock were added to `run_supplier_evaluation`. All required verification passed.
 
-**Branch and commit:** `fix/authz-uniform-tenant-boundary`, created from `integration/audit-and-task-019` at `73bcc09`. Final commit: `71ba3fe35d83451d89c587e31442122dac123f95` (`71ba3fe`).
+**Branch and commit:** `fix/authz-uniform-tenant-boundary`, created from `integration/audit-and-task-019` at `73bcc09`. Final implementation commit (migration + test suite): `71ba3fe35d83451d89c587e31442122dac123f95` (`71ba3fe`). This handoff itself is recorded in the commit that follows it, `9831ff8557b2687eb950a45d20d8c2784e2fe3d6` (`9831ff8`), which is the branch tip at delivery.
 
 ```text
 66f8b5c docs(task): approve TASK-026 uniform database authorization
 a83eca9 docs(task): fix wrong verification script path in TASK-025
 31863d8 fix(authz): make the database a uniform tenant authorization boundary
 71ba3fe test(authz): add permanent uniform-authorization SQL suite
+9831ff8 docs(task): record TASK-026 handoff
 ```
 
 **Files changed:**
