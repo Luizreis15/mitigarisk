@@ -134,7 +134,7 @@ migrations, or the evaluation engine contract.
 Run and report exact results for:
 
 ```text
-./scripts/run-local-verification.sh
+./supabase/tests/run-local-verification.sh
 cd apps/web && npm test
 cd apps/web && npx tsc --noEmit -p tsconfig.json
 cd apps/web && npm run build
