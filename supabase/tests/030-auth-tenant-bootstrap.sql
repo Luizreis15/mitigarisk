@@ -65,17 +65,28 @@ begin
     'bootstrap_tenant creates the first membership as an active, unattributed tenant_admin'
   );
 
-  perform pg_temp.assert(
-    exists (
-      select 1 from public.audit_events
-      where tenant_id = v_tenant.id and action = 'tenant.bootstrapped'
-    ),
-    'bootstrap_tenant records an audit event'
-  );
 end;
 $$;
 
+-- TASK-028 D6: audit_events_select no longer gives a platform administrator
+-- a bypass for tenant-scoped rows (20260922140000_platform_admin_operational_boundary.sql):
+-- they read only tenant_id is null (platform-level) events; a tenant-scoped
+-- event is visible only to an active member with audit.view, which the
+-- bootstrapping platform admin themselves is not (bootstrap_tenant grants
+-- the tenant_admin membership to p_initial_admin_user_id, a different user,
+-- never to the caller). This assertion is checked as the connecting
+-- superuser (RLS does not apply), which is what this test actually cares
+-- about -- that the event was recorded atomically -- decoupled from who can
+-- read it back, which 010/040/050/070 already cover directly.
 reset role;
+select pg_temp.assert(
+  exists (
+    select 1 from public.audit_events
+    where tenant_id = (select id from public.tenants where slug = 'bootstrap-co')
+      and action = 'tenant.bootstrapped'
+  ),
+  'bootstrap_tenant records an audit event'
+);
 
 -- 2. Tenant-admin invitations: capability-checked, cannot grant platform role,
 --    and always attribute invited_by to the caller ---------------------------
