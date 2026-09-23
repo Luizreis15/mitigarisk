@@ -11,7 +11,7 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test": "node --test tests/**/*.test.ts",
+    "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test tests/**/*.test.ts",
     "build:vercel": "DEPLOY_TARGET=vercel NITRO_PRESET=vercel vite build",
     "verify:vercel": "node scripts/verify-vercel-build.mjs"
   },
