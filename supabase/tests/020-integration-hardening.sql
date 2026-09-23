@@ -158,6 +158,17 @@ insert into public.evaluations (
     auth.uid(), 'user'
   );
 
+-- TASK-029 D8: evaluation_reason_codes no longer grants INSERT/UPDATE to
+-- authenticated at all (reason codes are written only by
+-- run_supplier_evaluation()); this fixture is for a legacy, non-supplier
+-- evaluation, which has no equivalent trusted RPC, so it moves to the
+-- superuser connection the harness itself runs as -- the same role a
+-- hosted project's service_role plays, and the only role capable of
+-- writing this table directly now. The append-only trigger still fires
+-- for this insert regardless of role (PostgreSQL never exempts a
+-- superuser from BEFORE triggers), so this exercises the same fixture
+-- setup as before, just through the one path still open to it.
+reset role;
 insert into public.evaluation_reason_codes (
   id, tenant_id, evaluation_id, code, description
 ) values (
@@ -167,10 +178,23 @@ insert into public.evaluation_reason_codes (
   'DOC_MISMATCH', 'Document mismatch'
 );
 
+set role authenticated;
+set local "request.jwt.claim.role" = 'authenticated';
+set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000002';
+
 update public.evaluations
 set status = 'completed', score = 81, decision_band = 'review', completed_at = now()
 where id = '30000000-0000-0000-0000-000000000001';
 
+-- TASK-029 D8: this assertion's target is the trigger's own reparenting
+-- guard (app.forbid_reason_code_mutation_after_completion's identity
+-- check), not whether an ordinary tenant member can write this table at
+-- all -- they no longer can, by design, so testing this as `authenticated`
+-- would now fail on the grant itself (42501) before ever reaching the
+-- guard it is meant to exercise. Moved to the superuser connection, same
+-- reasoning as the insert above: the trigger still fires and still raises
+-- 23001 regardless of who performs the UPDATE.
+reset role;
 do $$
 begin
   update public.evaluation_reason_codes
@@ -182,6 +206,10 @@ exception
     raise notice 'ok - terminal evaluation reason code cannot be reparented';
 end;
 $$;
+
+set role authenticated;
+set local "request.jwt.claim.role" = 'authenticated';
+set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000002';
 
 do $$
 begin
