@@ -89,13 +89,20 @@ Use the standard template. It must include:
 
 `grep -n "app\.is_platform_admin()\|app\.has_capability(" supabase/migrations/*.sql`, resolved to each object's **live** definition (the last migration that `drop policy`/`create or replace function`s it — several objects were redefined more than once before this task).
 
-### Flagged: one surface does not fit D4, D5, or D6 — not implemented
+### Flagged: two surfaces do not fit D4, D5, or D6 — not implemented
 
 **`public.record_audit_event(...)`** (write path, live in `20260912120800_security_and_english_first_hardening.sql`): both branches still let a platform administrator write an audit event into **any** tenant with no membership at all —
 - `p_tenant_id is null and not app.is_platform_admin()` → raise 42501 (so a platform admin *may* write a platform-level event — arguably D6-shaped, but D6's decision text names only the `select` policy, not this write path);
 - `p_tenant_id is not null and not app.is_platform_admin() and not exists(active membership) then` → raise 42501 (so a platform admin may **also** write into a tenant they do not belong to — not covered by D4's table list, not covered by D5).
 
 This does not cleanly match any of the three approved decisions as literally scoped, so per item 1 ("if a surface does not fit the table, stop and report it without implementing it") it is **left unchanged** in `20260922140000_platform_admin_operational_boundary.sql`. It is not currently known to be exploitable end-to-end the way probe G was (every existing caller of `record_audit_event` is itself already gated by an authorized RPC before the audit call), but a platform administrator can call `public.record_audit_event` directly (it is `grant`ed to `authenticated`) and forge an attributed-to-themselves, but arbitrary-content, audit row into any tenant. Recommend a follow-up task, the same way probe G became this one.
+
+**`evaluation_reason_codes_insert` and `evaluation_reason_codes_update`** (live, unmodified, in `20260912120300_evaluation.sql`, the original TASK-002 migration): discovered while producing the **live** grep below (`pg_policies`), not by the text grep alone, because these two policies were never touched by any later migration, including TASK-026's own `evaluation_reason_codes_select` rewrite. My TASK-026 handoff and this document's own first draft incorrectly stated that "evaluations/evaluation_reason_codes are already fixed by TASK-026" — that was true only for `evaluations_select/insert/update` and `evaluation_reason_codes_select`, never for these two. Both still read:
+```
+using (app.is_platform_admin() or app.has_capability(tenant_id, 'evaluation.run'))
+with check (app.is_platform_admin() or app.has_capability(tenant_id, 'evaluation.run'))
+```
+This is a live, direct-table write path: any platform administrator (any tenant, no membership needed), or any tenant member holding `evaluation.run`, can `INSERT`/`UPDATE` `evaluation_reason_codes` rows directly — bypassing `run_supplier_evaluation`'s non-forgeable, database-computed reasons entirely — for as long as the parent evaluation's `status` is `'pending'` (the append-only trigger, `app.forbid_reason_code_mutation_after_completion()`, only blocks this once the evaluation is `'completed'`/`'failed'`; a legacy, `supplier_id is null` evaluation can be left `'pending'` indefinitely, e.g. supabase/tests/020-integration-hardening.sql's own fixtures). `evaluation_reason_codes` is not in D4's table list (only `evaluations` implicitly was, via TASK-026, and even that migration missed these two), is not D5, and is not D6, so per the same stop-and-report instruction it is **left unchanged** here. This is arguably more urgent than the `record_audit_event` finding above — it is a live forgery vector on evaluation evidence, the exact category of bug TASK-023's original security correction (`20260914120200_supplier_evaluation.sql`) set out to close. Recommend an urgent follow-up task.
 
 ### D4 — moved to `app.has_tenant_capability_as_member(...)`, no platform bypass
 
@@ -171,6 +178,43 @@ New helper: `app.is_platform_governance_actor()` — `security definer`, thin wr
 ### Already fixed by TASK-026, superseded — no action
 
 `evaluations_insert`, `evaluations_update`, `evaluations_select`, `evaluation_reason_codes_select` (live definitions are entirely from `20260922130000_uniform_tenant_authorization.sql`, zero `app.is_platform_admin()`/`app.has_capability(` references remaining); `public.create_supplier`, `public.create_supplier_evidence`, `suppliers_select`, `supplier_evidence_select`, `public.record_supplier_final_decision`, `public.can_record_supplier_final_decision`, `supplier_final_decisions_select` (all call the D1/D2-safe member-only helpers already).
+
+### Live grep (AC2), from `pg_policies` after applying every migration and the seed — not the raw text grep
+
+The text grep at the top of this section necessarily shows every historical definition (applied migrations are immutable); this is the query that matters — the **live**, resolved state of every RLS policy after `20260922140000_platform_admin_operational_boundary.sql` applies:
+
+```sql
+select schemaname, tablename, policyname from pg_policies
+where coalesce(qual,'') ~ 'app\.is_platform_admin\(' or coalesce(with_check,'') ~ 'app\.is_platform_admin\('
+order by tablename, policyname;
+```
+```
+ schemaname |        tablename         |           policyname
+------------+---------------------------+----------------------------------
+ public     | evaluation_reason_codes  | evaluation_reason_codes_insert    <- flagged above, not D4/D5/D6, not touched
+ public     | evaluation_reason_codes  | evaluation_reason_codes_update    <- flagged above, not D4/D5/D6, not touched
+ public     | supplier_final_decisions | supplier_final_decisions_select   <- D1 denial ("not app.is_platform_admin()"), expected
+(3 rows)
+```
+
+```sql
+select schemaname, tablename, policyname from pg_policies
+where coalesce(qual,'') ~ 'app\.has_capability\(' or coalesce(with_check,'') ~ 'app\.has_capability\('
+order by tablename, policyname;
+```
+```
+ schemaname |      tablename      |      policyname
+------------+---------------------+-----------------------
+ public     | evaluation_reason_codes | evaluation_reason_codes_insert   <- flagged above
+ public     | evaluation_reason_codes | evaluation_reason_codes_update   <- flagged above
+ public     | memberships          | memberships_insert    <- D5, expected (tenant.manage_members)
+ public     | memberships          | memberships_select    <- D5, expected (tenant.view)
+ public     | memberships          | memberships_update    <- D5, expected (tenant.manage_members)
+ public     | tenants              | tenants_update         <- D5, expected (tenant.manage_settings)
+(6 rows)
+```
+
+Every row is either (a) one of the two newly flagged `evaluation_reason_codes` write policies (not implemented, reported above), or (b) an expected, already-documented D1 denial check or D5 capability check. `app.is_platform_admin(` and bare `app.has_capability(` no longer appear in any D4 policy, `app.is_platform_governance_actor()` is the only bypass in every D5/D6 policy, and no `pg_proc` security-definer function other than `app.is_platform_admin()` itself, `app.is_platform_governance_actor()`, `app.has_capability`, and the pre-approved D1-denial helpers references `app.is_platform_admin(` in its body.
 
 ### Documentation errata (item 5)
 
