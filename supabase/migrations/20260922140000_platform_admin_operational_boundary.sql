@@ -224,6 +224,61 @@ create policy policy_thresholds_write on public.policy_thresholds
   using (app.has_tenant_capability_as_member(tenant_id, 'policy.manage'))
   with check (app.has_tenant_capability_as_member(tenant_id, 'policy.manage'));
 
+-- 3b. Side effect of 3, found while writing 070-platform-admin-operational-boundary.sql:
+-- app.forbid_children_when_not_draft() (live version in
+-- 20260912120800_security_and_english_first_hardening.sql) is security
+-- INVOKER. It looks up its parent policy_versions row's status with a
+-- plain SELECT, which is now subject to the *narrower* policy_versions_select
+-- from section 3 above. A caller correctly denied policy.view on that
+-- tenant (a platform admin with no membership, or -- this was already
+-- latently true before this task, just never exercised by an existing
+-- test -- any other outsider with no policy.view capability there either)
+-- gets zero rows back, so `v_status` stays null, `null is distinct from
+-- 'draft'` is true, and the trigger raises its own "not draft" 23001
+-- instead of the INSERT ever reaching policy_factors_write/
+-- policy_thresholds_write's 42501 denial. The caller is still correctly
+-- denied either way -- this is not a privilege escalation -- but the
+-- SQLSTATE is wrong. Made security definer, the same fix this codebase
+-- already applies everywhere else a trigger needs to see a row regardless
+-- of the calling role's own RLS visibility (e.g.
+-- app.enforce_evaluation_policy_and_identity() in the same source
+-- migration). Body otherwise unchanged.
+
+create or replace function app.forbid_children_when_not_draft()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_status text;
+begin
+  if tg_op <> 'INSERT' then
+    select status into v_status
+    from public.policy_versions
+    where id = old.policy_version_id and tenant_id = old.tenant_id;
+
+    if v_status is distinct from 'draft' then
+      raise exception 'Cannot modify % once the original policy version is not draft', tg_table_name
+        using errcode = '23001';
+    end if;
+  end if;
+
+  if tg_op <> 'DELETE' then
+    select status into v_status
+    from public.policy_versions
+    where id = new.policy_version_id and tenant_id = new.tenant_id;
+
+    if v_status is distinct from 'draft' then
+      raise exception 'Cannot attach % to a policy version that is not draft', tg_table_name
+        using errcode = '23001';
+    end if;
+  end if;
+
+  return coalesce(new, old);
+end;
+$$;
+
 -- 4. D4 policies: cases, case_evidence, case_decisions (select only; insert
 -- was already fixed by 20260914120300_case_decisions_tenant_admin_only.sql,
 -- which uses app.is_active_tenant_admin() with no capability route and no
