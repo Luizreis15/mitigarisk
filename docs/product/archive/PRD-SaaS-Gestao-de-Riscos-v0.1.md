@@ -1,3 +1,5 @@
+> **SUPERSEDED (26 Sep 2026)** — replaced by [`../PRD-v0.3.md`](../PRD-v0.3.md) and [`../PRODUCT-DIRECTION-MVP-25.md`](../PRODUCT-DIRECTION-MVP-25.md). Kept for history only; the Brazil-first, Portuguese assumptions below no longer apply.
+
 # PRD — SaaS de Gestão, Avaliação e Monitoramento de Riscos
 
 > **Language decision update — 12 September 2026:** ADR 0002 supersedes the Portuguese-first assumption in this discovery document. MITIGA is English-first and market-neutral. This PRD remains historical source material and must be rewritten for the international product; it must not be translated literally.
