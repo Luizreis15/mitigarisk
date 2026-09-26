@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Integrate the Cursor and Claude Code worktrees into `main` without allowing one agent to overwrite another or bypass review.
+Integrate the Cursor and Claude Code worktrees into `main` without allowing one agent to overwrite another or bypass review. The orchestrator (Claude, Cowork) reviews and recommends; the merge is performed by the human owner (Edu).
 
 ## 1. Freeze and collect handoffs
 
@@ -15,8 +15,9 @@ From the main repository, confirm:
 ```text
 git -C ../worktrees/cursor status --short --branch
 git -C ../worktrees/claude status --short --branch
-git -C ../worktrees/codex status --short --branch
 ```
+
+Any other worktree still present (for example the legacy `codex` one, kept only for history) is checked the same way before anything is merged from it.
 
 Each branch must be clean. Review the commits and compare each branch with `main` before running or merging code.
 
