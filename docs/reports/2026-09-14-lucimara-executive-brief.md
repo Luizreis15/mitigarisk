@@ -1,3 +1,5 @@
+> **SUPERSEDED (26 Sep 2026)** — replaced by [`../product/PRODUCT-DIRECTION-MVP-25.md`](../product/PRODUCT-DIRECTION-MVP-25.md) (product direction and the 25-day MVP plan) and ADR 0012. Kept for history; do not use it to plan work.
+
 # MITIGA executive progress brief for Lucimara — 2026-09-14
 
 ## Where the project stands
