@@ -83,3 +83,79 @@ These files live outside the repo:
 ## Expected handoff
 
 The standard template, plus the list of files changed with a one-line summary each and the output of the acceptance grep.
+
+## Handoff
+
+**Outcome:** Documentation-only alignment done. The repository now describes the current product (a configurable, explainable and auditable CRA and Due-Diligence engine for EU obliged entities), records the decision in ADR 0012, and names the current roles. No code, migration, test, seed or dependency was changed. The PT-BR analysis (`01-Analise…`) was not committed.
+
+**Branch and commits:** `docs/foundation-alignment-cra`, created from `origin/main` at `4c79eac`. **PR #2 (`fix/ci-node22-strip-types`) is not merged yet** (state OPEN at setup), so this branch does not include the CI test-script fix; on Node 22.13 the `web-quality` job will still fail here until PR #2 lands (docs-only branch, unrelated to this change).
+
+```text
+f3b2558 docs(task): add TASK-030 foundation alignment contract
+549c773 docs(product): add PRD v0.3, MVP-25 direction and CRA policy template
+ca45559 docs(adr): record the customer CRA engine as the MVP core
+be0b074 docs(governance): align roles and product north with the current workflow
+1062669 docs(product): rewrite README for the CRA product direction
+b345430 docs(product): mark superseded reports and name the CRA context
+```
+
+Final content commit: `b345430`. This handoff is recorded in the commit that follows it (a commit cannot contain its own hash); the branch tip at delivery is reported in the reply.
+
+**Files changed (19):**
+
+- `docs/tasks/TASK-030-claude-foundation-alignment.md` (A) — the approved contract and this handoff.
+- `docs/product/PRD-v0.3.md` (A) — PRD v0.3 export; content unchanged, formatting only (2-space list indent normalised, `1.  ` → `1. `, trailing spaces stripped; verified identical modulo whitespace).
+- `docs/product/PRODUCT-DIRECTION-MVP-25.md` (A) — product direction and fixed 25-day MVP scope (byte-identical copy of input 02).
+- `docs/product/policy-templates/CRA-TEMPLATE-v1-DRAFT.md` (A) — CRA and due-diligence policy template v1, DRAFT (byte-identical copy of input 03).
+- `docs/product/archive/PRD-SaaS-Gestao-de-Riscos-v0.1.md` (R) — PRD v0.1 moved with a one-line SUPERSEDED header pointing to v0.3 and the direction.
+- `docs/adr/0012-customer-cra-engine-as-mvp-core.md` (A) — decision record: CRA engine is the MVP core; supplier slice kept as reference, not extended; scoring authority stays in the database; positioning; policy numbers DRAFT.
+- `docs/adr/0007-deterministic-evaluation-engine.md` (M) — status line amended to point to ADR 0012 (TS engine is a non-authoritative reference/test oracle). Not in the contract's file list; added because the contract asks that ADR 0012 supersede any conflicting wording there — reviewer to confirm.
+- `README.md` (M) — new intro/one-line definition, real-versus-prototype status, next milestone, corrected repository map (removed the non-existent `artifacts/`), governance; security section kept.
+- `AGENTS.md` (M) — product one-liner and pointers; roles (Claude Cowork orchestrator/reviewer, Edu merge owner, Claude Code backend, Cursor frontend); contracts/reviews locations.
+- `apps/web/AGENTS.md` (M) — same roles/product bullets with relative paths.
+- `CLAUDE.md` (M) — new "Product north" section (one-liner, principle, pointers to direction, ADR 0012 and policy template); role section updated (author never reviews own change).
+- `CONTRIBUTING.md` (M) — review/merge sentence: Claude (Cowork) reviews, Edu approves and merges; contracts in `docs/tasks/`.
+- `docs/governance/MULTI-AGENT-DEVELOPMENT.md` (M) — operating model, role table and merge steps reassigned; one explicit historical note about Codex; all merge gates and the handoff/task templates unchanged.
+- `docs/governance/MERGE-RUNBOOK.md` (M) — merge performed by Edu after orchestrator review; the `worktrees/codex` command replaced by a historical note. Not in the contract's file list but inside the acceptance grep's `docs/governance` scope.
+- `docs/prompts/PROMPT-ORCHESTRATION.md` (M) — prompts retitled/reworded for the orchestrator, the Claude Code implementation owner and the independent reviewer/merge recommender; reviewer prompt no longer used by the author role.
+- `.cursor/rules/00-mitiga-core.mdc` (M) — product north and roles bullets.
+- `docs/reports/2026-09-14-construction-status-and-35-day-plan.md` (M) — SUPERSEDED header.
+- `docs/reports/2026-09-14-lucimara-executive-brief.md` (M) — SUPERSEDED header.
+- `docs/architecture/PLATFORM-ARCHITECTURE.md` (M) — short "Customer Risk Assessment context" section before "Runtime baseline"; nothing else restructured.
+
+**Acceptance grep** (`grep -rin "codex" AGENTS.md CLAUDE.md CONTRIBUTING.md apps/web/AGENTS.md docs/governance docs/prompts .cursor/rules README.md`), output — only explicit historical notes remain:
+
+```text
+docs/governance/MERGE-RUNBOOK.md:20:Any other worktree still present (for example the legacy `codex` one, kept only for history) is checked the same way before anything is merged from it.
+docs/governance/MULTI-AGENT-DEVELOPMENT.md:5:... (Previously Codex filled the orchestrator and merge-owner roles; it is no longer part of the workflow.)
+```
+
+**Acceptance criteria:**
+
+1. Grep: only the two historical notes above — met.
+2. One-line definition ("MITIGA is a configurable, explainable and auditable Customer Risk Assessment (CRA) and Due-Diligence engine for EU obliged entities.") is byte-identical in `README.md`, `CLAUDE.md` and `docs/adr/0012-customer-cra-engine-as-mvp-core.md` (also in `AGENTS.md` and the direction document) — met.
+3. PRD v0.3, the product direction and the policy template exist under `docs/product/`; v0.1 archived with a SUPERSEDED header — met.
+4. `check-secrets` and `git diff --check` pass; `npm test` unchanged at 223/223 — met.
+
+**Checks and exact results** (Node v24.11.1, npm 11.6.2):
+
+| Check | Result |
+|---|---|
+| `./scripts/check-secrets.sh` | exit 0 — "Secret check passed." |
+| `git diff --check origin/main` | exit 0 |
+| `npm ci` (apps/web) | exit 0 |
+| `npm test` (apps/web) | exit 0 — 223 tests, 223 pass, 0 fail, 0 skipped |
+| `git status` after `npm ci` | clean (no tracked changes) |
+
+**Security/tenant/audit impact:** none — documentation only. No secret read or written; no `.env*` opened; no hosted service touched.
+
+**Decisions and assumptions:**
+
+- The ADR 0007 amendment and the MERGE-RUNBOOK edit go slightly beyond the contract's literal file list; both are required by its stated intent and acceptance grep and are flagged above.
+- README status lines are limited to facts verified in the 25 Sep audit (218 SQL assertions, 223 tests, prototype routes, unapplied hosted migrations, Resend not implemented); the transient CI state is deliberately not stated in the README.
+- PRD v0.3 contains named individuals and a reference-operator list exactly as exported; kept unchanged per the contract ("keep the content").
+- Docs referenced by the new files but outside this task (e.g. `docs/reviews/` review reports for TASK-026/028/029 currently live only in the orchestration folder) were not moved.
+
+**Known limitations:** the branch does not include PR #2, so the Node 22.13 unit-test CI job stays red on this branch; historical task contracts and reviews still mention Codex (out of scope); no rendered-Markdown preview was checked.
+
+**Recommended reviewer:** the orchestrator (Claude, Cowork), independent review per `docs/governance/MULTI-AGENT-DEVELOPMENT.md`.
