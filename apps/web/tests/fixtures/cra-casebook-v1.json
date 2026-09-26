@@ -1,0 +1,1700 @@
+[
+ {
+  "id": "CB-01",
+  "title": "Clean e-commerce customer at onboarding (face-to-face, bank transfer)",
+  "source": "P1.7 low-risk path",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-02",
+  "title": "Gambling purpose, card payment, non-face-to-face, onboarding",
+  "source": "P1.7",
+  "facts": {
+   "purpose": "gambling",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "card",
+   "product_type": "closed_loop",
+   "channel": "non_face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 17.5,
+   "category_scores": {
+    "customer": 15.0,
+    "geography": 0.0,
+    "product_payment": 30.0,
+    "channel": 100.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_MEDIUM",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_MEDIUM",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-03",
+  "title": "Cash payment, cash-intensive occupation, higher-risk nationality",
+  "source": "P1.7",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "cash_intensive",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "higher",
+   "sow_country_risk": "standard",
+   "payment_method": "cash",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 12.5,
+   "category_scores": {
+    "customer": 10.0,
+    "geography": 15.0,
+    "product_payment": 60.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_MEDIUM",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_MEDIUM",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_HIGH",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-04",
+  "title": "Worst onboarding profile without overrides (transactions not yet observed)",
+  "source": "P1.7 — shows Q1 impact",
+  "facts": {
+   "purpose": "multipurpose",
+   "employment_status": "unemployed",
+   "occupation_risk": "high_risk",
+   "adverse_media_non_material": "multiple",
+   "prior_str": "one_or_more",
+   "residence_country_risk": "high_risk_third_country",
+   "nationality_risk": "high_risk_third_country",
+   "sow_country_risk": "high_risk_third_country",
+   "payment_method": "cash",
+   "product_type": "open_loop",
+   "channel": "non_face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 55.0,
+   "category_scores": {
+    "customer": 100.0,
+    "geography": 100.0,
+    "product_payment": 100.0,
+    "channel": 100.0,
+    "transactions": 0.0
+   },
+   "band": "MEDIUM",
+   "dd_level": "CDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE"
+   ],
+   "review_months": 24,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_HIGH",
+    "FACTOR_EMPLOYMENT_STATUS_HIGH",
+    "FACTOR_OCCUPATION_RISK_HIGH",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_HIGH",
+    "FACTOR_PRIOR_STR_HIGH",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_HIGH",
+    "FACTOR_NATIONALITY_RISK_HIGH",
+    "FACTOR_SOW_COUNTRY_RISK_HIGH",
+    "FACTOR_PAYMENT_METHOD_HIGH",
+    "FACTOR_PRODUCT_TYPE_HIGH",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_MEDIUM",
+    "DD_CDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-05",
+  "title": "Same as CB-04 after transactions observed: above affordability, significant behaviour change, high-value tx",
+  "source": "P2.8 ongoing CRA",
+  "facts": {
+   "purpose": "multipurpose",
+   "employment_status": "unemployed",
+   "occupation_risk": "high_risk",
+   "adverse_media_non_material": "multiple",
+   "prior_str": "one_or_more",
+   "residence_country_risk": "high_risk_third_country",
+   "nationality_risk": "high_risk_third_country",
+   "sow_country_risk": "high_risk_third_country",
+   "payment_method": "cash",
+   "product_type": "open_loop",
+   "channel": "non_face_to_face",
+   "affordability": "above_limit",
+   "behaviour_change": "significant",
+   "high_value_transactions": "yes",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 100.0,
+   "category_scores": {
+    "customer": 100.0,
+    "geography": 100.0,
+    "product_payment": 100.0,
+    "channel": 100.0,
+    "transactions": 100.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_HIGH",
+    "FACTOR_EMPLOYMENT_STATUS_HIGH",
+    "FACTOR_OCCUPATION_RISK_HIGH",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_HIGH",
+    "FACTOR_PRIOR_STR_HIGH",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_HIGH",
+    "FACTOR_NATIONALITY_RISK_HIGH",
+    "FACTOR_SOW_COUNTRY_RISK_HIGH",
+    "FACTOR_PAYMENT_METHOD_HIGH",
+    "FACTOR_PRODUCT_TYPE_HIGH",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_HIGH",
+    "FACTOR_BEHAVIOUR_CHANGE_HIGH",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_HIGH",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-06",
+  "title": "Ongoing review: clean profile but above affordability limit",
+  "source": "P2.2c / P2.8",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "above_limit",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 22.5,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 50.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_HIGH",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-07",
+  "title": "Ongoing review: gambling, card, non-F2F, near affordability limit, moderate behaviour change",
+  "source": "P2.8",
+  "facts": {
+   "purpose": "gambling",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "card",
+   "product_type": "closed_loop",
+   "channel": "non_face_to_face",
+   "affordability": "near_limit",
+   "behaviour_change": "moderate",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 35.5,
+   "category_scores": {
+    "customer": 15.0,
+    "geography": 0.0,
+    "product_payment": 30.0,
+    "channel": 100.0,
+    "transactions": 40.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_MEDIUM",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_MEDIUM",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_MEDIUM",
+    "FACTOR_BEHAVIOUR_CHANGE_MEDIUM",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-08",
+  "title": "Ongoing review lands in MEDIUM: gambling, card, non-F2F, above limit + moderate change",
+  "source": "P2.8",
+  "facts": {
+   "purpose": "gambling",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "card",
+   "product_type": "closed_loop",
+   "channel": "non_face_to_face",
+   "affordability": "above_limit",
+   "behaviour_change": "moderate",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 46.75,
+   "category_scores": {
+    "customer": 15.0,
+    "geography": 0.0,
+    "product_payment": 30.0,
+    "channel": 100.0,
+    "transactions": 65.0
+   },
+   "band": "MEDIUM",
+   "dd_level": "CDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE"
+   ],
+   "review_months": 24,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_MEDIUM",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_MEDIUM",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_HIGH",
+    "FACTOR_BEHAVIOUR_CHANGE_MEDIUM",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_MEDIUM",
+    "DD_CDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-09",
+  "title": "Confirmed sanctions match on a clean profile",
+  "source": "P1.3 / P3.3",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "confirmed",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REJECT",
+   "overrides_hit": [
+    "OVR_SANCTIONS_CONFIRMED"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "FREEZE_FUNDS_AND_BLOCK_IF_EXISTING",
+    "REJECT_IF_PROSPECT",
+    "REPORT_TO_MLRO"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_SANCTIONS_CONFIRMED",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-10",
+  "title": "Inconclusive (partial) sanctions match",
+  "source": "P1.3 partial match",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "inconclusive",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_SANCTIONS_INCONCLUSIVE"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "BLOCK_PENDING_MANUAL_REVIEW"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_SANCTIONS_INCONCLUSIVE",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-11",
+  "title": "PEP confirmed by screening",
+  "source": "P1.5",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "confirmed",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_PEP"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_PEP",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-12",
+  "title": "PEP self-declared in SOW questionnaire",
+  "source": "P1.6",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "self_declared",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_PEP"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_PEP",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-13",
+  "title": "Material adverse media (AML/CFT conviction)",
+  "source": "P1.4",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "material",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_ADVERSE_MEDIA_MATERIAL"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "REPORT_TO_MLRO"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_ADVERSE_MEDIA_MATERIAL",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-14",
+  "title": "Potential material adverse media (under investigation)",
+  "source": "P1.4",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "potential",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_ADVERSE_MEDIA_POTENTIAL"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_ADVERSE_MEDIA_POTENTIAL",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-15",
+  "title": "High-net-worth individual",
+  "source": "P1.7 condition",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": true,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [
+    "OVR_HNWI"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_HNWI",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-16",
+  "title": "Declared active links to blacklisted country",
+  "source": "P1.2 / P3.5",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": true
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REJECT",
+   "overrides_hit": [
+    "OVR_BLACKLISTED_COUNTRY"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "REJECT_OR_TERMINATE",
+    "REPORT_TO_MLRO"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_BLACKLISTED_COUNTRY",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-17",
+  "title": "Multiple overrides: PEP + confirmed sanctions (reject wins)",
+  "source": "precedence",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "confirmed",
+   "pep_status": "confirmed",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REJECT",
+   "overrides_hit": [
+    "OVR_SANCTIONS_CONFIRMED",
+    "OVR_PEP"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "FREEZE_FUNDS_AND_BLOCK_IF_EXISTING",
+    "REJECT_IF_PROSPECT",
+    "REPORT_TO_MLRO"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_SANCTIONS_CONFIRMED",
+    "OVR_PEP",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-24",
+  "title": "Two reject overrides sharing an action: material adverse media + blacklisted country (REPORT_TO_MLRO listed once)",
+  "source": "override de-duplication",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "material",
+   "hnwi": false,
+   "blacklisted_country_link": true
+  },
+  "expected": {
+   "overall_score": 0.0,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REJECT",
+   "overrides_hit": [
+    "OVR_BLACKLISTED_COUNTRY",
+    "OVR_ADVERSE_MEDIA_MATERIAL"
+   ],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS",
+    "REJECT_OR_TERMINATE",
+    "REPORT_TO_MLRO"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "OVR_BLACKLISTED_COUNTRY",
+    "OVR_ADVERSE_MEDIA_MATERIAL",
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-18",
+  "title": "Non-material adverse media only (not an override)",
+  "source": "P1.4 non-material",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "single",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 1.5,
+   "category_scores": {
+    "customer": 7.5,
+    "geography": 0.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_MEDIUM",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-19",
+  "title": "Missing SOW-derived facts (occupation, employment, SOW country) at onboarding",
+  "source": "data quality",
+  "facts": {
+   "purpose": "ecommerce",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 5.5,
+   "category_scores": {
+    "customer": 20.0,
+    "geography": 15.0,
+    "product_payment": 0.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [
+    "employment_status",
+    "occupation_risk",
+    "sow_country_risk"
+   ],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "DATA_MISSING_EMPLOYMENT_STATUS",
+    "DATA_MISSING_OCCUPATION_RISK",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "DATA_MISSING_SOW_COUNTRY_RISK",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-20",
+  "title": "Invalid value supplied for payment_method",
+  "source": "validation",
+  "facts": {
+   "purpose": "ecommerce",
+   "employment_status": "employed",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "none",
+   "prior_str": "none",
+   "residence_country_risk": "standard",
+   "nationality_risk": "standard",
+   "sow_country_risk": "standard",
+   "payment_method": "crypto",
+   "product_type": "closed_loop",
+   "channel": "face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 4.5,
+   "category_scores": {
+    "customer": 0.0,
+    "geography": 0.0,
+    "product_payment": 30.0,
+    "channel": 0.0,
+    "transactions": 0.0
+   },
+   "band": "LOW",
+   "dd_level": "SDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING"
+   ],
+   "review_months": 36,
+   "missing_factors": [
+    "payment_method"
+   ],
+   "reason_codes": [
+    "FACTOR_PURPOSE_LOW",
+    "FACTOR_EMPLOYMENT_STATUS_LOW",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_LOW",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "DATA_MISSING_PAYMENT_METHOD",
+    "INVALID_VALUE_PAYMENT_METHOD",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_LOW",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_LOW",
+    "DD_SDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-21",
+  "title": "Boundary check: score exactly 36.00 is MEDIUM",
+  "source": "band boundary Q4",
+  "facts": {
+   "purpose": "gambling",
+   "employment_status": "student",
+   "occupation_risk": "high_risk",
+   "adverse_media_non_material": "none",
+   "prior_str": "one_or_more",
+   "residence_country_risk": "higher",
+   "nationality_risk": "high_risk_third_country",
+   "sow_country_risk": "standard",
+   "payment_method": "cash",
+   "product_type": "closed_loop",
+   "channel": "non_face_to_face",
+   "affordability": "not_observed",
+   "behaviour_change": "not_observed",
+   "high_value_transactions": "not_observed",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 36.0,
+   "category_scores": {
+    "customer": 60.0,
+    "geography": 50.0,
+    "product_payment": 60.0,
+    "channel": 100.0,
+    "transactions": 0.0
+   },
+   "band": "MEDIUM",
+   "dd_level": "CDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE"
+   ],
+   "review_months": 24,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_MEDIUM",
+    "FACTOR_EMPLOYMENT_STATUS_MEDIUM",
+    "FACTOR_OCCUPATION_RISK_HIGH",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_LOW",
+    "FACTOR_PRIOR_STR_HIGH",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_MEDIUM",
+    "FACTOR_NATIONALITY_RISK_HIGH",
+    "FACTOR_SOW_COUNTRY_RISK_LOW",
+    "FACTOR_PAYMENT_METHOD_HIGH",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_LOW",
+    "FACTOR_BEHAVIOUR_CHANGE_LOW",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_LOW",
+    "BAND_MEDIUM",
+    "DD_CDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-22",
+  "title": "Boundary check: score exactly 76.00 is HIGH",
+  "source": "band boundary Q4",
+  "facts": {
+   "purpose": "multipurpose",
+   "employment_status": "retired",
+   "occupation_risk": "standard",
+   "adverse_media_non_material": "single",
+   "prior_str": "none",
+   "residence_country_risk": "high_risk_third_country",
+   "nationality_risk": "standard",
+   "sow_country_risk": "higher",
+   "payment_method": "bank_transfer",
+   "product_type": "open_loop",
+   "channel": "non_face_to_face",
+   "affordability": "above_limit",
+   "behaviour_change": "significant",
+   "high_value_transactions": "yes",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 76.0,
+   "category_scores": {
+    "customer": 47.5,
+    "geography": 55.0,
+    "product_payment": 40.0,
+    "channel": 100.0,
+    "transactions": 100.0
+   },
+   "band": "HIGH",
+   "dd_level": "EDD",
+   "outcome": "REVIEW_REQUIRED",
+   "overrides_hit": [],
+   "approvals_required": [
+    "MLRO",
+    "BOARD"
+   ],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE",
+    "OBTAIN_SOW_SOF_DOCUMENTS"
+   ],
+   "review_months": 12,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_HIGH",
+    "FACTOR_EMPLOYMENT_STATUS_MEDIUM",
+    "FACTOR_OCCUPATION_RISK_LOW",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_MEDIUM",
+    "FACTOR_PRIOR_STR_LOW",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_HIGH",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_MEDIUM",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_HIGH",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_HIGH",
+    "FACTOR_BEHAVIOUR_CHANGE_HIGH",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_HIGH",
+    "BAND_HIGH",
+    "DD_EDD"
+   ]
+  }
+ },
+ {
+  "id": "CB-23",
+  "title": "Boundary check: score 75.50 stays MEDIUM",
+  "source": "band boundary Q4",
+  "facts": {
+   "purpose": "gambling",
+   "employment_status": "self_employed",
+   "occupation_risk": "high_risk",
+   "adverse_media_non_material": "multiple",
+   "prior_str": "one_or_more",
+   "residence_country_risk": "high_risk_third_country",
+   "nationality_risk": "standard",
+   "sow_country_risk": "higher",
+   "payment_method": "bank_transfer",
+   "product_type": "closed_loop",
+   "channel": "non_face_to_face",
+   "affordability": "above_limit",
+   "behaviour_change": "significant",
+   "high_value_transactions": "yes",
+   "sanctions_match": "none",
+   "pep_status": "none",
+   "adverse_media_material": "none",
+   "hnwi": false,
+   "blacklisted_country_link": false
+  },
+  "expected": {
+   "overall_score": 75.5,
+   "category_scores": {
+    "customer": 75.0,
+    "geography": 55.0,
+    "product_payment": 0.0,
+    "channel": 100.0,
+    "transactions": 100.0
+   },
+   "band": "MEDIUM",
+   "dd_level": "CDD",
+   "outcome": "PROCEED",
+   "overrides_hit": [],
+   "approvals_required": [],
+   "required_actions": [
+    "IDENTIFY_CUSTOMER",
+    "VERIFY_ID",
+    "ONGOING_SCREENING",
+    "OBTAIN_PURPOSE_AND_NATURE"
+   ],
+   "review_months": 24,
+   "missing_factors": [],
+   "reason_codes": [
+    "FACTOR_PURPOSE_MEDIUM",
+    "FACTOR_EMPLOYMENT_STATUS_MEDIUM",
+    "FACTOR_OCCUPATION_RISK_HIGH",
+    "FACTOR_ADVERSE_MEDIA_NON_MATERIAL_HIGH",
+    "FACTOR_PRIOR_STR_HIGH",
+    "FACTOR_RESIDENCE_COUNTRY_RISK_HIGH",
+    "FACTOR_NATIONALITY_RISK_LOW",
+    "FACTOR_SOW_COUNTRY_RISK_MEDIUM",
+    "FACTOR_PAYMENT_METHOD_LOW",
+    "FACTOR_PRODUCT_TYPE_LOW",
+    "FACTOR_CHANNEL_HIGH",
+    "FACTOR_AFFORDABILITY_HIGH",
+    "FACTOR_BEHAVIOUR_CHANGE_HIGH",
+    "FACTOR_HIGH_VALUE_TRANSACTIONS_HIGH",
+    "BAND_MEDIUM",
+    "DD_CDD"
+   ]
+  }
+ }
+]
