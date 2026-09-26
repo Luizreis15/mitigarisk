@@ -112,3 +112,114 @@ insert into public.policy_thresholds (tenant_id, policy_version_id, label, min_s
 update public.policy_versions
 set status = 'published', effective_from = now(), published_at = now(), published_by = '00000000-0000-0000-0000-000000000002'
 where id = '20000000-0000-0000-0000-000000000010' and status = 'draft';
+
+-- TASK-032 (dev only): the CRA Template v1 DRAFT, loaded EXACTLY from its
+-- machine-readable JSON into a NEW fictional tenant as a published cra_v2
+-- policy version. The JSON literal below is byte-identical to
+-- apps/web/tests/fixtures/cra-template-v1-draft.json (a unit test enforces
+-- it); every category, factor, points map, override and band row is derived
+-- from that literal with jsonb functions, never typed a second time. The
+-- policy numbers are DRAFT until the compliance lead signs them off. Never
+-- point this at a hosted project.
+
+insert into public.tenants (id, name, slug, status) values
+  ('10000000-0000-0000-0000-000000000004', 'EU Payments Demo Ltd.', 'eu-payments-demo', 'active')
+on conflict (id) do nothing;
+
+do $seed$
+declare
+  v_tenant constant uuid := '10000000-0000-0000-0000-000000000004';
+  v_version constant uuid := '20000000-0000-0000-0000-000000000020';
+  v_template constant jsonb := $template${
+  "template_key": "eu-payments-gaming-cra",
+  "version_label": "v1-DRAFT",
+  "status_note": "DRAFT: provisional weights and points pending compliance-lead sign-off (see CRA-TEMPLATE-v1-DRAFT.md Q1-Q8)",
+  "missing_factor_points": 50,
+  "rounding": "half-up to 2 decimals at category and overall level",
+  "categories": [
+    {"key": "customer", "label": "Customer", "weight": 20, "factors": [
+      {"key": "purpose", "weight": 30, "points": {"ecommerce": 0, "gambling": 50, "multipurpose": 100}},
+      {"key": "employment_status", "weight": 20, "points": {"employed": 0, "self_employed": 50, "retired": 50, "student": 50, "unemployed": 100}},
+      {"key": "occupation_risk", "weight": 20, "points": {"standard": 0, "cash_intensive": 50, "high_risk": 100}},
+      {"key": "adverse_media_non_material", "weight": 15, "points": {"none": 0, "single": 50, "multiple": 100}},
+      {"key": "prior_str", "weight": 15, "points": {"none": 0, "one_or_more": 100}}
+    ]},
+    {"key": "geography", "label": "Geography", "weight": 10, "factors": [
+      {"key": "residence_country_risk", "weight": 40, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}},
+      {"key": "nationality_risk", "weight": 30, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}},
+      {"key": "sow_country_risk", "weight": 30, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}}
+    ]},
+    {"key": "product_payment", "label": "Product / Service / Payment", "weight": 15, "factors": [
+      {"key": "payment_method", "weight": 60, "points": {"bank_transfer": 0, "card": 50, "cash": 100}},
+      {"key": "product_type", "weight": 40, "points": {"closed_loop": 0, "open_loop": 100}}
+    ]},
+    {"key": "channel", "label": "Delivery channel", "weight": 10, "factors": [
+      {"key": "channel", "weight": 100, "points": {"face_to_face": 0, "non_face_to_face": 100}}
+    ]},
+    {"key": "transactions", "label": "Transactions", "weight": 45, "factors": [
+      {"key": "affordability", "weight": 50, "points": {"not_observed": 0, "within": 0, "near_limit": 50, "above_limit": 100}},
+      {"key": "behaviour_change", "weight": 30, "points": {"not_observed": 0, "none": 0, "moderate": 50, "significant": 100}},
+      {"key": "high_value_transactions", "weight": 20, "points": {"not_observed": 0, "no": 0, "yes": 100}}
+    ]}
+  ],
+  "overrides": [
+    {"code": "OVR_SANCTIONS_CONFIRMED", "fact": "sanctions_match", "in": ["confirmed"], "effect": "reject", "actions": ["FREEZE_FUNDS_AND_BLOCK_IF_EXISTING", "REJECT_IF_PROSPECT", "REPORT_TO_MLRO"]},
+    {"code": "OVR_BLACKLISTED_COUNTRY", "fact": "blacklisted_country_link", "in": [true], "effect": "reject", "actions": ["REJECT_OR_TERMINATE", "REPORT_TO_MLRO"]},
+    {"code": "OVR_SANCTIONS_INCONCLUSIVE", "fact": "sanctions_match", "in": ["inconclusive"], "effect": "force_high", "actions": ["BLOCK_PENDING_MANUAL_REVIEW"]},
+    {"code": "OVR_PEP", "fact": "pep_status", "in": ["confirmed", "self_declared"], "effect": "force_high", "actions": [], "approvals": ["MLRO", "BOARD"]},
+    {"code": "OVR_ADVERSE_MEDIA_MATERIAL", "fact": "adverse_media_material", "in": ["material"], "effect": "force_high", "actions": ["REPORT_TO_MLRO"]},
+    {"code": "OVR_ADVERSE_MEDIA_POTENTIAL", "fact": "adverse_media_material", "in": ["potential"], "effect": "force_high", "actions": []},
+    {"code": "OVR_HNWI", "fact": "hnwi", "in": [true], "effect": "force_high", "actions": []}
+  ],
+  "bands": [
+    {"band": "LOW", "min": 0, "max_exclusive": 36, "dd_level": "SDD", "review_months": 36, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING"]},
+    {"band": "MEDIUM", "min": 36, "max_exclusive": 76, "dd_level": "CDD", "review_months": 24, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE"]},
+    {"band": "HIGH", "min": 76, "max_inclusive": 100, "dd_level": "EDD", "review_months": 12, "approvals": ["MLRO", "BOARD"], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE", "OBTAIN_SOW_SOF_DOCUMENTS"]}
+  ],
+  "rules": {
+    "override_precedence": "reject > force_high; all hit overrides are reported",
+    "reject_outcome": "band HIGH, dd_level EDD, outcome REJECT (score still computed and reported)",
+    "force_high_outcome": "band HIGH, dd_level EDD, outcome REVIEW_REQUIRED",
+    "missing_factor": "factor fact absent or value not in map -> missing_factor_points and DATA_MISSING_<factor> reason; value not in map is also INVALID_VALUE_<factor>"
+  }
+}$template$::jsonb;
+begin
+  if exists (select 1 from public.policy_versions where id = v_version) then
+    return;
+  end if;
+
+  insert into public.policy_versions (
+    id, tenant_id, version_number, status, created_by, engine_kind, label, missing_factor_points
+  ) values (
+    v_version, v_tenant, 1, 'draft', '00000000-0000-0000-0000-000000000002', 'cra_v2',
+    'EU Payments & Gaming CRA — v1 DRAFT', (v_template ->> 'missing_factor_points')::numeric
+  );
+
+  insert into public.policy_categories (tenant_id, policy_version_id, key, label, weight, position)
+  select v_tenant, v_version, c.value ->> 'key', c.value ->> 'label', (c.value ->> 'weight')::numeric, c.ordinality
+  from jsonb_array_elements(v_template -> 'categories') with ordinality as c;
+
+  insert into public.policy_category_factors (tenant_id, policy_version_id, category_key, factor_key, weight, position, points)
+  select v_tenant, v_version, c.value ->> 'key', f.value ->> 'key', (f.value ->> 'weight')::numeric, f.ordinality, f.value -> 'points'
+  from jsonb_array_elements(v_template -> 'categories') as c,
+       lateral jsonb_array_elements(c.value -> 'factors') with ordinality as f;
+
+  insert into public.policy_overrides (tenant_id, policy_version_id, code, position, fact_key, match_values, effect, actions, approvals)
+  select v_tenant, v_version, o.value ->> 'code', o.ordinality, o.value ->> 'fact', o.value -> 'in',
+         o.value ->> 'effect', coalesce(o.value -> 'actions', '[]'::jsonb), coalesce(o.value -> 'approvals', '[]'::jsonb)
+  from jsonb_array_elements(v_template -> 'overrides') with ordinality as o;
+
+  insert into public.policy_cra_bands (tenant_id, policy_version_id, band, min_score, max_score, max_inclusive, dd_level, review_months, actions, approvals)
+  select v_tenant, v_version, b.value ->> 'band', (b.value ->> 'min')::numeric,
+         coalesce(b.value ->> 'max_exclusive', b.value ->> 'max_inclusive')::numeric,
+         (b.value ? 'max_inclusive'), b.value ->> 'dd_level', (b.value ->> 'review_months')::integer,
+         coalesce(b.value -> 'actions', '[]'::jsonb), coalesce(b.value -> 'approvals', '[]'::jsonb)
+  from jsonb_array_elements(v_template -> 'bands') as b;
+
+  -- Publish last: the publish-time validator checks the whole structure.
+  update public.policy_versions
+  set status = 'published', effective_from = now(), published_at = now(),
+      published_by = '00000000-0000-0000-0000-000000000002'
+  where id = v_version and status = 'draft';
+end
+$seed$;
