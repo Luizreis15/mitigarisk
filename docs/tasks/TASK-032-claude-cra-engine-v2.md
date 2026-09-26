@@ -110,3 +110,81 @@ Transcribed from the orchestrator's message to the implementer: the source contr
 2. **`public.run_supplier_evaluation` may be redefined in a new migration with exactly one change:** select the current published policy with `engine_kind = 'weighted_v1'`. A regression test is required: a tenant with a published `cra_v2` still evaluates suppliers with its `weighted_v1` policy. The Template v1 seed goes into a **new** tenant, "EU Payments Demo Ltd." (fixed UUID, slug `eu-payments-demo`), not an existing one. Before adding it, check whether any suite from 010 to 080 counts tenants; if one does, report it and adjust with a written justification.
 3. **`null` counts as absent** for a fact.
 4. **`effect` is validated only at publish time** (no CHECK on the table); `band` and `dd_level` keep their CHECK constraints.
+
+## Handoff
+
+**Outcome:** CRA engine v2 implemented: policy structure, publish-time validation, immutability, a pure database evaluator, a dev seed of Template v1 DRAFT, a SQL suite and a non-authoritative TypeScript mirror. **24/24 casebook cases pass in SQL and in TypeScript with identical outputs.** No customer subject, persistence, user RPC, UI, API, trigger rules, approval chain or audit pack was added. All required gates pass.
+
+**Branch and commits:** `feat/cra-engine-v2`, created from `docs/foundation-alignment-cra` (TASK-030 was not yet merged into `origin/main`), tip `9a7d0ca` at creation. The commits below are on top of it.
+
+```text
+docs(task): add TASK-032 CRA engine v2 contract and amendment 1
+feat(cra): add CRA policy structure and database evaluator
+test(cra): add the CRA engine v2 SQL suite
+feat(cra): add the non-authoritative TypeScript CRA engine mirror
+docs(task): record TASK-032 handoff        <- the handoff commit; tip reported in the reply
+```
+
+**Files changed:**
+- `supabase/migrations/20260926100000_cra_engine_v2.sql` (new) — schema, validators, evaluator, the one-line `run_supplier_evaluation` fix, rollback notes.
+- `supabase/seed.sql` (appended) — dev-only tenant "EU Payments Demo Ltd." and Template v1 DRAFT loaded from the embedded JSON.
+- `supabase/tests/090-cra-engine-v2.sql` (new) — 120 assertions.
+- `apps/web/lib/domain/cra-engine.ts` (new) — pure exact-decimal TS mirror.
+- `apps/web/tests/domain/cra-engine.test.ts` (new) — 35 tests.
+- `apps/web/tests/fixtures/cra-casebook-v1.json`, `cra-template-v1-draft.json` (new) — byte-identical copies of the normative inputs (verified with `cmp`).
+- `docs/tasks/TASK-032-claude-cra-engine-v2.md` — the contract, the transcribed Amendment 1, and this handoff.
+
+No UI, dependency, lockfile or earlier-migration change. `reference_engine.py` was not committed.
+
+### Schema summary
+
+`public.policy_versions` gains three columns: `engine_kind text not null default 'weighted_v1'` (CHECK `weighted_v1|cra_v2`), `label text`, `missing_factor_points numeric` (CHECK 0–100). Existing rows keep `weighted_v1`.
+
+| Table | Columns (besides id, tenant_id, policy_version_id, created_at) | Notes |
+|---|---|---|
+| `policy_categories` | key, label, weight, position | unique (version, key) and (version, position) |
+| `policy_category_factors` | category_key, factor_key, weight, position, `points jsonb` | FK to the category; factor_key unique per version |
+| `policy_overrides` | code, position, fact_key, `match_values jsonb`, effect, `actions jsonb`, `approvals jsonb` | **no CHECK on effect** (validated at publish only, per amendment) |
+| `policy_cra_bands` | band (CHECK LOW/MEDIUM/HIGH), min_score, max_score, max_inclusive, dd_level (CHECK SDD/CDD/EDD), review_months, `actions jsonb`, `approvals jsonb` | a score s is in a band when min_score ≤ s and (s < max_score, or s ≤ max_score if max_inclusive) |
+
+Every child has composite FKs to `policy_versions(id, tenant_id)`, the existing `app.forbid_children_when_not_draft` trigger, RLS with `select` through `app.has_tenant_capability_as_member(tenant_id,'policy.view')`, no write policy, and `insert/update/delete` revoked from `authenticated` (all revoked from `anon`).
+
+**Publish-time validation** (`trg_policy_versions_cra_publish_validation`, security definer, `cra_v2` only, `22023`, aborts the whole statement so nothing is partially published): category weights sum to 100; each category's factor weights sum to 100; each points map is a non-empty object of numbers in [0,100]; bands contiguous over [0,100] (start 0, each next starts where the previous exclusive one ends, last ends at 100 inclusive); every override effect is `reject` or `force_high`. Additional checks I added (see decisions): `missing_factor_points` set; a HIGH band exists; each band/override `actions` and `approvals` are string arrays with approvals in {MLRO, BOARD}; `match_values` is a non-empty array.
+
+### Function signature
+
+```sql
+app.evaluate_cra(p_tenant_id uuid, p_policy_version_id uuid, p_facts jsonb) returns jsonb
+-- language plpgsql, STABLE, SECURITY DEFINER, set search_path = public, pg_temp
+-- revoke all ... from public, authenticated, anon
+-- 22023: version is not cra_v2 / not this tenant's / not found / facts not an object / structurally unusable
+```
+Returns exactly the casebook `expected` shape: `overall_score, category_scores, band, dd_level, outcome, overrides_hit, approvals_required, required_actions, review_months, missing_factors, reason_codes`.
+
+### Results
+
+**Casebook (24 cases):** SQL 24/24 (whole-object `jsonb` equality, one assertion per case); TypeScript 24/24 (`assert.deepStrictEqual`). Extra check outside the repo, not committed: a differential run on **3,000 random fact sets** (missing, null, unmapped values, rare overrides; 579 LOW, 1,589 MEDIUM, 832 HIGH; 247 REJECT) gave **0 mismatches** for SQL × reference engine and TypeScript × reference engine.
+
+**SQL suites** (`run-local-verification.sh`, `set -o pipefail`, **SQL=0**): 010=16, 020=21, 030=18, 040=43, 050=26, 060=28, 070=40, 080=26 (all unchanged) and **090=120**; total **338**, 0 failures. Suite 090 covers: seed structure; the 24 cases; null/invalid/array/extra-fact semantics; 19 publish negatives, each with proof of no partial publish, plus a positive control; immutability (insert/update/delete on all four children, plus label/engine_kind/missing_factor_points on the version); `authenticated`/`anon` cannot execute `evaluate_cra` or write the children; member/auditor read, outsider/platform-admin/anon do not; cross-tenant, weighted_v1 and nonexistent versions raise 22023; the supplier regression.
+
+**Application:** `npm ci` exit 0; `npm test` exit 0, **258 tests, 258 pass** (223 previous + 35 new; 24 are the casebook); `tsc` exit 0; lint exit 0; `build` exit 0; `build:vercel` exit 0; `verify:vercel` exit 0; `check-secrets` exit 0; `git diff --check` exit 0.
+
+### Decisions, deviations and things to confirm
+
+1. **Amendment 1 was not in the contract file on disk** when I started; I transcribed it from the orchestrator's message into the repo copy, and marked it as transcribed. The reference engine and casebook were confirmed updated (24 cases, the reference reproduces all 24).
+2. **`run_supplier_evaluation`: exactly one change**, proved by `diff` of the old and new function text: `where tenant_id = p_tenant_id and status = 'published'` → `... and engine_kind = 'weighted_v1'`. Regression in suite 090: Meridian publishes a newer `cra_v2` and its supplier evaluation still uses the `weighted_v1` policy.
+3. **Tenant count check (as instructed):** no suite from 010 to 080 counts tenants in a way the new tenant can change (only `count = 0` as `anon` and `>= 2` as platform admin). No existing suite needed adjusting. The demo tenant has **no memberships** in the seed, so no existing user-scoped assertion is affected; suite 090 adds the memberships it needs inside its own rolled-back transaction.
+4. **Column names:** the contract says band `min`/`max`; I used `min_score`/`max_score`, consistent with `policy_thresholds`. The `missing_factor_points` setting and a `label` (the contract requires a label, and the table had none) are columns on `policy_versions`.
+5. **Published-policy immutability was extended:** `app.forbid_published_policy_version_mutation()` compared specific columns on the archive transition and would have let an archive also rewrite the new columns. I redefined it (body otherwise unchanged) to compare `engine_kind`, `label` and `missing_factor_points`. Beyond the literal contract; needed for "a published cra_v2 policy is immutable".
+6. **Extra publish validations** (HIGH band exists, string-array actions/approvals with approvals ⊆ {MLRO, BOARD}, non-empty `match_values`, `missing_factor_points` set) go beyond the five listed rules. They only reject structures the evaluator could not evaluate correctly; reviewer to confirm they are welcome.
+7. **`evaluate_cra` does not require the version to be published** (the contract lists only "not cra_v2 or not this tenant's"). It fails closed with 22023 on structurally unusable versions. The future RPCs that call it should require `published`.
+8. **Fact semantics I had to pin down** (all match the reference engine, none contradict the contract): `null` = absent (confirmed); only a JSON string in the map counts as mapped (a number, boolean or array is missing + invalid); an override fact must be a scalar and matches by exact equality (an array fact never hits).
+9. **Seed:** the JSON is embedded once in `seed.sql` (byte-identical to the fixture; a unit test enforces it) and every row is derived from it with jsonb functions. The seed is idempotent-guarded on the policy id.
+
+**Security/tenant/audit impact:** additive. New tables are tenant-scoped, RLS-read-only, not writable by client roles; `evaluate_cra` and the validator helpers are not executable by `authenticated`/`anon`; the only change to existing behaviour is the supplier policy selection filter and the stricter archive check on published policy versions. No secret, credential or hosted service was touched.
+
+**Migration and rollback:** forward-only; rollback notes are in the migration header (drop the trigger, helper functions, four tables, three columns and `app.evaluate_cra`; restore the prior bodies of the two redefined functions from `20260912120200` and `20260922140000`). No existing row is modified.
+
+**Known limitations:** no policy-authoring path for tenants yet (children are written by migration/seed/superuser only); the demo tenant has no members, so it cannot be used in the UI until a later task adds them; a tenant holding both engine kinds is now safe for suppliers, but nothing yet chooses which engine a *customer* assessment uses (task 033+); the TypeScript mirror validates nothing about the template (structural validation is the database's publish-time job).
+
+**Recommended reviewer:** the orchestrator (Claude, Cowork).
