@@ -25,6 +25,9 @@ export const CAPABILITY_KEYS = [
   "integration.view",
   "notification.manage",
   "notification.view",
+  "customer.view",
+  "customer.manage",
+  "assessment.run",
 ] as const;
 
 export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
