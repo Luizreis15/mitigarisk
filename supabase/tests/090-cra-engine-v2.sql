@@ -1964,9 +1964,14 @@ select pg_temp.assert(
   and not has_function_privilege('authenticated', 'app.cra_string_array_valid(jsonb,text[])', 'execute'),
   'the CRA validator helpers are not executable by authenticated');
 
+-- TASK-033 added a tenant_admin (002) membership for this same tenant to
+-- the dev seed itself (supabase/seed.sql), so only the auditor (005)
+-- membership is new here; the on conflict guards this test if seed
+-- membership ever changes again. Same active tenant_admin either way.
 insert into public.memberships (tenant_id, user_id, role_key, status) values
   ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000002', 'tenant_admin', 'active'),
-  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000005', 'auditor', 'active');
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000005', 'auditor', 'active')
+on conflict (tenant_id, user_id) do nothing;
 
 set role authenticated; set local "request.jwt.claim.role" = 'authenticated'; set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000002';
 select pg_temp.assert(
