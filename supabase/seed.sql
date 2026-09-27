@@ -223,3 +223,34 @@ begin
   where id = v_version and status = 'draft';
 end
 $seed$;
+
+-- TASK-033 (dev only): fictional members of the "EU Payments Demo Ltd."
+-- tenant (mirrors the same fictional dev accounts already used for the
+-- other tenants), plus 3 fictional customers to exercise the CRA
+-- assessment flow. Never point this at a hosted project.
+
+insert into public.memberships (tenant_id, user_id, role_key, status) values
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000002', 'tenant_admin', 'active'),
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000004', 'operator', 'active')
+on conflict (tenant_id, user_id) do nothing;
+
+insert into public.customers (
+  id, tenant_id, external_reference, full_name, date_of_birth, country_of_birth,
+  nationality, residence_country, onboarding_channel, created_by, updated_by
+) values
+  (
+    '30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000004', 'CUST-DEMO-001',
+    'Elena Marchetti', '1988-04-12', 'IT', 'IT', 'MT', 'face_to_face',
+    '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000004', 'CUST-DEMO-002',
+    'Rahim Osei', '1995-11-03', 'GH', 'GH', 'MT', 'non_face_to_face',
+    '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002'
+  ),
+  (
+    '30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000004', 'CUST-DEMO-003',
+    'Ilse van der Berg', '1979-07-22', 'NL', 'NL', 'MT', 'non_face_to_face',
+    '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002'
+  )
+on conflict (id) do nothing;
