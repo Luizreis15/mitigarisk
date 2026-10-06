@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { CRA_FACTOR_VALUE_MAX_LENGTH } from "../../lib/domain/customer-assessment.ts";
+import { codePointLength } from "../../lib/domain/customer-assessment-facts.ts";
 
 // Same drift guard as tenancy-sql-sync.test.ts: the factor fact length limit
 // is defined in SQL (app.cra_factor_value_max_length()) and mirrored in TS for
@@ -35,7 +36,7 @@ void test("every casebook factor value fits within CRA_FACTOR_VALUE_MAX_LENGTH",
   for (const entry of casebook) {
     for (const value of Object.values(entry.facts)) {
       if (typeof value === "string") {
-        assert.ok(value.length <= CRA_FACTOR_VALUE_MAX_LENGTH, `"${value}" exceeds the factor value limit`);
+        assert.ok(codePointLength(value) <= CRA_FACTOR_VALUE_MAX_LENGTH, `"${value}" exceeds the factor value limit`);
       }
     }
   }
