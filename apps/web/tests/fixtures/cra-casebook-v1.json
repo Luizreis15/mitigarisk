@@ -303,8 +303,7 @@
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -575,8 +574,7 @@
     "OVR_SANCTIONS_CONFIRMED"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -652,8 +650,7 @@
     "OVR_SANCTIONS_INCONCLUSIVE"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -727,8 +724,7 @@
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -801,8 +797,7 @@
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -875,8 +870,7 @@
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -950,8 +944,7 @@
     "OVR_ADVERSE_MEDIA_POTENTIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1024,8 +1017,7 @@
     "OVR_HNWI"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1098,8 +1090,7 @@
     "OVR_BLACKLISTED_COUNTRY"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1175,8 +1166,7 @@
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1254,8 +1244,7 @@
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1598,8 +1587,7 @@
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
