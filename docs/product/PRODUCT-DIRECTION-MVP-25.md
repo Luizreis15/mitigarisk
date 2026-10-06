@@ -1,7 +1,7 @@
 # MITIGA — Product Direction & 25-Day MVP (v1)
 
 **Date:** 26 Sep 2026 · **Owner:** Product orchestration (Claude) · **Approvers:** Edu (product), Lucimara (risk & compliance)
-**Inputs:** Lucimara's source files (Investor deck, Regulatory presentation, AML/CFT Operational Process Flow Charts, Project Now Ruleset, EU Compliance Checklist, Vendor Benchmark, Financial Plan) · PRD v0.3 · current codebase state (26 Sep 2026)
+**Inputs:** Lucimara's source files (Investor deck, Regulatory presentation, AML/CFT Operational Process Flow Charts, gambling-industry transaction trigger ruleset, EU Compliance Checklist, Vendor Benchmark, Financial Plan) · PRD v0.3 · current codebase state (26 Sep 2026)
 
 ---
 
@@ -39,11 +39,12 @@ The goal: **on day 25, Lucimara can run her own CRA methodology in MITIGA on syn
 ### In scope
 
 1. **Customer subject.** A natural-person customer with an external reference, the registration fields from P1.1 and the SOW questionnaire from P1.2. It reuses the supplier slice's tenancy, RPC, audit and immutability patterns.
-2. **Policy Template v1: "EU Payments & Gaming CRA (C2D-derived)",** following spec doc 03:
+2. **Policy Template v1: "MITIGA EU Payments & Gaming CRA",** following spec doc 03 (Lucimara partial sign-off Oct 2026):
    - override rules;
-   - five weighted categories with sub-factors and value→points maps;
-   - bands mapped to SDD/CDD/EDD;
-   - required actions per band;
+   - five weighted categories with sub-factors and value→points maps; **weights customisable 0–100**;
+   - occupation/country lists: MITIGA starter lists, **tenant scores exposure**;
+   - bands mapped to SDD/CDD/EDD (**76 = HIGH**);
+   - required actions per band; **MLRO for EDD**, board only on MLRO escalation;
    - periodic review interval per band.
 3. **Assessment result:**
    - overall score and category scores;
@@ -54,8 +55,8 @@ The goal: **on day 25, Lucimara can run her own CRA methodology in MITIGA on syn
    - required actions;
    - next periodic review date;
    - policy version.
-4. **Transaction trigger evaluator:** the Project Now ruleset (€500 lifetime, €2k/180d, affordability, €10k/180d net linked) run on **aggregated totals supplied by the caller**. There is no raw transaction ingestion in the MVP. The output is the trigger hit and the required action.
-5. **Approval chain.** High risk, EDD or PEP requires an MLRO decision, recorded as an immutable decision. A board-approval flag is captured.
+4. **Transaction trigger evaluator:** MITIGA gambling-industry default (€500 lifetime, €2k/180d, affordability, €10k/180d net linked) run on **aggregated totals supplied by the caller**. There is no raw transaction ingestion in the MVP. The output is the trigger hit and the required action.
+5. **Approval chain.** High risk, EDD or PEP requires an **MLRO** decision, recorded as immutable. **Board** only if the MLRO escalates/submits — not for every EDD.
 6. **API v1:** per-tenant API key, `POST /v1/assessments` (idempotent) and `GET /v1/assessments/{id}`, plus minimal docs and examples.
 7. **History, detail and audit pack export** (PDF/CSV). The pack contains inputs, policy version, factor contributions, overrides, decision chain and timestamps.
 8. **Members:** invite and assign roles (real UI).

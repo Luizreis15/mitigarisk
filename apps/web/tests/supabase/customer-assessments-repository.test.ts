@@ -5,6 +5,7 @@ import {
   runCustomerAssessment,
   listCustomerAssessments,
   getLatestCustomerAssessment,
+  getCustomerAssessmentForm,
   AssessmentCorrelationConflictError,
   CustomerNotFoundForAssessmentError,
   NoPublishedCraPolicyError,
@@ -184,4 +185,98 @@ void test("getLatestCustomerAssessment returns null when none exists", async () 
   const { client } = fakeSelectClient({ data: null, error: null });
   const result = await getLatestCustomerAssessment(client, TENANT_ID, CUSTOMER_ID);
   assert.equal(result, null);
+});
+
+const FORM_PAYLOAD = {
+  policy_version_id: "20000000-0000-0000-0000-000000000020",
+  policy_label: "MITIGA EU Payments & Gaming CRA — v1 DRAFT (demo)",
+  categories: [
+    {
+      key: "channel",
+      label: "Delivery channel",
+      position: 4,
+      factors: [{ key: "channel", position: 1, values: ["face_to_face", "non_face_to_face"] }],
+    },
+  ],
+  overrides: [
+    { fact_key: "pep_status", values: ["confirmed", "self_declared", "none"], negative_value: "none", provisional: false },
+    { fact_key: "hnwi", values: [true, false], negative_value: false, provisional: true },
+  ],
+};
+
+void test("getCustomerAssessmentForm calls get_customer_assessment_form with only the tenant id", async () => {
+  const { client, calls } = fakeRpcClient({ data: FORM_PAYLOAD, error: null });
+  await getCustomerAssessmentForm(client, TENANT_ID);
+  assert.equal(calls.name, "get_customer_assessment_form");
+  assert.deepEqual(calls.params, { p_tenant_id: TENANT_ID });
+});
+
+void test("getCustomerAssessmentForm maps the payload to the camelCase domain shape", async () => {
+  const { client } = fakeRpcClient({ data: FORM_PAYLOAD, error: null });
+  const form = await getCustomerAssessmentForm(client, TENANT_ID);
+  assert.deepEqual(form, {
+    policyVersionId: "20000000-0000-0000-0000-000000000020",
+    policyLabel: "MITIGA EU Payments & Gaming CRA — v1 DRAFT (demo)",
+    categories: [
+      {
+        key: "channel",
+        label: "Delivery channel",
+        position: 4,
+        factors: [{ key: "channel", position: 1, values: ["face_to_face", "non_face_to_face"] }],
+      },
+    ],
+    overrides: [
+      { factKey: "pep_status", values: ["confirmed", "self_declared", "none"], negativeValue: "none", provisional: false },
+      { factKey: "hnwi", values: [true, false], negativeValue: false, provisional: true },
+    ],
+  });
+});
+
+void test("getCustomerAssessmentForm never passes through undocumented fields such as weights or points", async () => {
+  const leaky = {
+    ...FORM_PAYLOAD,
+    weight: 100,
+    categories: [
+      {
+        ...FORM_PAYLOAD.categories[0],
+        weight: 10,
+        factors: [{ key: "channel", position: 1, values: ["face_to_face"], weight: 100, points: { face_to_face: 0 } }],
+      },
+    ],
+    overrides: [{ ...FORM_PAYLOAD.overrides[0], code: "OVR_PEP", effect: "force_high" }],
+  };
+  const { client } = fakeRpcClient({ data: leaky, error: null });
+  const serialized = JSON.stringify(await getCustomerAssessmentForm(client, TENANT_ID));
+  for (const key of ["weight", "points", "code", "effect"]) {
+    assert.equal(serialized.includes(`"${key}"`), false, `${key} must not reach the domain shape`);
+  }
+});
+
+void test("getCustomerAssessmentForm fails closed with CustomerAssessmentReadError on an unexpected payload shape", async () => {
+  for (const data of [
+    null,
+    "form",
+    { ...FORM_PAYLOAD, categories: null },
+    { ...FORM_PAYLOAD, overrides: [{ fact_key: "hnwi", values: [1], negative_value: false, provisional: false }] },
+    { ...FORM_PAYLOAD, overrides: [{ fact_key: "hnwi", values: [true], negative_value: false }] },
+    { ...FORM_PAYLOAD, categories: [{ key: "c", label: "C", position: 1, factors: [{ key: "f", position: 1, values: [0] }] }] },
+  ]) {
+    const { client } = fakeRpcClient({ data, error: null });
+    await assert.rejects(() => getCustomerAssessmentForm(client, TENANT_ID), CustomerAssessmentReadError);
+  }
+});
+
+void test("getCustomerAssessmentForm maps a P0003 error to NoPublishedCraPolicyError", async () => {
+  const { client } = fakeRpcClient({ data: null, error: { code: "P0003", message: "no policy" } });
+  await assert.rejects(() => getCustomerAssessmentForm(client, TENANT_ID), NoPublishedCraPolicyError);
+});
+
+void test("getCustomerAssessmentForm maps a 42501 error to ForbiddenError", async () => {
+  const { client } = fakeRpcClient({ data: null, error: { code: "42501", message: "insufficient_privilege" } });
+  await assert.rejects(() => getCustomerAssessmentForm(client, TENANT_ID), ForbiddenError);
+});
+
+void test("getCustomerAssessmentForm maps any other database error to CustomerAssessmentReadError", async () => {
+  const { client } = fakeRpcClient({ data: null, error: { code: "08006", message: "connection failure" } });
+  await assert.rejects(() => getCustomerAssessmentForm(client, TENANT_ID), CustomerAssessmentReadError);
 });
