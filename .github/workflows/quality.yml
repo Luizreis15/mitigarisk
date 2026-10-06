@@ -40,7 +40,7 @@ jobs:
         run: npm ci
       - name: Audit production dependency tree
         working-directory: apps/web
-        run: npm audit --omit=dev --audit-level=high
+        run: node ../../scripts/npm-audit-gate.mjs
       - name: Run domain unit tests
         working-directory: apps/web
         run: npm test
