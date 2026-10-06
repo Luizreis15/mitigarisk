@@ -372,6 +372,7 @@ export const messages = {
       open: 'Open',
     },
     notAssessed: 'Not assessed yet',
+    emptyValue: '—',
     open: 'Open',
     newTitle: 'New customer',
     newIntro:
@@ -381,6 +382,7 @@ export const messages = {
       'All fields are required. Use fictional data only; never enter a real person.',
     required: 'Required',
     selectCountry: 'Choose a country',
+    externalReferencePlaceholder: 'CUST-DEMO-010',
     fields: {
       externalReference: 'External reference',
       fullName: 'Full name',
@@ -502,6 +504,7 @@ export const messages = {
         'This is a risk classification, not a final onboarding decision.',
       overallScoreLabel: 'Overall score',
       scoreOutOf: '{score} out of 100',
+      scoreOutOfSuffix: '/ 100',
       bandLabel: 'Risk band',
       ddLevelLabel: 'Due-diligence level',
       outcomeLabel: 'Outcome',
@@ -628,6 +631,10 @@ export const messages = {
       InvalidFactorAnswerError:
         'One of the answers is not allowed by the current policy. Reload the page and try again.',
       MissingOverrideAnswerError: 'Answer every screening question.',
+      DuplicateAssessmentFieldError:
+        'An answer was submitted more than once. Reload the page and try again.',
+      ReservedFactKeyError:
+        'The current risk policy cannot be used by this form. Contact your policy administrator.',
       InvalidOverrideAnswerError:
         'One of the screening answers is not allowed by the current policy. Reload the page and try again.',
       AssessmentPolicyChangedError:

@@ -11,7 +11,11 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { interpolate, messages } from '@/lib/i18n/messages';
-import type { AssessmentFormView } from '@/lib/i18n/customer-assessment-form';
+import { customerErrorMessage } from '@/lib/i18n/customer-errors';
+import {
+  withSubmittedValues,
+  type AssessmentFormView,
+} from '@/lib/i18n/customer-assessment-form';
 import {
   runCustomerAssessmentAction,
   type CustomerActionResult,
@@ -39,7 +43,8 @@ function SubmitButton() {
 // submits facts only; runCustomerAssessmentAction re-reads the form
 // server-side and forwards nothing the policy does not list. The
 // correlation id comes from the server render, so a double submit replays
-// idempotently.
+// idempotently. After a failed run the form re-mounts (keyed by the attempt)
+// with the answers the server echoed back, because React resets it on submit.
 export function CustomerAssessmentForm({
   view,
   tenantId,
@@ -56,10 +61,12 @@ export function CustomerAssessmentForm({
     initialState,
   );
   const t = messages.customerWorkspace.assessmentForm;
-  const errors = messages.customerWorkspace.errors;
+  const error = state?.status === 'error' ? state : null;
+  const shown = withSubmittedValues(view, error?.values);
 
   return (
     <form
+      key={error?.attempt ?? 'initial'}
       action={formAction}
       className="space-y-6 rounded-xl border border-border p-5 sm:p-6"
       aria-labelledby="customer-assessment-form"
@@ -77,19 +84,17 @@ export function CustomerAssessmentForm({
         </p>
         <p className="text-sm">
           <span className="text-muted-foreground">{t.policyLabel}: </span>
-          <span className="font-medium">{view.policyLabel}</span>
+          <span className="font-medium">{shown.policyLabel}</span>
         </p>
       </div>
 
-      {state?.status === 'error' ? (
-        <Alert variant="destructive" role="alert">
-          <AlertTitle>
-            {errors[state.code as keyof typeof errors] ?? errors.UnknownError}
-          </AlertTitle>
-          {state.correlationId ? (
+      {error ? (
+        <Alert variant="destructive" role="alert" id="customer-assessment-form-error">
+          <AlertTitle>{customerErrorMessage(error.code)}</AlertTitle>
+          {error.correlationId ? (
             <AlertDescription className="font-mono text-xs break-all">
               {interpolate(t.correlationReference, {
-                correlationId: state.correlationId,
+                correlationId: error.correlationId,
               })}
             </AlertDescription>
           ) : null}
@@ -99,14 +104,14 @@ export function CustomerAssessmentForm({
       <input type="hidden" name="tenantId" value={tenantId} />
       <input type="hidden" name="customerId" value={customerId} />
       <input type="hidden" name="correlationId" value={correlationId} />
-      <input type="hidden" name="policyVersionId" value={view.policyVersionId} />
+      <input type="hidden" name="policyVersionId" value={shown.policyVersionId} />
 
       <div className="space-y-5">
         <div>
           <h3 className="text-sm font-medium">{t.factorsTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t.factorsHelp}</p>
         </div>
-        {view.categories.map((category) => (
+        {shown.categories.map((category) => (
           <fieldset
             key={category.key}
             className="grid gap-4 rounded-lg border border-border p-4 sm:grid-cols-2"
@@ -122,9 +127,13 @@ export function CustomerAssessmentForm({
                   name={factor.name}
                   className="h-11 w-full"
                   defaultValue={factor.defaultValue}
+                  aria-invalid={error?.field === factor.name ? true : undefined}
+                  aria-describedby={
+                    error?.field === factor.name ? 'customer-assessment-form-error' : undefined
+                  }
                 >
-                  {factor.options.map((option) => (
-                    <NativeSelectOption key={option.value} value={option.value}>
+                  {factor.options.map((option, index) => (
+                    <NativeSelectOption key={`${option.value}-${index}`} value={option.value}>
                       {option.label}
                     </NativeSelectOption>
                   ))}
@@ -140,11 +149,13 @@ export function CustomerAssessmentForm({
           <h3 className="text-sm font-medium">{t.overridesTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t.overridesHelp}</p>
         </div>
-        {view.overrides.map((override) => (
+        {shown.overrides.map((override) => (
           <fieldset
             key={override.factKey}
             className="space-y-3 rounded-lg border border-border p-4"
-            aria-required="true"
+            aria-describedby={
+              error?.field === override.name ? 'customer-assessment-form-error' : undefined
+            }
           >
             <legend className="flex flex-wrap items-center gap-2 px-1 text-sm font-medium">
               {override.label}
@@ -158,11 +169,11 @@ export function CustomerAssessmentForm({
               ) : null}
             </legend>
             <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {override.options.map((option) => {
-                const id = `${override.name}-${option.value}`;
+              {override.options.map((option, index) => {
+                const id = `${override.name}-${index}`;
                 return (
                   <label
-                    key={option.value}
+                    key={`${option.value}-${index}`}
                     htmlFor={id}
                     className="flex min-h-11 cursor-pointer items-center gap-2 text-sm"
                   >
@@ -172,6 +183,7 @@ export function CustomerAssessmentForm({
                       name={override.name}
                       value={option.value}
                       required={override.required}
+                      defaultChecked={override.defaultValue === option.value}
                       className="size-4 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
                     {option.label}

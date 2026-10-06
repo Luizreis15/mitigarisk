@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Source-boundary tests for the customer CRA experience
@@ -47,6 +47,85 @@ void test('customer actions and routes never import or reference a service-role 
       assert.ok(!source.includes(marker), `${relative(appWeb, path)} must not reference ${marker}`);
     }
   }
+});
+
+const stripComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+function resolveImport(fromFile: string, specifier: string): string | null {
+  let base: string;
+  if (specifier.startsWith('@/')) base = join(appWeb, specifier.slice(2));
+  else if (specifier.startsWith('.')) base = resolve(dirname(fromFile), specifier);
+  else return null;
+  const candidates = [base, `${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')];
+  return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile()) ?? null;
+}
+
+/** Every local module reachable from the entry files through static imports and re-exports. */
+function reachableModules(entries: string[]): Set<string> {
+  const seen = new Set<string>();
+  const queue = [...entries];
+  while (queue.length > 0) {
+    const file = queue.pop() as string;
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const source = stripComments(read(file));
+    for (const match of source.matchAll(/(?:import|export)\s[^'"]*?from\s*['"]([^'"]+)['"]|import\s*\(?\s*['"]([^'"]+)['"]/g)) {
+      const target = resolveImport(file, match[1] ?? match[2]);
+      if (target) queue.push(target);
+    }
+  }
+  return seen;
+}
+
+void test('no service-role or admin client is reachable through the import graph of customer actions and pages', () => {
+  const reachable = reachableModules([actionsPath, ...customerPageFiles]);
+  const names = [...reachable].map((path) => relative(appWeb, path));
+  assert.ok(names.includes('lib/supabase/session.ts'), 'the walk must reach the cookie-backed client');
+  assert.ok(names.includes('components/workspace/customer-assessment-form.tsx'), 'the walk must follow page imports');
+  assert.ok(!names.includes('lib/supabase/server.ts'), 'lib/supabase/server.ts (service role) must be unreachable');
+  for (const path of reachable) {
+    const name = relative(appWeb, path);
+    const source = stripComments(read(path));
+    assert.ok(
+      !/\bcreateClient\b[^;]*from\s*['"]@supabase\/supabase-js['"]/.test(source),
+      `${name} must not build a raw (non-cookie) Supabase client`,
+    );
+    if (name === 'lib/supabase/env.ts') continue;
+    for (const marker of ['SERVICE_ROLE', 'getServiceRoleSupabaseConfig', 'getServiceRoleSupabaseClient', 'service_role']) {
+      assert.ok(!source.includes(marker), `${name} is reachable from customer routes and must not reference ${marker}`);
+    }
+  }
+});
+
+const ALLOWED_FORM_FIELDS = new Set([
+  'tenantId',
+  'customerId',
+  'correlationId',
+  'policyVersionId',
+  'externalReference',
+  'fullName',
+  'dateOfBirth',
+  'countryOfBirth',
+  'nationality',
+  'residenceCountry',
+  'onboardingChannel',
+]);
+
+void test('customer actions read only allow-listed FormData fields, never a score, band, or outcome', () => {
+  const source = stripComments(read(actionsPath));
+  const literalReads = [
+    ...source.matchAll(/(?:readFormValue\(formData,\s*|formData\.get(?:All)?\(\s*)['"`]([^'"`]*)['"`]/g),
+  ].map((match) => match[1]);
+  assert.ok(literalReads.length >= 11, 'expected the literal field reads to be found');
+  for (const field of literalReads) {
+    assert.ok(ALLOWED_FORM_FIELDS.has(field), `actions must not read the "${field}" field from the browser`);
+    assert.ok(!/score|band|dd_?level|outcome|override|approval|review|result/i.test(field), field);
+  }
+  const dynamicReads = [...source.matchAll(/formData\.(get|getAll|has)\(\s*([A-Za-z_]\w*)\s*\)/g)].map((m) => `${m[1]}(${m[2]})`);
+  assert.deepEqual(dynamicReads.sort(), ['get(key)', 'getAll(name)'], 'only readFormValue and fieldReader read by variable');
+  assert.match(source, /function readFormValue\(formData: FormData, key: string\)/);
+  assert.match(source, /function fieldReader\(formData: FormData\): FieldReader/);
+  assert.ok(!/fieldReader\(formData\)\(/.test(source), 'fieldReader is only handed to the form-bound domain helpers');
 });
 
 void test('customer actions use only the cookie-backed client and are Server Actions', () => {
@@ -168,4 +247,41 @@ void test('customer presentation never imports the engine or calculates a result
     assert.ok(!/calculate|compute|threshold/i.test(source), `${name} must not calculate`);
     assert.ok(!source.includes('@supabase'), `${name} must not import Supabase`);
   }
+});
+
+void test('both customer forms re-mount with the echoed values after a failed Server Action', () => {
+  const create = read(join(appWeb, 'components/workspace/customer-create-form.tsx'));
+  const assess = read(join(appWeb, 'components/workspace/customer-assessment-form.tsx'));
+  for (const source of [create, assess]) {
+    assert.match(source, /key=\{error\?\.attempt \?\? 'initial'\}/);
+    assert.match(source, /customerErrorMessage\(error\.code\)/);
+    assert.ok(!/errors\[[^\]]*code\]/.test(source), 'error copy goes through the own-property lookup');
+  }
+  assert.ok(!create.includes('noValidate'), 'native required validation stays on');
+  for (const field of ['externalReference', 'fullName', 'dateOfBirth', 'countryOfBirth', 'nationality', 'residenceCountry']) {
+    assert.match(create, new RegExp(`defaultValue=\\{value\\('${field}'\\)\\}`), field);
+  }
+  assert.match(assess, /withSubmittedValues\(view, error\?\.values\)/);
+  assert.match(assess, /defaultChecked=\{override\.defaultValue === option\.value\}/);
+  assert.ok(!assess.includes('aria-required'), 'a plain fieldset has no aria-required; the radios carry required');
+  assert.match(assess, /\brequired\b/);
+});
+
+void test('customer presentation keeps copy in the catalog and keys lists by code and index', () => {
+  const result = read(join(appWeb, 'components/workspace/customer-assessment-result.tsx'));
+  const list = read(join(appWeb, 'components/workspace/customer-list.tsx'));
+  const create = read(join(appWeb, 'components/workspace/customer-create-form.tsx'));
+  assert.ok(!result.includes('/ 100'));
+  assert.ok(!list.includes("'—'"));
+  assert.ok(!create.includes('CUST-DEMO-010'));
+  assert.match(result, /<span aria-hidden="true">\s*\{view\.overallScoreText\}/, 'the visible score is hidden from screen readers');
+  assert.equal((result.match(/interpolate\(t\.scoreOutOf,/g) ?? []).length, 1, 'the score is announced once');
+  const keys = [...result.matchAll(/key=\{(`[^`]*`|[^}]+)\}/g)].map((match) => match[1]);
+  assert.ok(keys.length >= 8);
+  for (const key of keys) {
+    assert.match(key, /^`\$\{[\w.]+\}-\$\{index\}`$/, key);
+  }
+  const profile = read(join(appWeb, 'components/workspace/customer-profile.tsx'));
+  assert.match(profile, /customerStatusLabel\(customer\.status\)/);
+  assert.match(profile, /onboardingChannelLabel\(customer\.onboardingChannel\)/);
 });

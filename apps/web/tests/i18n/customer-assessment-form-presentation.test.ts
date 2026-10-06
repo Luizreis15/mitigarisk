@@ -1,9 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildAssessmentFormView, factValueLabel } from '../../lib/i18n/customer-assessment-form.ts';
+import {
+  buildAssessmentFormView,
+  factValueLabel,
+  withSubmittedValues,
+} from '../../lib/i18n/customer-assessment-form.ts';
 import {
   NOT_KNOWN_FACTOR_VALUE,
   decodeOverrideValue,
+  encodeFactorValue,
+  encodeOverrideValue,
 } from '../../lib/domain/customer-assessment-facts.ts';
 import type { CustomerAssessmentForm } from '../../lib/domain/customer-assessment.ts';
 import type { PolicyVersionId } from '../../lib/domain/ids.ts';
@@ -66,7 +72,7 @@ void test('every factor offers its policy values plus an explicit "Not known" op
     for (const factor of category.factors) {
       const source = DEMO_FORM.categories.flatMap((c) => c.factors).find((f) => f.key === factor.key);
       assert.ok(source);
-      assert.deepEqual(factor.options.slice(0, -1).map((o) => o.value), source.values);
+      assert.deepEqual(factor.options.slice(0, -1).map((o) => o.value), source.values.map(encodeFactorValue));
       assert.deepEqual(factor.options.at(-1), { value: NOT_KNOWN_FACTOR_VALUE, label: 'Not known' });
       assert.equal(factor.defaultValue, NOT_KNOWN_FACTOR_VALUE);
       assert.equal(factor.name, `factor.${factor.key}`);
@@ -131,4 +137,34 @@ void test('labels fall back to readable sentence case for keys and values the ca
 void test('the form view exposes no weights, points, or scoring keys', () => {
   const serialized = JSON.stringify(buildAssessmentFormView(DEMO_FORM));
   assert.ok(!/weight|points|score|band/i.test(serialized));
+});
+
+void test('submitted answers are restored after a failed run, but only when they match a listed option', () => {
+  const view = buildAssessmentFormView(DEMO_FORM);
+  const shown = withSubmittedValues(view, {
+    'factor.purpose': encodeFactorValue('gambling'),
+    'factor.payment_method': encodeFactorValue('crypto'),
+    'factor.employment_status': 'retired',
+    'override.pep_status': encodeOverrideValue('self_declared'),
+    'override.hnwi': 'string:true',
+    'override.sanctions_match': encodeOverrideValue('none'),
+  });
+  const factor = (key: string) => shown.categories.flatMap((c) => c.factors).find((f) => f.key === key);
+  const override = (key: string) => shown.overrides.find((o) => o.factKey === key);
+  assert.equal(factor('purpose')?.defaultValue, 'value:gambling');
+  assert.equal(factor('payment_method')?.defaultValue, NOT_KNOWN_FACTOR_VALUE);
+  assert.equal(factor('employment_status')?.defaultValue, NOT_KNOWN_FACTOR_VALUE);
+  assert.equal(factor('nationality_risk')?.defaultValue, NOT_KNOWN_FACTOR_VALUE);
+  assert.equal(override('pep_status')?.defaultValue, 'string:self_declared');
+  assert.equal(override('sanctions_match')?.defaultValue, 'string:none');
+  assert.equal(override('hnwi')?.defaultValue, null);
+  assert.equal(override('adverse_media_material')?.defaultValue, null);
+});
+
+void test('restoring ignores inherited keys and leaves the view untouched without submitted values', () => {
+  const view = buildAssessmentFormView(DEMO_FORM);
+  assert.equal(withSubmittedValues(view, undefined), view);
+  const inherited = Object.create({ 'factor.purpose': encodeFactorValue('gambling') }) as Record<string, string>;
+  const shown = withSubmittedValues(view, inherited);
+  assert.equal(shown.categories[0].factors[0].defaultValue, NOT_KNOWN_FACTOR_VALUE);
 });

@@ -93,11 +93,11 @@ export function CustomerList({
                       {ddLevelShortLabel(latest.ddLevel)}
                     </Badge>
                   ) : (
-                    '—'
+                    t.emptyValue
                   )}
                 </TableCell>
                 <TableCell>
-                  {latest ? formatDate(latest.nextReviewDue) : '—'}
+                  {latest ? formatDate(latest.nextReviewDue) : t.emptyValue}
                 </TableCell>
                 <TableCell>
                   <Link

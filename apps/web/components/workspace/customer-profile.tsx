@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { messages } from '@/lib/i18n/messages';
 import { countryName } from '@/lib/i18n/countries';
+import { customerStatusLabel, onboardingChannelLabel } from '@/lib/i18n/customer';
 import { formatDate, formatDateTime } from '@/lib/i18n/presentation';
 import type { Customer } from '@/lib/domain/customer';
 
@@ -24,7 +25,7 @@ export function CustomerProfile({ customer }: { customer: Customer }) {
         <h2 id="customer-profile" className="text-base font-medium">
           {t.profileTitle}
         </h2>
-        <Badge variant="outline">{t.statusValues[customer.status]}</Badge>
+        <Badge variant="outline">{customerStatusLabel(customer.status)}</Badge>
       </div>
       <dl className="grid grid-cols-1 gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
         <div className="min-w-0">
@@ -43,7 +44,7 @@ export function CustomerProfile({ customer }: { customer: Customer }) {
         </div>
         <div>
           <dt className="text-muted-foreground">{t.fields.onboardingChannel}</dt>
-          <dd className="mt-1">{t.onboardingChannels[customer.onboardingChannel]}</dd>
+          <dd className="mt-1">{onboardingChannelLabel(customer.onboardingChannel)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">{t.fields.countryOfBirth}</dt>

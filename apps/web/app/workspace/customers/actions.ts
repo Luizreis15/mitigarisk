@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
@@ -10,7 +11,14 @@ import {
   runCustomerAssessment,
 } from '@/lib/supabase/customer-assessments-repository';
 import { validateCreateCustomerInput, type CreateCustomerInput } from '@/lib/domain/customer';
-import { buildAssessmentFacts } from '@/lib/domain/customer-assessment-facts';
+import {
+  assessmentErrorField,
+  buildAssessmentFacts,
+  pickSubmittedAssessmentValues,
+  type FieldReader,
+} from '@/lib/domain/customer-assessment-facts';
+import { customerErrorField, pickSubmittedCustomerValues } from '@/lib/domain/customer-form-state';
+import type { CustomerAssessmentForm } from '@/lib/domain/customer-assessment';
 import { isUuid, type CorrelationId, type CustomerId, type TenantId } from '@/lib/domain/ids';
 
 // Server Actions for the customer CRA experience
@@ -28,9 +36,20 @@ import { isUuid, type CorrelationId, type CustomerId, type TenantId } from '@/li
 // generated at render; the database alone computes and persists the score,
 // band, DD level and outcome.
 
+// On error, `values` echoes what the user submitted so the form can be
+// re-rendered with it (React 19 resets a form before every Server Action);
+// `attempt` is unique per failed submission so the client can re-mount the
+// form with those values.
 export type CustomerActionResult =
   | { status: 'success' }
-  | { status: 'error'; code: string; correlationId?: string };
+  | {
+      status: 'error';
+      code: string;
+      attempt?: string;
+      correlationId?: string;
+      field?: string | null;
+      values?: Record<string, string>;
+    };
 
 function readFormValue(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -39,6 +58,10 @@ function readFormValue(formData: FormData, key: string): string {
 
 function errorCode(error: unknown): string {
   return error instanceof Error ? error.name : 'UnknownError';
+}
+
+function fieldReader(formData: FormData): FieldReader {
+  return (name) => formData.getAll(name).filter((value): value is string => typeof value === 'string');
 }
 
 // Platform administrators receive no operational bypass, exactly as in
@@ -55,12 +78,13 @@ export async function createCustomerAction(
   const client = await createServerSupabaseClient();
 
   const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const submittedValues = pickSubmittedCustomerValues((name) => readFormValue(formData, name));
   let tenantId: TenantId;
   try {
     const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.manage');
     tenantId = context.tenantId;
   } catch (error) {
-    return { status: 'error', code: errorCode(error) };
+    return { status: 'error', code: errorCode(error), attempt: randomUUID(), values: submittedValues };
   }
 
   const input: CreateCustomerInput = {
@@ -79,7 +103,13 @@ export async function createCustomerAction(
     const customer = await createCustomer(client, tenantId, validated);
     customerId = customer.id;
   } catch (error) {
-    return { status: 'error', code: errorCode(error) };
+    return {
+      status: 'error',
+      code: errorCode(error),
+      attempt: randomUUID(),
+      field: customerErrorField(error),
+      values: submittedValues,
+    };
   }
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}`);
@@ -118,17 +148,15 @@ export async function runCustomerAssessmentAction(
   }
 
   let denied = false;
+  let form: CustomerAssessmentForm | null = null;
   try {
     // The form is re-read server-side: only the keys and values it lists can
     // become facts, whatever the browser submitted.
-    const form = await getCustomerAssessmentForm(client, tenantId);
+    form = await getCustomerAssessmentForm(client, tenantId);
     if (readFormValue(formData, 'policyVersionId') !== form.policyVersionId) {
       throw new AssessmentPolicyChangedError();
     }
-    const facts = buildAssessmentFacts(form, (name) => {
-      const value = formData.get(name);
-      return typeof value === 'string' ? value : null;
-    });
+    const facts = buildAssessmentFacts(form, fieldReader(formData));
     await runCustomerAssessment(client, {
       tenantId,
       customerId: customerId as CustomerId,
@@ -139,7 +167,14 @@ export async function runCustomerAssessmentAction(
     if (errorCode(error) === 'ForbiddenError') {
       denied = true;
     } else {
-      return { status: 'error', code: errorCode(error), correlationId };
+      return {
+        status: 'error',
+        code: errorCode(error),
+        attempt: randomUUID(),
+        correlationId,
+        field: assessmentErrorField(error),
+        values: form ? pickSubmittedAssessmentValues(form, fieldReader(formData)) : {},
+      };
     }
   }
   if (denied) redirect('/denied');

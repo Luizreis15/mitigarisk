@@ -36,8 +36,8 @@ export function CustomerAssessmentResult({
               <>
                 <p className="mt-2 font-medium">{t.rejectReasonsLabel}</p>
                 <ul className="mt-1 list-disc space-y-1 pl-5">
-                  {view.overrides.map((override) => (
-                    <li key={override.code}>{override.label}</li>
+                  {view.overrides.map((override, index) => (
+                    <li key={`${override.code}-${index}`}>{override.label}</li>
                   ))}
                 </ul>
               </>
@@ -57,13 +57,15 @@ export function CustomerAssessmentResult({
           <div>
             <p className="text-sm text-muted-foreground">{t.overallScoreLabel}</p>
             <p className="text-4xl font-semibold tracking-tight">
-              {view.overallScoreText}
-              <span className="sr-only">
-                {' '}
-                {interpolate(t.scoreOutOf, { score: view.overallScoreText })}
+              <span aria-hidden="true">
+                {view.overallScoreText}
+                <span className="text-base font-normal text-muted-foreground">
+                  {' '}
+                  {t.scoreOutOfSuffix}
+                </span>
               </span>
-              <span aria-hidden="true" className="text-base font-normal text-muted-foreground">
-                {' '}/ 100
+              <span className="sr-only">
+                {interpolate(t.scoreOutOf, { score: view.overallScoreText })}
               </span>
             </p>
           </div>
@@ -105,9 +107,9 @@ export function CustomerAssessmentResult({
         </h3>
         {view.approvals.length > 0 ? (
           <ul className="space-y-2">
-            {view.approvals.map((approval) => (
+            {view.approvals.map((approval, index) => (
               <li
-                key={approval.code}
+                key={`${approval.code}-${index}`}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3"
               >
                 <span className="flex items-center gap-2 text-sm font-medium">
@@ -133,8 +135,8 @@ export function CustomerAssessmentResult({
           {t.categoryScoresTitle}
         </h3>
         <ul className="space-y-3">
-          {view.categoryScores.map((category) => (
-            <li key={category.key} className="space-y-1.5">
+          {view.categoryScores.map((category, index) => (
+            <li key={`${category.key}-${index}`} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
                 <span aria-hidden="true">{category.label}</span>
                 <span aria-hidden="true" className="font-medium tabular-nums">
@@ -169,9 +171,9 @@ export function CustomerAssessmentResult({
           <>
             <p className="text-sm text-muted-foreground">{t.overridesHelp}</p>
             <ul className="space-y-2">
-              {view.overrides.map((override) => (
+              {view.overrides.map((override, index) => (
                 <li
-                  key={override.code}
+                  key={`${override.code}-${index}`}
                   className="rounded-lg border border-border px-4 py-3 text-sm"
                 >
                   {override.label}
@@ -190,8 +192,8 @@ export function CustomerAssessmentResult({
         </h3>
         <p className="text-sm text-muted-foreground">{t.requiredActionsHelp}</p>
         <ul className="space-y-2">
-          {view.requiredActions.map((action) => (
-            <li key={action.code} className="flex items-start gap-2 text-sm">
+          {view.requiredActions.map((action, index) => (
+            <li key={`${action.code}-${index}`} className="flex items-start gap-2 text-sm">
               <CircleIcon
                 aria-hidden="true"
                 className="mt-0.5 size-4 shrink-0 text-muted-foreground"
@@ -241,8 +243,8 @@ export function CustomerAssessmentResult({
               <>
                 <p className="text-sm text-muted-foreground">{t.missingFactorsHelp}</p>
                 <ul className="space-y-1 text-sm">
-                  {view.missingFactors.map((factor) => (
-                    <li key={factor.code}>
+                  {view.missingFactors.map((factor, index) => (
+                    <li key={`${factor.code}-${index}`}>
                       {factor.label}{' '}
                       <span className="font-mono text-xs text-muted-foreground">
                         ({factor.code})
@@ -259,8 +261,8 @@ export function CustomerAssessmentResult({
             <div className="space-y-2">
               <h4 className="text-sm font-medium">{t.overridesTitle}</h4>
               <ul className="flex flex-wrap gap-2">
-                {view.overrides.map((override) => (
-                  <li key={override.code}>
+                {view.overrides.map((override, index) => (
+                  <li key={`${override.code}-${index}`}>
                     <code className="rounded-md bg-muted/60 px-2 py-1 font-mono text-xs">
                       {override.code}
                     </code>
@@ -272,8 +274,8 @@ export function CustomerAssessmentResult({
           <div className="space-y-2">
             <h4 className="text-sm font-medium">{t.reasonCodesTitle}</h4>
             <ul className="flex flex-wrap gap-2">
-              {view.reasonCodes.map((code) => (
-                <li key={code}>
+              {view.reasonCodes.map((code, index) => (
+                <li key={`${code}-${index}`}>
                   <code className="rounded-md bg-muted/60 px-2 py-1 font-mono text-xs break-all">
                     {code}
                   </code>
