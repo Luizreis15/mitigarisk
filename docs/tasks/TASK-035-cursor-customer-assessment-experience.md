@@ -281,3 +281,42 @@ The intermediate feature commit `05901ab` alone fails one Phase A boundary asser
 **Security / tenant / audit impact:** the only new write path is the existing audited `run_customer_assessment` RPC through the caller's RLS-scoped client. Facts are built only from the server-re-read form, and the database re-validates them (22023). No service-role usage (enforced by test), no score computed in the UI. **Rollback:** revert `05901ab` and `3919bda` (Phase A remains intact); no data or schema to roll back.
 
 **Recommended reviewer:** the orchestrator (Claude, Cowork).
+
+## Handoff — review fixes
+
+Addresses `docs/orquestracao/REVIEW-TASK-035.md` (APPROVED WITH CONDITIONS) and REVIEW-TASK-034 I-1. Fix commit: `4f60001`. No migration, RLS, RPC, seed, capability or repository change.
+
+### Finding → fix
+
+| Finding | Fix |
+|---|---|
+| M1 — React 19 resets forms before each Server Action | Error results carry `attempt` (server `randomUUID`), `field` and the echoed `values`. Both forms are keyed by `attempt` and re-mount with `defaultValue`/`defaultChecked`. Create form: the 7 fields, sliced to 300 characters (`lib/domain/customer-form-state.ts`). Assessment form: only listed fields, and only values matching a listed option (`pickSubmittedAssessmentValues`, `withSubmittedValues`). The offending control gets `aria-invalid`/`aria-describedby`. `noValidate` is removed, so native `required` works. The server re-validates everything. |
+| L1 — catalog lookup by inherited key | `customerErrorMessage` (`lib/i18n/customer-errors.ts`) uses `Object.hasOwn` with an `UnknownError` fallback. Tested with `constructor`, `__proto__` and `toString`. |
+| L2 — `aria-required` on a plain fieldset | Removed. The radios keep `required`, the legend keeps "(required)", and the fieldset points at the error via `aria-describedby`. |
+| L3 — facts builder hardening | Facts are a `Object.create(null)` object. `__proto__`/`constructor`/`prototype` throw `ReservedFactKeyError`. A repeated field throws `DuplicateAssessmentFieldError` (the reader uses `getAll`). Real factor values are submitted as `value:<v>`, so the `not_known` sentinel cannot collide with a policy value. A unit test covers each case. |
+| L4 — weak source-boundary tests | The test walks the static import graph from `actions.ts` and every customer `page.tsx`. It asserts that `lib/supabase/server.ts` is unreachable, that no reachable module builds a raw `createClient` client, and that no reachable module references service-role helpers or `SERVICE_ROLE` (except `env.ts`, which defines them). A mutation check confirmed it fails on an injected import. Every literal FormData read in `actions.ts` must be on an allow-list and never match score/band/outcome. Only `readFormValue` and `fieldReader` read by variable. |
+| Nits | `'/ 100'`, `'—'` and `'CUST-DEMO-010'` moved to the catalog. The visible score is `aria-hidden`, so the sr-only "{score} out of 100" is announced once. Unknown status/channel values fall back to `humanizeCode` (`lib/i18n/customer.ts`). Result list keys are `${code}-${index}`, and override radio ids are index-based. |
+| REVIEW-TASK-034 I-1 — code points | `codePointLength` (`Array.from(value).length`) matches `char_length`. Tested with 64 emoji (accepted, 128 UTF-16 units) and 65 emoji (rejected). The casebook drift test uses the same counter. |
+
+### Checks (in `apps/web` unless noted)
+
+| Check | Exit code |
+|---|---|
+| `npm ci` | 0 |
+| `npm test` | 0 — 345 passed, 0 failed (327 before + 18 new) |
+| `npx tsc --noEmit -p tsconfig.json` | 0 |
+| `npm run lint` | 0 |
+| `npm run build` | 0 |
+| `npm run build:vercel` | 0 |
+| `npm run verify:vercel` | 0 |
+| `./scripts/check-secrets.sh` (repo root) | 0 |
+| `git diff --check` | 0 |
+
+### Browser verification
+
+**Still pending (condition C1).** `docker info` still exits 1, so the local stack could not start and there are no screenshots under `docs/orquestracao/screenshots/task-035/`. No hosted Supabase was contacted and `.env`/`.env.local` were not read.
+
+### Notes
+
+- The supplier forms have the same React 19 reset behaviour. This is out of scope here; recommend a follow-up that reuses the `attempt` + echoed-values pattern.
+- The echoed create-form values are reflected only into the same user's form, via React-escaped `defaultValue`.
