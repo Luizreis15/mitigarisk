@@ -26,3 +26,45 @@ export interface CustomerAssessment {
   assessedAt: string;
   createdAt: string;
 }
+
+// Mirrors public.get_customer_assessment_form()
+// (supabase/migrations/20261006100000_customer_assessment_form.sql,
+// docs/tasks/TASK-034-claude-cra-lucimara-decisions-and-assessment-form.md).
+// What an assessment needs and which values each fact accepts, for the
+// tenant's latest published cra_v2 policy. Deliberately carries no weights
+// and no points: a caller who can run an assessment must not be able to
+// game the score.
+
+/** An override (screening) fact value: a JSON string or boolean, compared type- and case-sensitively by the database. */
+export type CraOverrideFactValue = string | boolean;
+
+export interface CustomerAssessmentFormFactor {
+  key: string;
+  position: number;
+  /** Allowed values (the factor's points-map keys), byte-order sorted. Absent/unknown values are scored as missing data, not rejected. */
+  values: string[];
+}
+
+export interface CustomerAssessmentFormCategory {
+  key: string;
+  label: string;
+  position: number;
+  factors: CustomerAssessmentFormFactor[];
+}
+
+export interface CustomerAssessmentFormOverride {
+  factKey: string;
+  /** Exactly the values run_customer_assessment accepts for this fact; the fact is mandatory. */
+  values: CraOverrideFactValue[];
+  /** The explicit "no hit" value (false for boolean facts, "none" otherwise). */
+  negativeValue: CraOverrideFactValue;
+  /** The policy marks this override as pending a compliance decision (e.g. OVR_HNWI, Q6). It is still evaluated. */
+  provisional: boolean;
+}
+
+export interface CustomerAssessmentForm {
+  policyVersionId: PolicyVersionId;
+  policyLabel: string;
+  categories: CustomerAssessmentFormCategory[];
+  overrides: CustomerAssessmentFormOverride[];
+}
