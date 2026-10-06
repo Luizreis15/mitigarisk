@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CorrelationId, CustomerAssessmentId, CustomerId, PolicyVersionId, TenantId, UserId } from "../domain/ids";
-import type { CustomerAssessment } from "../domain/customer-assessment";
+import type {
+  CraOverrideFactValue,
+  CustomerAssessment,
+  CustomerAssessmentForm,
+  CustomerAssessmentFormCategory,
+  CustomerAssessmentFormOverride,
+} from "../domain/customer-assessment";
 import type { CraResult } from "../domain/cra-engine";
 import { ForbiddenError } from "./authorization.ts";
 
@@ -181,4 +187,121 @@ export async function getLatestCustomerAssessment(
   }
 
   return data ? mapRow(data as CustomerAssessmentRow) : null;
+}
+
+// public.get_customer_assessment_form()
+// (supabase/migrations/20261006100000_customer_assessment_form.sql): needs
+// assessment.run only, so an operator (no policy.view) can build the form.
+// Only the documented fields are copied into the domain shape; a payload
+// that does not match it fails closed instead of reaching the UI.
+
+interface AssessmentFormPayload {
+  policy_version_id: string;
+  policy_label: string;
+  categories: Array<{
+    key: string;
+    label: string;
+    position: number;
+    factors: Array<{ key: string; position: number; values: string[] }>;
+  }>;
+  overrides: Array<{
+    fact_key: string;
+    values: CraOverrideFactValue[];
+    negative_value: CraOverrideFactValue;
+    provisional: boolean;
+  }>;
+}
+
+function isOverrideValue(value: unknown): value is CraOverrideFactValue {
+  return typeof value === "string" || typeof value === "boolean";
+}
+
+function isAssessmentFormPayload(data: unknown): data is AssessmentFormPayload {
+  if (typeof data !== "object" || data === null) return false;
+  const form = data as Record<string, unknown>;
+  if (typeof form.policy_version_id !== "string" || typeof form.policy_label !== "string") return false;
+  if (!Array.isArray(form.categories) || !Array.isArray(form.overrides)) return false;
+  const categoriesValid = (form.categories as unknown[]).every((category) => {
+    const c = category as Record<string, unknown> | null;
+    return (
+      typeof c === "object" &&
+      c !== null &&
+      typeof c.key === "string" &&
+      typeof c.label === "string" &&
+      typeof c.position === "number" &&
+      Array.isArray(c.factors) &&
+      (c.factors as unknown[]).every((factor) => {
+        const f = factor as Record<string, unknown> | null;
+        return (
+          typeof f === "object" &&
+          f !== null &&
+          typeof f.key === "string" &&
+          typeof f.position === "number" &&
+          Array.isArray(f.values) &&
+          (f.values as unknown[]).every((value) => typeof value === "string")
+        );
+      })
+    );
+  });
+  const overridesValid = (form.overrides as unknown[]).every((override) => {
+    const o = override as Record<string, unknown> | null;
+    return (
+      typeof o === "object" &&
+      o !== null &&
+      typeof o.fact_key === "string" &&
+      Array.isArray(o.values) &&
+      (o.values as unknown[]).every(isOverrideValue) &&
+      isOverrideValue(o.negative_value) &&
+      typeof o.provisional === "boolean"
+    );
+  });
+  return categoriesValid && overridesValid;
+}
+
+function mapAssessmentForm(payload: AssessmentFormPayload): CustomerAssessmentForm {
+  const categories: CustomerAssessmentFormCategory[] = payload.categories.map((category) => ({
+    key: category.key,
+    label: category.label,
+    position: category.position,
+    factors: category.factors.map((factor) => ({
+      key: factor.key,
+      position: factor.position,
+      values: [...factor.values],
+    })),
+  }));
+  const overrides: CustomerAssessmentFormOverride[] = payload.overrides.map((override) => ({
+    factKey: override.fact_key,
+    values: [...override.values],
+    negativeValue: override.negative_value,
+    provisional: override.provisional,
+  }));
+  return {
+    policyVersionId: payload.policy_version_id as PolicyVersionId,
+    policyLabel: payload.policy_label,
+    categories,
+    overrides,
+  };
+}
+
+export async function getCustomerAssessmentForm(
+  client: SupabaseClient,
+  tenantId: TenantId,
+): Promise<CustomerAssessmentForm> {
+  const { data, error } = await client.rpc("get_customer_assessment_form", { p_tenant_id: tenantId });
+
+  if (error) {
+    if (error.code === "P0003") {
+      throw new NoPublishedCraPolicyError(tenantId);
+    }
+    if (error.code === "42501") {
+      throw new ForbiddenError("assessment.run", tenantId);
+    }
+    throw new CustomerAssessmentReadError(`Failed to read the customer assessment form: ${error.message}`);
+  }
+
+  if (!isAssessmentFormPayload(data)) {
+    throw new CustomerAssessmentReadError("The customer assessment form returned by the database has an unexpected shape");
+  }
+
+  return mapAssessmentForm(data);
 }
