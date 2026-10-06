@@ -21,12 +21,16 @@ export function WorkspaceRealFrame({
   children,
   backHref = '/workspace',
   backLabel = messages.supplierWorkspace.backToWorkspace,
+  kicker = messages.supplierWorkspace.kicker,
+  fictionalNotice = messages.supplierWorkspace.fictionalNotice,
 }: {
   title: string;
   intro: string;
   children: ReactNode;
   backHref?: string;
   backLabel?: string;
+  kicker?: string;
+  fictionalNotice?: string;
 }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
@@ -41,10 +45,10 @@ export function WorkspaceRealFrame({
         <CardHeader className="space-y-3 border-b bg-muted/20 px-5 py-6 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[0.7rem] font-medium tracking-[0.16em] uppercase text-muted-foreground">
-              {messages.supplierWorkspace.kicker}
+              {kicker}
             </p>
             <Badge variant="outline" className="bg-background">
-              {messages.supplierWorkspace.fictionalNotice}
+              {fictionalNotice}
             </Badge>
           </div>
           <CardTitle className="max-w-3xl text-2xl leading-tight sm:text-3xl">
