@@ -35,6 +35,14 @@ export interface CustomerAssessment {
 // and no points: a caller who can run an assessment must not be able to
 // game the score.
 
+/**
+ * Maximum length, in characters, of a factor fact value. The database rejects any factor fact that is not
+ * absent, null, or a string of at most this length (22023), and never publishes a policy listing a longer value.
+ * Mirrors app.cra_factor_value_max_length() (supabase/migrations/20261006110000_bound_factor_facts.sql);
+ * tests/domain/customer-assessment-sql-sync.test.ts keeps the two in sync.
+ */
+export const CRA_FACTOR_VALUE_MAX_LENGTH = 64;
+
 /** An override (screening) fact value: a JSON string or boolean, compared type- and case-sensitively by the database. */
 export type CraOverrideFactValue = string | boolean;
 
