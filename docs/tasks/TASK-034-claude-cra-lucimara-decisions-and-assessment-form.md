@@ -99,6 +99,14 @@ The standard template, plus:
 - the list of files where C2D/Project Now was replaced;
 - the SHA.
 
+## Amendment 1 — 6 Oct 2026 (orchestrator, from REVIEW-TASK-033 L1)
+
+`run_customer_assessment` must bound factor facts before they are persisted, in a new forward-only migration that redefines the function:
+- a factor fact must be absent, JSON null, or a JSON string of at most 64 characters;
+- anything else (number, boolean, array, object, or a longer string) is rejected with `22023`, and nothing is stored.
+
+Unmapped string values keep the current missing-data semantics. Add SQL negatives for each rejected type and for the length limit, with a zero-rows proof for each. The 24 casebook replays must still pass. The assessment form RPC (item 5) must agree with this rule.
+
 ## Handoff
 
 **Outcome:** Implemented. Template v1, the dev seed and every CRA test now match Lucimara's Oct 2026 answers: MLRO-only approvals for `OVR_PEP` and the HIGH band (no automatic `BOARD`, Q7), `OVR_HNWI` marked provisional (Q6), and MITIGA naming everywhere (Q2). The demo tenant's `cra_v2` policy is published in the dev seed and `run_customer_assessment` succeeds on a seeded demo customer after a fresh reset. The UI now has a safe read path, `public.get_customer_assessment_form()`, that returns the facts and allowed values with no weights and no points. Its override values come from the same SQL helper that `run_customer_assessment` validates against, so the form and the assessment cannot disagree. Backend and docs only.
