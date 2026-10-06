@@ -384,8 +384,7 @@ select value from jsonb_array_elements($casebook$[
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -656,8 +655,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_SANCTIONS_CONFIRMED"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -733,8 +731,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_SANCTIONS_INCONCLUSIVE"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -808,8 +805,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -882,8 +878,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -956,8 +951,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1031,8 +1025,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_POTENTIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1105,8 +1098,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_HNWI"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1179,8 +1171,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_BLACKLISTED_COUNTRY"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1256,8 +1247,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1335,8 +1325,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1679,8 +1668,7 @@ select value from jsonb_array_elements($casebook$[
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1782,9 +1770,9 @@ select value from jsonb_array_elements($casebook$[
 
 -- 0. Structure of the seeded template ---------------------------------------
 select pg_temp.assert(
-  (select engine_kind = 'cra_v2' and status = 'published' and label = 'EU Payments & Gaming CRA — v1 DRAFT' and missing_factor_points = 50
+  (select engine_kind = 'cra_v2' and status = 'published' and label = 'MITIGA EU Payments & Gaming CRA — v1 DRAFT (demo)' and missing_factor_points = 50
    from public.policy_versions where id = '20000000-0000-0000-0000-000000000020'),
-  'seed: Template v1 is a published cra_v2 version labelled "EU Payments & Gaming CRA — v1 DRAFT" in the demo tenant'
+  'seed: Template v1 is a published cra_v2 version labelled "MITIGA EU Payments & Gaming CRA — v1 DRAFT (demo)" in the demo tenant'
 );
 select pg_temp.assert(
   (select tenant_id from public.policy_versions where id = '20000000-0000-0000-0000-000000000020') = '10000000-0000-0000-0000-000000000004'
@@ -1880,6 +1868,14 @@ begin
   perform pg_temp.assert(v_result = 'OK', 'an unmodified copy of the template publishes');
   perform pg_temp.assert((select status from public.policy_versions where id = v_ok) = 'published',
     'the published copy has status published');
+
+  -- Template v1 no longer requires BOARD (Lucimara Q7), but BOARD stays a
+  -- valid approval value for the future MLRO escalation flow.
+  v_ok := pg_temp.copy_cra('10000000-0000-0000-0000-000000000004', 3);
+  update public.policy_cra_bands set approvals = '["MLRO", "BOARD"]'::jsonb where policy_version_id = v_ok and band = 'HIGH';
+  update public.policy_overrides set approvals = '["MLRO", "BOARD"]'::jsonb where policy_version_id = v_ok and code = 'OVR_PEP';
+  perform pg_temp.assert(pg_temp.try_publish(v_ok) = 'OK',
+    'BOARD is still an allowed approval value at publish time (band and override)');
 
   for v_case in
     select * from (values

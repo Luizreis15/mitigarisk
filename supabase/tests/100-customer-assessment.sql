@@ -347,8 +347,7 @@ select value from jsonb_array_elements($casebook$[
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -619,8 +618,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_SANCTIONS_CONFIRMED"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -696,8 +694,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_SANCTIONS_INCONCLUSIVE"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -771,8 +768,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -845,8 +841,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -919,8 +914,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -994,8 +988,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_POTENTIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1068,8 +1061,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_HNWI"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1142,8 +1134,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_BLACKLISTED_COUNTRY"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1219,8 +1210,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_PEP"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1298,8 +1288,7 @@ select value from jsonb_array_elements($casebook$[
     "OVR_ADVERSE_MEDIA_MATERIAL"
    ],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",
@@ -1642,8 +1631,7 @@ select value from jsonb_array_elements($casebook$[
    "outcome": "REVIEW_REQUIRED",
    "overrides_hit": [],
    "approvals_required": [
-    "MLRO",
-    "BOARD"
+    "MLRO"
    ],
    "required_actions": [
     "IDENTIFY_CUSTOMER",

@@ -121,6 +121,8 @@ where id = '20000000-0000-0000-0000-000000000010' and status = 'draft';
 -- from that literal with jsonb functions, never typed a second time. The
 -- policy numbers are DRAFT until the compliance lead signs them off. Never
 -- point this at a hosted project.
+-- TASK-034: published here (dev seed only) so the local stack and previews
+-- can run public.run_customer_assessment end to end; labelled as a demo.
 
 insert into public.tenants (id, name, slug, status) values
   ('10000000-0000-0000-0000-000000000004', 'EU Payments Demo Ltd.', 'eu-payments-demo', 'active')
@@ -133,7 +135,7 @@ declare
   v_template constant jsonb := $template${
   "template_key": "eu-payments-gaming-cra",
   "version_label": "v1-DRAFT",
-  "status_note": "DRAFT: provisional weights and points pending compliance-lead sign-off (see CRA-TEMPLATE-v1-DRAFT.md Q1-Q8)",
+  "status_note": "DRAFT: Lucimara Oct 2026 closed Q1–Q5,Q7 (customisable weights 0–100; Mitiga branding; tenant-scored lists; 76=HIGH; gambling-industry triggers; MLRO for EDD, board on escalation only). Q6 HNWI definition and Q8 mandatory intake fields still open. Demo weights are illustrative defaults.",
   "missing_factor_points": 50,
   "rounding": "half-up to 2 decimals at category and overall level",
   "categories": [
@@ -166,15 +168,15 @@ declare
     {"code": "OVR_SANCTIONS_CONFIRMED", "fact": "sanctions_match", "in": ["confirmed"], "effect": "reject", "actions": ["FREEZE_FUNDS_AND_BLOCK_IF_EXISTING", "REJECT_IF_PROSPECT", "REPORT_TO_MLRO"]},
     {"code": "OVR_BLACKLISTED_COUNTRY", "fact": "blacklisted_country_link", "in": [true], "effect": "reject", "actions": ["REJECT_OR_TERMINATE", "REPORT_TO_MLRO"]},
     {"code": "OVR_SANCTIONS_INCONCLUSIVE", "fact": "sanctions_match", "in": ["inconclusive"], "effect": "force_high", "actions": ["BLOCK_PENDING_MANUAL_REVIEW"]},
-    {"code": "OVR_PEP", "fact": "pep_status", "in": ["confirmed", "self_declared"], "effect": "force_high", "actions": [], "approvals": ["MLRO", "BOARD"]},
+    {"code": "OVR_PEP", "fact": "pep_status", "in": ["confirmed", "self_declared"], "effect": "force_high", "actions": [], "approvals": ["MLRO"]},
     {"code": "OVR_ADVERSE_MEDIA_MATERIAL", "fact": "adverse_media_material", "in": ["material"], "effect": "force_high", "actions": ["REPORT_TO_MLRO"]},
     {"code": "OVR_ADVERSE_MEDIA_POTENTIAL", "fact": "adverse_media_material", "in": ["potential"], "effect": "force_high", "actions": []},
-    {"code": "OVR_HNWI", "fact": "hnwi", "in": [true], "effect": "force_high", "actions": []}
+    {"code": "OVR_HNWI", "fact": "hnwi", "in": [true], "effect": "force_high", "actions": [], "status": "provisional_pending_Q6"}
   ],
   "bands": [
     {"band": "LOW", "min": 0, "max_exclusive": 36, "dd_level": "SDD", "review_months": 36, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING"]},
     {"band": "MEDIUM", "min": 36, "max_exclusive": 76, "dd_level": "CDD", "review_months": 24, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE"]},
-    {"band": "HIGH", "min": 76, "max_inclusive": 100, "dd_level": "EDD", "review_months": 12, "approvals": ["MLRO", "BOARD"], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE", "OBTAIN_SOW_SOF_DOCUMENTS"]}
+    {"band": "HIGH", "min": 76, "max_inclusive": 100, "dd_level": "EDD", "review_months": 12, "approvals": ["MLRO"], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE", "OBTAIN_SOW_SOF_DOCUMENTS"]}
   ],
   "rules": {
     "override_precedence": "reject > force_high; all hit overrides are reported",
@@ -192,7 +194,7 @@ begin
     id, tenant_id, version_number, status, created_by, engine_kind, label, missing_factor_points
   ) values (
     v_version, v_tenant, 1, 'draft', '00000000-0000-0000-0000-000000000002', 'cra_v2',
-    'EU Payments & Gaming CRA — v1 DRAFT', (v_template ->> 'missing_factor_points')::numeric
+    'MITIGA EU Payments & Gaming CRA — v1 DRAFT (demo)', (v_template ->> 'missing_factor_points')::numeric
   );
 
   insert into public.policy_categories (tenant_id, policy_version_id, key, label, weight, position)
