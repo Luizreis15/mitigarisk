@@ -3,6 +3,7 @@ import { buildWorkspaceViewModel } from '@/lib/domain/workspace-access';
 import { classifyTenantSelectionError } from '@/lib/domain/tenant-selection';
 import type { TenantOptionView } from '@/lib/domain/workspace-access';
 import type { TenantId } from '@/lib/domain/ids';
+import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
@@ -120,6 +121,19 @@ export default async function WorkspacePage({
     }
   }
 
+  // The Customers entry is shown only with a server-confirmed customer.view
+  // on the verified tenant; a failed capability read hides it (fail closed).
+  let customerEntryTenantId: TenantId | null = null;
+  if (activeTenantId) {
+    try {
+      if (await hasCapability(client, activeTenantId, 'customer.view')) {
+        customerEntryTenantId = activeTenantId;
+      }
+    } catch {
+      customerEntryTenantId = null;
+    }
+  }
+
   return (
     <WorkspaceExperience
       model={buildWorkspaceViewModel({
@@ -134,6 +148,7 @@ export default async function WorkspacePage({
         selectedTenantName,
       })}
       realEntryTenantId={activeTenantId}
+      customerEntryTenantId={customerEntryTenantId}
     />
   );
 }

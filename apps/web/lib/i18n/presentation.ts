@@ -27,6 +27,16 @@ export function formatDateTime(
   }).format(new Date(isoUtc));
 }
 
+export function formatDate(
+  isoDate: string,
+  config: PresentationConfig = defaultPresentation,
+) {
+  return new Intl.DateTimeFormat(config.locale, {
+    dateStyle: 'medium',
+    timeZone: config.timeZone,
+  }).format(new Date(isoDate));
+}
+
 export function formatNumber(
   value: number,
   config: PresentationConfig = defaultPresentation,

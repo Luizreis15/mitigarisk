@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { WorkspaceDemoPreview } from '@/components/workspace/workspace-demo-preview';
 import { WorkspaceFrame } from '@/components/workspace/workspace-frame';
+import { WorkspaceCustomerEntry } from '@/components/workspace/workspace-customer-entry';
 import { WorkspaceRealEntry } from '@/components/workspace/workspace-real-entry';
 import { WorkspaceSessionActions } from '@/components/workspace/workspace-session-actions';
 import { WorkspaceStatus } from '@/components/workspace/workspace-status';
@@ -13,10 +14,13 @@ import { messages } from '@/lib/i18n/messages';
 export function WorkspaceExperience({
   model,
   realEntryTenantId,
+  customerEntryTenantId,
 }: {
   model: WorkspaceViewModel;
   /** Set only for a fully server-verified active tenant selection (docs/tasks/TASK-023-claude-real-supplier-evaluation-slice.md). Renders the one link into the real supplier evaluation slice; omitted, this component's behavior is unchanged from TASK-015/018/019. */
   realEntryTenantId?: TenantId | null;
+  /** Set only when the server confirmed customer.view on the verified tenant (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). */
+  customerEntryTenantId?: TenantId | null;
 }) {
   return (
     <WorkspaceFrame model={model}>
@@ -41,6 +45,9 @@ export function WorkspaceExperience({
         <p className="text-sm leading-6 text-muted-foreground">
           {messages.workspace.buildingNotice}
         </p>
+      ) : null}
+      {customerEntryTenantId ? (
+        <WorkspaceCustomerEntry tenantId={customerEntryTenantId} />
       ) : null}
       {realEntryTenantId ? <WorkspaceRealEntry tenantId={realEntryTenantId} /> : null}
       <WorkspaceDemoPreview />

@@ -344,6 +344,324 @@ export const messages = {
       UnknownError: 'Something went wrong. Try again.',
     },
   },
+  customerWorkspace: {
+    kicker: 'Customer risk assessment',
+    fictionalNotice: 'Fictional demonstration data only',
+    backToWorkspace: 'Back to workspace',
+    backToCustomers: 'All customers',
+    entryTitle: 'Customers',
+    entryBody:
+      'Register fictional customers and review their persisted customer risk assessments.',
+    entryAction: 'Open customers',
+    listTitle: 'Customers',
+    listIntro:
+      'Fictional customers in your company and the latest risk classification recorded by the database for each one.',
+    listLabel: 'Customer list',
+    newCustomer: 'New customer',
+    emptyTitle: 'No customers yet',
+    emptyBody: 'No fictional customer has been registered in this company yet.',
+    emptyBodyCanCreate:
+      'Register the first fictional customer to begin a risk assessment.',
+    columns: {
+      name: 'Name',
+      externalReference: 'External reference',
+      nationalityResidence: 'Nationality / residence',
+      latestBand: 'Latest band',
+      latestDdLevel: 'DD level',
+      nextReviewDue: 'Next review due',
+      open: 'Open',
+    },
+    notAssessed: 'Not assessed yet',
+    emptyValue: '—',
+    open: 'Open',
+    newTitle: 'New customer',
+    newIntro:
+      'Record a fictional customer. Use invented names, references, and dates only.',
+    createFormTitle: 'Customer details',
+    createFormHint:
+      'All fields are required. Use fictional data only; never enter a real person.',
+    required: 'Required',
+    selectCountry: 'Choose a country',
+    externalReferencePlaceholder: 'CUST-DEMO-010',
+    fields: {
+      externalReference: 'External reference',
+      fullName: 'Full name',
+      dateOfBirth: 'Date of birth',
+      countryOfBirth: 'Country of birth',
+      nationality: 'Nationality',
+      residenceCountry: 'Residence country',
+      onboardingChannel: 'Onboarding channel',
+    },
+    onboardingChannels: {
+      face_to_face: 'Face to face',
+      non_face_to_face: 'Non-face to face',
+    },
+    statusValues: {
+      active: 'Active',
+      archived: 'Archived',
+    },
+    submit: 'Create customer',
+    submitting: 'Creating…',
+    cancel: 'Cancel',
+    missingTitle: 'Customer not found',
+    missingBody:
+      'This identifier is not a customer in your active company, or it belongs to another tenant.',
+    detailIntro:
+      'Customer profile, the latest persisted risk assessment, and the full assessment history.',
+    profileTitle: 'Customer profile',
+    recordedLabel: 'Recorded (UTC)',
+    latestTitle: 'Latest assessment',
+    noAssessmentTitle: 'No assessment yet',
+    noAssessmentBody:
+      'This customer has not been assessed. The latest result appears here once an assessment is recorded.',
+    assessmentForm: {
+      title: 'Run a risk assessment',
+      intro:
+        'Answer from the facts you hold about this fictional customer. The database applies your published risk policy and records the result; this form never shows weights or points.',
+      policyLabel: 'Current policy',
+      factorsTitle: 'Risk factors',
+      factorsHelp:
+        'Choose "Not known" when the information is unavailable. The policy then applies its missing-data rule.',
+      notKnown: 'Not known',
+      overridesTitle: 'Screening results',
+      overridesHelp:
+        'Every screening question is required. Choose the negative answer when there is no hit.',
+      provisionalTag: 'provisional (pending compliance confirmation)',
+      submit: 'Run assessment',
+      submitting: 'Running…',
+      noPolicyTitle: 'Your company has no published risk policy yet',
+      noPolicyBody:
+        'An assessment can run only after a risk policy is published for this company.',
+      unavailableTitle: 'The assessment form could not be loaded',
+      unavailableBody: 'Reload the page to try again.',
+      correlationReference: 'Reference: {correlationId}',
+    },
+    factValues: {
+      true: 'Yes',
+      false: 'No',
+      none: 'None',
+      no: 'No',
+      yes: 'Yes',
+      standard: 'Standard',
+      higher: 'Higher',
+      high_risk_third_country: 'High-risk third country',
+      ecommerce: 'E-commerce',
+      gambling: 'Gambling',
+      multipurpose: 'Multipurpose',
+      employed: 'Employed',
+      self_employed: 'Self-employed',
+      retired: 'Retired',
+      student: 'Student',
+      unemployed: 'Unemployed',
+      cash_intensive: 'Cash-intensive',
+      high_risk: 'High risk',
+      single: 'Single',
+      multiple: 'Multiple',
+      one_or_more: 'One or more',
+      bank_transfer: 'Bank transfer',
+      card: 'Card',
+      cash: 'Cash',
+      closed_loop: 'Closed loop',
+      open_loop: 'Open loop',
+      face_to_face: 'Face to face',
+      non_face_to_face: 'Non-face to face',
+      not_observed: 'Not observed yet',
+      within: 'Within limit',
+      near_limit: 'Near limit',
+      above_limit: 'Above limit',
+      moderate: 'Moderate',
+      significant: 'Significant',
+      confirmed: 'Confirmed',
+      inconclusive: 'Inconclusive',
+      self_declared: 'Self-declared',
+      material: 'Material',
+      potential: 'Potential',
+    },
+    overrideFacts: {
+      sanctions_match: 'Sanctions screening result',
+      blacklisted_country_link: 'Link to a blacklisted country',
+      pep_status: 'Politically exposed person (PEP) status',
+      adverse_media_material: 'Material adverse media',
+      hnwi: 'High-net-worth individual',
+    },
+    historyTitle: 'Assessment history',
+    historyEmpty: 'No assessments recorded yet.',
+    historyColumns: {
+      date: 'Date (UTC)',
+      policy: 'Policy version',
+      score: 'Score',
+      band: 'Band',
+      ddLevel: 'DD level',
+      outcome: 'Outcome',
+      assessedBy: 'Assessed by',
+    },
+    assessedByYou: 'You',
+    result: {
+      eyebrow: 'Risk classification',
+      databaseNotice:
+        'Calculated and stored by the database from the published policy. This screen only displays the persisted result.',
+      classificationNotice:
+        'This is a risk classification, not a final onboarding decision.',
+      overallScoreLabel: 'Overall score',
+      scoreOutOf: '{score} out of 100',
+      scoreOutOfSuffix: '/ 100',
+      bandLabel: 'Risk band',
+      ddLevelLabel: 'Due-diligence level',
+      outcomeLabel: 'Outcome',
+      categoryScoresTitle: 'Category scores',
+      categoryScoreAria: '{category}: {score} out of 100',
+      overridesTitle: 'Overrides that fired',
+      overridesHelp:
+        'An override applies regardless of the score. Each one below changed this result.',
+      noOverrides: 'No override fired.',
+      requiredActionsTitle: 'Required actions',
+      requiredActionsHelp:
+        'Checklist for the due-diligence team. Display only; completion is not recorded here.',
+      approvalsTitle: 'Required approvals',
+      noApprovals: 'No additional approval is required.',
+      approvalPending: 'Pending',
+      approvalNotActionable:
+        'Sign-off is not available in this release; it remains pending.',
+      nextReviewLabel: 'Next review due',
+      reviewCycle: 'Review cycle: every {months} months',
+      policyLabel: 'Policy version',
+      assessedAtLabel: 'Assessed (UTC)',
+      correlationLabel: 'Correlation',
+      whyTitle: 'Why this result',
+      whyHelp:
+        'Technical detail behind the classification, including the raw reason codes recorded with the assessment.',
+      missingFactorsTitle: 'Missing information',
+      missingFactorsHelp:
+        'These facts were not known, so the policy applied its missing-data points.',
+      noMissingFactors: 'No information was missing.',
+      reasonCodesTitle: 'Reason codes',
+      rejectTitle: 'Do not onboard — report to MLRO',
+      rejectBody:
+        'A reject override fired. The customer must not be onboarded, and the case must be reported to the MLRO.',
+      rejectReasonsLabel: 'Override reasons',
+    },
+    bands: {
+      LOW: 'Low',
+      MEDIUM: 'Medium',
+      HIGH: 'High',
+    },
+    ddLevels: {
+      SDD: 'Simplified due diligence (SDD)',
+      CDD: 'Customer due diligence (CDD)',
+      EDD: 'Enhanced due diligence (EDD)',
+    },
+    ddLevelsShort: {
+      SDD: 'SDD',
+      CDD: 'CDD',
+      EDD: 'EDD',
+    },
+    outcomes: {
+      PROCEED: 'Proceed with onboarding',
+      REVIEW_REQUIRED: 'Review required before onboarding',
+      REJECT: 'Do not onboard — report to MLRO',
+    },
+    approvals: {
+      MLRO: 'MLRO sign-off required',
+      BOARD: 'Board approval required',
+    },
+    categories: {
+      customer: 'Customer',
+      geography: 'Geography',
+      product_payment: 'Product, service and payment',
+      channel: 'Delivery channel',
+      transactions: 'Transactions',
+    },
+    overrides: {
+      OVR_SANCTIONS_CONFIRMED:
+        'Confirmed sanctions match: the customer appears on a sanctions list.',
+      OVR_SANCTIONS_INCONCLUSIVE:
+        'Inconclusive sanctions match: the screening hit must be resolved manually.',
+      OVR_BLACKLISTED_COUNTRY:
+        'Link to a blacklisted country.',
+      OVR_PEP:
+        'Politically exposed person (confirmed or self-declared).',
+      OVR_ADVERSE_MEDIA_MATERIAL: 'Material adverse media was found.',
+      OVR_ADVERSE_MEDIA_POTENTIAL:
+        'Potential adverse media was found and needs review.',
+      OVR_HNWI: 'High-net-worth individual.',
+    },
+    requiredActions: {
+      IDENTIFY_CUSTOMER: 'Identify the customer',
+      VERIFY_ID: 'Verify the identity document',
+      ONGOING_SCREENING: 'Keep the customer under ongoing screening',
+      OBTAIN_PURPOSE_AND_NATURE:
+        'Obtain the purpose and intended nature of the relationship',
+      OBTAIN_SOW_SOF_DOCUMENTS:
+        'Obtain source-of-wealth and source-of-funds documents',
+      FREEZE_FUNDS_AND_BLOCK_IF_EXISTING:
+        'Freeze funds and block the account if the customer already exists',
+      REJECT_IF_PROSPECT: 'Reject the customer if still a prospect',
+      REPORT_TO_MLRO: 'Report to the MLRO',
+      REJECT_OR_TERMINATE: 'Reject or terminate the relationship',
+      BLOCK_PENDING_MANUAL_REVIEW: 'Block activity pending manual review',
+    },
+    factors: {
+      purpose: 'Purpose of the account',
+      employment_status: 'Employment status',
+      occupation_risk: 'Occupation risk',
+      adverse_media_non_material: 'Non-material adverse media',
+      prior_str: 'Prior suspicious transaction reports',
+      residence_country_risk: 'Residence country risk',
+      nationality_risk: 'Nationality risk',
+      sow_country_risk: 'Source-of-wealth country risk',
+      payment_method: 'Payment method',
+      product_type: 'Product type',
+      channel: 'Delivery channel',
+      affordability: 'Affordability',
+      behaviour_change: 'Behaviour change',
+      high_value_transactions: 'High-value transactions',
+    },
+    errors: {
+      InvalidExternalReferenceError:
+        'Enter an external reference between 1 and 100 characters.',
+      InvalidFullNameError: 'Enter a full name between 1 and 200 characters.',
+      InvalidDateOfBirthError: 'Enter a valid date of birth in the past.',
+      InvalidCustomerCountryCodeError:
+        'Choose a country for country of birth, nationality, and residence.',
+      InvalidCustomerOnboardingChannelError:
+        'Choose face to face or non-face to face.',
+      DuplicateCustomerReferenceError:
+        'A customer with this external reference already exists in this company with different details.',
+      CustomerWriteError: 'The customer could not be saved. Try again.',
+      InvalidFactorAnswerError:
+        'One of the answers is not allowed by the current policy. Reload the page and try again.',
+      MissingOverrideAnswerError: 'Answer every screening question.',
+      DuplicateAssessmentFieldError:
+        'An answer was submitted more than once. Reload the page and try again.',
+      ReservedFactKeyError:
+        'The current risk policy cannot be used by this form. Contact your policy administrator.',
+      InvalidOverrideAnswerError:
+        'One of the screening answers is not allowed by the current policy. Reload the page and try again.',
+      AssessmentPolicyChangedError:
+        'The risk policy changed while this form was open. Reload the page to use the current policy.',
+      AssessmentCorrelationConflictError:
+        'This form was already submitted with different answers. Reload the page to run a new assessment.',
+      NoPublishedCraPolicyError:
+        'Your company has no published risk policy yet',
+      InvalidAssessmentFactsError:
+        'The assessment could not be recorded. Nothing was stored.',
+      CustomerNotFoundForAssessmentError:
+        'This customer could not be found in your active company.',
+      CustomerAssessmentWriteError:
+        'The assessment could not be recorded. Try again.',
+      CustomerAssessmentReadError:
+        'The assessment form could not be loaded. Reload the page and try again.',
+      InvalidAssessmentRequestError:
+        'This assessment request is incomplete. Reload the page and try again.',
+      ForbiddenError: 'Your role does not have this capability.',
+      NoActiveTenantMembershipError:
+        'Your account is not a member of any company.',
+      TenantSelectionRequiredError: 'Choose a company before continuing.',
+      InvalidTenantSelectionError:
+        'That company selection could not be used. Start over.',
+      UnknownError: 'Something went wrong. Try again.',
+    },
+  },
   views: {
     company: 'Company',
     'company-admin': 'Company admin',
