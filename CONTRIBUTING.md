@@ -20,7 +20,7 @@ Do not include agent names in commit subjects. Authorship and review are recorde
 
 Every pull request must include objective, acceptance criteria, affected contexts, security and rollback impact, verification results, visible-change screenshots, limitations, and follow-up work.
 
-Use squash merge. Codex performs the final integration review; a human approves changes involving production data, authentication, billing, legal rules, destructive migrations, or external communication.
+Use squash merge. Claude (Cowork) performs the independent review and records it in `docs/reviews/`; Edu, the human owner, approves and merges. A human approval is always required for changes involving production data, authentication, billing, legal rules, destructive migrations, or external communication. Task contracts live in `docs/tasks/`.
 
 ## Definition of done
 

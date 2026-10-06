@@ -20,6 +20,12 @@ The MVP is an API-first modular monolith. It provides clear domain boundaries an
 | Notifications | Templates, email requests, delivery and failure events |
 | Platform operations | Tenant health, incidents, support access and observability |
 
+## Customer Risk Assessment context
+
+The MVP core is a **Customer Risk Assessment (CRA)** bounded context: a configurable, explainable and auditable customer risk rating and due-diligence engine for EU obliged entities (`docs/adr/0012-customer-cra-engine-as-mvp-core.md`; direction in `docs/product/PRODUCT-DIRECTION-MVP-25.md`). It builds on the Risk policy, Evaluation, Cases and Audit contexts above and adds override rules, weighted categories with value→points maps, SDD/CDD/EDD bands with required actions, periodic-review dates, transaction trigger rules on caller-supplied aggregates, a two-level approval chain and an audit-pack export.
+
+Scoring authority stays in the database, inside `security definer` RPCs; the TypeScript engine is a non-authoritative reference and test oracle. The supplier slice is retained as the reference implementation of the tenancy, RPC, audit and immutability patterns and is not extended.
+
 ## Runtime baseline
 
 - Web and backend-for-frontend: TypeScript application in `apps/web/`.

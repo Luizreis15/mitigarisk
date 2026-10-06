@@ -2,16 +2,16 @@
 
 ## Operating model
 
-MITIGA uses one repository and one integration authority. Codex is the technical orchestrator and merge owner: it decomposes work, writes task contracts, reconciles architecture, reviews cross-cutting impact, and prepares merges. Cursor and Claude Code implement or review bounded tasks. Humans retain approval for business, legal, security, production, billing, and destructive decisions.
+MITIGA uses one repository and one integration authority. Claude (Cowork) is the orchestrator and independent reviewer: it decomposes work, writes task contracts in `docs/tasks/`, sequences work, reconciles architecture, performs the independent review and records it in `docs/reviews/`, and prepares merge recommendations. Edu, the human owner, is the merge owner and approver. Claude Code (backend/domain) and Cursor (frontend) implement bounded tasks. Humans retain approval for business, legal, security, production, billing, and destructive decisions. (Previously Codex filled the orchestrator and merge-owner roles; it is no longer part of the workflow.)
 
 ## Default responsibilities
 
 | Role | Primary responsibility | Must not do alone |
 |---|---|---|
-| Codex | Architecture, backlog decomposition, task prompts, integration review, release readiness | Approve legal policy, production secrets, billing, or destructive production changes |
+| Claude (Cowork) — orchestrator and independent reviewer | Architecture, backlog decomposition, task contracts, sequencing, independent review, release readiness | Approve legal policy, production secrets, billing, or destructive production changes; merge |
 | Cursor | Product UI, interaction, frontend tests, local full-stack slices | Change core contracts or migrations without task approval |
-| Claude Code | Domain/backend implementation, threat analysis, independent review, difficult debugging | Merge its own high-risk change without independent review |
-| Human owners | Product priorities, risk appetite, compliance interpretation, budget, production approval | Share secrets in Git, chat, issue, screenshot, or source file |
+| Claude Code | Domain/backend implementation, threat analysis, difficult debugging | Review or merge its own change |
+| Edu — human owner, merge owner and approver | Product priorities, risk appetite, compliance interpretation, budget, production approval, merging | Share secrets in Git, chat, issue, screenshot, or source file |
 
 Assignments may change per task, but author and reviewer must be different for high-risk work.
 
@@ -19,12 +19,12 @@ Assignments may change per task, but author and reviewer must be different for h
 
 `main` is the only permanent branch and must remain deployable. Work uses short-lived branches created from current `main`. Use temporary `integration/<initiative>` branches only when two dependent pull requests cannot be validated separately.
 
-1. Codex creates a task contract and identifies dependencies.
+1. The orchestrator (Claude, Cowork) writes a task contract in `docs/tasks/` and identifies dependencies.
 2. One agent owns one branch and one outcome.
 3. The agent updates from `main` before handoff.
 4. An independent agent reviews security-sensitive or architectural changes.
-5. Codex performs the merge review and checks cross-feature consistency.
-6. Human approval is obtained when the change crosses a protected decision boundary.
+5. The orchestrator performs the independent review, records it in `docs/reviews/`, checks cross-feature consistency, and recommends whether to merge.
+6. Edu (human owner) approves and merges; human approval is always required when the change crosses a protected decision boundary.
 7. The pull request is squash-merged; the branch is deleted after merge.
 
 No direct commits to `main` after the bootstrap commit. Never combine unrelated fixes in a merge just because they are nearby.

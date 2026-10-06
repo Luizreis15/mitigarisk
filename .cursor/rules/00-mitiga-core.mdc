@@ -6,6 +6,8 @@ alwaysApply: true
 # MITIGA core rules
 
 - Read `AGENTS.md` and the architecture and governance documents before coding.
+- Product north: MITIGA is a configurable, explainable and auditable Customer Risk Assessment (CRA) and Due-Diligence engine for EU obliged entities. MITIGA does the work; the entity retains the decision. See `docs/product/PRODUCT-DIRECTION-MVP-25.md` and `docs/adr/0012-customer-cra-engine-as-mvp-core.md`.
+- Roles: Claude (Cowork) orchestrates and reviews independently; Edu (human owner) approves and merges; Claude Code owns backend/domain work; Cursor owns the frontend. Task contracts are in `docs/tasks/`, review reports in `docs/reviews/`.
 - Work from a bounded task contract with explicit acceptance criteria.
 - Keep `main` deployable; use a short-lived branch and squash merge.
 - The MVP is a modular monolith. New services require an ADR.

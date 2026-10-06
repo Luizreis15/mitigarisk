@@ -1,6 +1,9 @@
 # ADR 0007 — Deterministic evaluation engine: scoring, versioning, reasons, and the decision boundary
 
-- Status: accepted
+- Status: accepted; amended 2026-09-26 by ADR 0012 — the scoring
+  authority for persisted results is the database (`security definer`
+  RPCs), and this TypeScript engine is a non-authoritative reference
+  implementation and test oracle
 - Date: 2026-09-13
 
 ## Context
