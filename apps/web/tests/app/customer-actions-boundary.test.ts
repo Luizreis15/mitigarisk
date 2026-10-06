@@ -112,7 +112,45 @@ void test('create and assess controls render only for server-confirmed capabilit
 
   const detail = read(join(customersDir, '[customerId]/page.tsx'));
   assert.match(detail, /hasCapability\(client, tenantId, 'assessment\.run'\)/);
-  assert.match(detail, /\{canRunAssessment \? <CustomerAssessmentFormPlaceholder \/> : null\}/);
+  assert.match(detail, /if \(canRunAssessment\) \{\s*try \{\s*form = await getCustomerAssessmentForm\(client, tenantId\);/);
+  assert.match(detail, /\{canRunAssessment && form \? \(\s*<CustomerAssessmentForm/);
+  assert.match(detail, /\{canRunAssessment && formUnavailable \? \(/);
+  assert.ok(!detail.includes('Placeholder'), 'the phase A placeholder is gone');
+});
+
+void test('runCustomerAssessmentAction forwards only facts built from the re-fetched form', () => {
+  const source = read(actionsPath);
+  const start = source.indexOf('export async function runCustomerAssessmentAction');
+  assert.ok(start >= 0, 'runCustomerAssessmentAction must exist');
+  const body = source.slice(start);
+  assert.match(body, /resolveAuthorizedTenantContext\(client, identity, requestedTenantId, 'assessment\.run'\)/);
+  const formIndex = body.indexOf('await getCustomerAssessmentForm(client, tenantId)');
+  const factsIndex = body.indexOf('buildAssessmentFacts(form,');
+  const runIndex = body.indexOf('await runCustomerAssessment(client, {');
+  assert.ok(formIndex >= 0 && factsIndex > formIndex && runIndex > factsIndex, 'form re-read, then facts built, then the RPC');
+  assert.match(body, /tenantId,\s*customerId: customerId as CustomerId,\s*facts,\s*correlationId: correlationId as CorrelationId,\s*\}\)/);
+  for (const forbidden of ['Object.fromEntries', 'formData.entries', 'formData.keys', 'formData.forEach', 'JSON.parse']) {
+    assert.ok(!source.includes(forbidden), `actions must never forward submitted keys wholesale (${forbidden})`);
+  }
+  assert.match(body, /readFormValue\(formData, 'policyVersionId'\) !== form\.policyVersionId/);
+  assert.match(body, /redirect\('\/denied'\)/);
+});
+
+void test('the assessment correlation id is generated server-side at render', () => {
+  const detail = read(join(customersDir, '[customerId]/page.tsx'));
+  assert.match(detail, /import \{ randomUUID \} from 'node:crypto'/);
+  assert.match(detail, /const correlationId = randomUUID\(\);/);
+  const form = read(join(appWeb, 'components/workspace/customer-assessment-form.tsx'));
+  assert.match(form, /<input type="hidden" name="correlationId" value=\{correlationId\} \/>/);
+  assert.ok(!form.includes('randomUUID') && !form.includes('crypto.'), 'the browser never mints the correlation id');
+});
+
+void test('the assessment form never mentions weights or points', () => {
+  const form = read(join(appWeb, 'components/workspace/customer-assessment-form.tsx')).replace(/\/\/.*$/gm, '');
+  const view = read(join(appWeb, 'lib/i18n/customer-assessment-form.ts')).replace(/\/\/.*$/gm, '');
+  for (const source of [form, view]) {
+    assert.ok(!/weight|points/i.test(source));
+  }
 });
 
 void test('the workspace shows the Customers entry only with server-confirmed customer.view', () => {
@@ -130,6 +168,4 @@ void test('customer presentation never imports the engine or calculates a result
     assert.ok(!/calculate|compute|threshold/i.test(source), `${name} must not calculate`);
     assert.ok(!source.includes('@supabase'), `${name} must not import Supabase`);
   }
-  const placeholder = read(join(appWeb, 'components/workspace/customer-assessment-form-placeholder.tsx'));
-  assert.ok(!/<form|<button|<Button|<input/i.test(placeholder), 'the phase A placeholder has no controls');
 });
