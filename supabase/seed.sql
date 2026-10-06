@@ -206,9 +206,13 @@ begin
   from jsonb_array_elements(v_template -> 'categories') as c,
        lateral jsonb_array_elements(c.value -> 'factors') with ordinality as f;
 
-  insert into public.policy_overrides (tenant_id, policy_version_id, code, position, fact_key, match_values, effect, actions, approvals)
+  -- TASK-034: an override "status" starting with "provisional" (OVR_HNWI,
+  -- pending Lucimara Q6) sets the informational provisional flag; any other
+  -- template key the columns below do not name is ignored.
+  insert into public.policy_overrides (tenant_id, policy_version_id, code, position, fact_key, match_values, effect, actions, approvals, provisional)
   select v_tenant, v_version, o.value ->> 'code', o.ordinality, o.value ->> 'fact', o.value -> 'in',
-         o.value ->> 'effect', coalesce(o.value -> 'actions', '[]'::jsonb), coalesce(o.value -> 'approvals', '[]'::jsonb)
+         o.value ->> 'effect', coalesce(o.value -> 'actions', '[]'::jsonb), coalesce(o.value -> 'approvals', '[]'::jsonb),
+         starts_with(coalesce(o.value ->> 'status', ''), 'provisional')
   from jsonb_array_elements(v_template -> 'overrides') with ordinality as o;
 
   insert into public.policy_cra_bands (tenant_id, policy_version_id, band, min_score, max_score, max_inclusive, dd_level, review_months, actions, approvals)
