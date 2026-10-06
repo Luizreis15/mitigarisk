@@ -218,6 +218,45 @@ begin
   perform pg_temp.assert(v_accepted = 13, format('all 13 listed override values were accepted (got %s)', v_accepted));
 end;
 $$;
+
+-- 3b. TASK-034 Amendment 1: every listed factor value satisfies the factor
+-- bound and is accepted by run_customer_assessment, scored (not missing).
+do $$
+declare
+  v_form jsonb := (select form from form_snapshot);
+  v_base jsonb;
+  v_factor jsonb;
+  v_value jsonb;
+  v_row public.customer_assessments;
+  v_accepted int := 0;
+begin
+  select jsonb_object_agg(fct ->> 'key', fct -> 'values' -> 0)
+  into v_base
+  from jsonb_array_elements(v_form -> 'categories') cat, jsonb_array_elements(cat -> 'factors') fct;
+  select v_base || jsonb_object_agg(o ->> 'fact_key', o -> 'negative_value')
+  into v_base
+  from jsonb_array_elements(v_form -> 'overrides') o;
+
+  for v_factor in select fct from jsonb_array_elements(v_form -> 'categories') cat, jsonb_array_elements(cat -> 'factors') fct loop
+    for v_value in select value from jsonb_array_elements(v_factor -> 'values') loop
+      if jsonb_typeof(v_value) <> 'string' or char_length(v_value #>> '{}') > 64 then
+        raise exception 'ASSERTION FAILED: listed value % for % violates the factor bound', v_value, v_factor ->> 'key';
+      end if;
+      v_row := public.run_customer_assessment(
+        '10000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000003',
+        v_base || jsonb_build_object(v_factor ->> 'key', v_value), gen_random_uuid()
+      );
+      if v_row.result -> 'missing_factors' <> '[]'::jsonb then
+        raise exception 'ASSERTION FAILED: listed value % for % was scored as missing', v_value, v_factor ->> 'key';
+      end if;
+      v_accepted := v_accepted + 1;
+    end loop;
+  end loop;
+
+  perform pg_temp.assert(v_accepted = 43,
+    format('all 43 listed factor values are strings within the 64-character bound and are accepted and scored (got %s)', v_accepted));
+end;
+$$;
 reset role;
 
 -- 4. Authorization -----------------------------------------------------------------
@@ -291,6 +330,88 @@ select pg_temp.assert(
   pg_temp.sqlstate_of($q$select public.get_customer_assessment_form('10000000-0000-0000-0000-000000000004')$q$) = '42501',
   'anon is denied execute on the form (42501)'
 );
+reset role;
+
+-- 5. TASK-034 Amendment 1: a policy whose points map has a key longer than
+-- the factor bound cannot be published, so the form can never list it.
+-- Runs last: the boundary copy becomes the demo tenant's latest version.
+create or replace function pg_temp.copy_demo_cra(p_version_number int)
+returns uuid language plpgsql as $$
+declare
+  v_new uuid := gen_random_uuid();
+  v_src constant uuid := '20000000-0000-0000-0000-000000000020';
+  v_tenant constant uuid := '10000000-0000-0000-0000-000000000004';
+begin
+  insert into public.policy_versions (id, tenant_id, version_number, status, created_by, engine_kind, label, missing_factor_points)
+  select v_new, v_tenant, p_version_number, 'draft', '00000000-0000-0000-0000-000000000002', 'cra_v2', label, missing_factor_points
+  from public.policy_versions where id = v_src;
+  insert into public.policy_categories (tenant_id, policy_version_id, key, label, weight, position)
+  select v_tenant, v_new, key, label, weight, position from public.policy_categories where policy_version_id = v_src;
+  insert into public.policy_category_factors (tenant_id, policy_version_id, category_key, factor_key, weight, position, points)
+  select v_tenant, v_new, category_key, factor_key, weight, position, points from public.policy_category_factors where policy_version_id = v_src;
+  insert into public.policy_overrides (tenant_id, policy_version_id, code, position, fact_key, match_values, effect, actions, approvals, provisional)
+  select v_tenant, v_new, code, position, fact_key, match_values, effect, actions, approvals, provisional from public.policy_overrides where policy_version_id = v_src;
+  insert into public.policy_cra_bands (tenant_id, policy_version_id, band, min_score, max_score, max_inclusive, dd_level, review_months, actions, approvals)
+  select v_tenant, v_new, band, min_score, max_score, max_inclusive, dd_level, review_months, actions, approvals from public.policy_cra_bands where policy_version_id = v_src;
+  return v_new;
+end;
+$$;
+
+do $$
+declare
+  v_long uuid := pg_temp.copy_demo_cra(90);
+  v_edge uuid := pg_temp.copy_demo_cra(91);
+  v_state text;
+begin
+  update public.policy_category_factors
+  set points = points || jsonb_build_object(repeat('y', 65), 100)
+  where policy_version_id = v_long and factor_key = 'purpose';
+  begin
+    update public.policy_versions
+    set status = 'published', effective_from = now(), published_at = now(), published_by = '00000000-0000-0000-0000-000000000002'
+    where id = v_long;
+    v_state := 'OK';
+  exception when others then
+    v_state := sqlstate;
+  end;
+  perform pg_temp.assert(v_state = '22023', 'publish is blocked with 22023 when a points-map key exceeds 64 characters');
+  perform pg_temp.assert((select status from public.policy_versions where id = v_long) = 'draft',
+    'no partial publish when a points-map key exceeds 64 characters');
+
+  update public.policy_category_factors
+  set points = points || jsonb_build_object(repeat('y', 64), 100)
+  where policy_version_id = v_edge and factor_key = 'purpose';
+  update public.policy_versions
+  set status = 'published', effective_from = now(), published_at = now(), published_by = '00000000-0000-0000-0000-000000000002'
+  where id = v_edge;
+  perform pg_temp.assert((select status from public.policy_versions where id = v_edge) = 'published',
+    'a points-map key of exactly 64 characters publishes');
+end;
+$$;
+
+set role authenticated; set local "request.jwt.claim.role" = 'authenticated'; set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000004';
+select pg_temp.assert(
+  (select fct -> 'values' @> to_jsonb(array[repeat('y', 64)])
+   from jsonb_array_elements(public.get_customer_assessment_form('10000000-0000-0000-0000-000000000004') -> 'categories') cat,
+        jsonb_array_elements(cat -> 'factors') fct
+   where fct ->> 'key' = 'purpose'),
+  'the form lists the 64-character value of the newest published version'
+);
+do $$
+declare
+  v_facts jsonb := (select c from (
+    select jsonb_object_agg(fct ->> 'key', fct -> 'values' -> 0) as c
+    from jsonb_array_elements(public.get_customer_assessment_form('10000000-0000-0000-0000-000000000004') -> 'categories') cat,
+         jsonb_array_elements(cat -> 'factors') fct) s);
+  v_row public.customer_assessments;
+begin
+  v_facts := v_facts || '{"sanctions_match": "none", "blacklisted_country_link": false, "pep_status": "none", "adverse_media_material": "none", "hnwi": false}'::jsonb
+             || jsonb_build_object('purpose', repeat('y', 64));
+  v_row := public.run_customer_assessment('10000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000003', v_facts, gen_random_uuid());
+  perform pg_temp.assert(v_row.result -> 'missing_factors' = '[]'::jsonb,
+    'run_customer_assessment accepts and scores that listed 64-character value (form and RPC agree at the boundary)');
+end;
+$$;
 reset role;
 
 do $$

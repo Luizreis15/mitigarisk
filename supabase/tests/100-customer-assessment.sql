@@ -1824,6 +1824,58 @@ begin
 end;
 $$;
 
+-- 2b. TASK-034 Amendment 1: factor facts are bounded before persistence ------
+-- A factor fact must be absent, JSON null, or a JSON string of at most
+-- app.cra_factor_value_max_length() (64) characters. Runs as the caller
+-- (authenticated), which cannot read the app schema, so the limit is proven
+-- by its boundary (65 rejected, 64 accepted) rather than read directly.
+do $$
+declare
+  v_base jsonb := (select c -> 'facts' from cra_casebook where c ->> 'id' = 'CB-01');
+  v_negative record;
+  v_corr uuid;
+  v_n int := 0;
+begin
+  for v_negative in
+    select * from (values
+      ('a factor fact is a number', v_base || '{"purpose": 5}'::jsonb),
+      ('a factor fact is a boolean', v_base || '{"purpose": true}'::jsonb),
+      ('a factor fact is an array', v_base || '{"purpose": ["ecommerce"]}'::jsonb),
+      ('a factor fact is an object', v_base || '{"purpose": {"value": "ecommerce"}}'::jsonb),
+      ('a factor fact is a 65-character string', v_base || jsonb_build_object('purpose', repeat('x', 65))),
+      ('a factor fact is a 4 MiB string', v_base || jsonb_build_object('channel', repeat('x', 4 * 1024 * 1024)))
+    ) as t(label, facts)
+  loop
+    v_n := v_n + 1;
+    v_corr := ('e5000000-0000-0000-0000-' || lpad(v_n::text, 12, '0'))::uuid;
+    perform pg_temp.assert(
+      pg_temp.sqlstate_of(format(
+        $q$select public.run_customer_assessment('10000000-0000-0000-0000-000000000004'::uuid, '30000000-0000-0000-0000-000000000001'::uuid, %L::jsonb, %L::uuid)$q$,
+        v_negative.facts, v_corr
+      )) = '22023',
+      format('rejected with 22023 when %s', v_negative.label)
+    );
+    perform pg_temp.assert(
+      (select count(*) from public.customer_assessments where tenant_id = '10000000-0000-0000-0000-000000000004' and correlation_id = v_corr) = 0,
+      format('nothing stored when %s', v_negative.label)
+    );
+  end loop;
+
+  -- Boundary: an unmapped string of exactly 64 characters is still accepted
+  -- and scored as missing data (unchanged semantics).
+  v_corr := 'e5000000-0000-0000-0000-000000000099'::uuid;
+  perform public.run_customer_assessment(
+    '10000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000001',
+    v_base || jsonb_build_object('purpose', repeat('x', 64)), v_corr
+  );
+  perform pg_temp.assert(
+    (select result -> 'missing_factors' @> '["purpose"]'::jsonb and result -> 'reason_codes' @> '["INVALID_VALUE_PURPOSE"]'::jsonb
+     from public.customer_assessments where tenant_id = '10000000-0000-0000-0000-000000000004' and correlation_id = v_corr),
+    'an unmapped 64-character factor string is accepted and scored as missing/invalid data'
+  );
+end;
+$$;
+
 -- 3. Authorization: positive and negative, D1 and D2 ----------------------
 set role authenticated; set local "request.jwt.claim.role" = 'authenticated'; set local "request.jwt.claim.sub" = '00000000-0000-0000-0000-000000000002';
 do $$
