@@ -20,3 +20,5 @@ export * from "./workspace-access";
 export * from "./supplier";
 export * from "./supplier-evidence";
 export * from "./supplier-final-decision";
+export * from "./customer";
+export * from "./customer-assessment";

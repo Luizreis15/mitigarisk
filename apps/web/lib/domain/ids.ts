@@ -10,6 +10,8 @@ export type PolicyVersionId = Branded<string, "PolicyVersionId">;
 export type EvaluationId = Branded<string, "EvaluationId">;
 export type CaseId = Branded<string, "CaseId">;
 export type CorrelationId = Branded<string, "CorrelationId">;
+export type CustomerId = Branded<string, "CustomerId">;
+export type CustomerAssessmentId = Branded<string, "CustomerAssessmentId">;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
