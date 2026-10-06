@@ -14,6 +14,12 @@
 
 create schema if not exists auth;
 
+-- Supabase installs extensions in the `extensions` schema, outside every
+-- function's `search_path = public, pg_temp`. Mirror that so an unqualified
+-- extension call fails here exactly as it would in a hosted project.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
