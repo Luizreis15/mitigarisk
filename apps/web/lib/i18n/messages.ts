@@ -412,9 +412,76 @@ export const messages = {
     noAssessmentTitle: 'No assessment yet',
     noAssessmentBody:
       'This customer has not been assessed. The latest result appears here once an assessment is recorded.',
-    formPlaceholderTitle: 'Assessment form arrives next',
-    formPlaceholderBody:
-      'The guided assessment form, generated from your published risk policy, is the next step of this release. Until then this page shows persisted results only.',
+    assessmentForm: {
+      title: 'Run a risk assessment',
+      intro:
+        'Answer from the facts you hold about this fictional customer. The database applies your published risk policy and records the result; this form never shows weights or points.',
+      policyLabel: 'Current policy',
+      factorsTitle: 'Risk factors',
+      factorsHelp:
+        'Choose "Not known" when the information is unavailable. The policy then applies its missing-data rule.',
+      notKnown: 'Not known',
+      overridesTitle: 'Screening results',
+      overridesHelp:
+        'Every screening question is required. Choose the negative answer when there is no hit.',
+      provisionalTag: 'provisional (pending compliance confirmation)',
+      submit: 'Run assessment',
+      submitting: 'Running…',
+      noPolicyTitle: 'Your company has no published risk policy yet',
+      noPolicyBody:
+        'An assessment can run only after a risk policy is published for this company.',
+      unavailableTitle: 'The assessment form could not be loaded',
+      unavailableBody: 'Reload the page to try again.',
+      correlationReference: 'Reference: {correlationId}',
+    },
+    factValues: {
+      true: 'Yes',
+      false: 'No',
+      none: 'None',
+      no: 'No',
+      yes: 'Yes',
+      standard: 'Standard',
+      higher: 'Higher',
+      high_risk_third_country: 'High-risk third country',
+      ecommerce: 'E-commerce',
+      gambling: 'Gambling',
+      multipurpose: 'Multipurpose',
+      employed: 'Employed',
+      self_employed: 'Self-employed',
+      retired: 'Retired',
+      student: 'Student',
+      unemployed: 'Unemployed',
+      cash_intensive: 'Cash-intensive',
+      high_risk: 'High risk',
+      single: 'Single',
+      multiple: 'Multiple',
+      one_or_more: 'One or more',
+      bank_transfer: 'Bank transfer',
+      card: 'Card',
+      cash: 'Cash',
+      closed_loop: 'Closed loop',
+      open_loop: 'Open loop',
+      face_to_face: 'Face to face',
+      non_face_to_face: 'Non-face to face',
+      not_observed: 'Not observed yet',
+      within: 'Within limit',
+      near_limit: 'Near limit',
+      above_limit: 'Above limit',
+      moderate: 'Moderate',
+      significant: 'Significant',
+      confirmed: 'Confirmed',
+      inconclusive: 'Inconclusive',
+      self_declared: 'Self-declared',
+      material: 'Material',
+      potential: 'Potential',
+    },
+    overrideFacts: {
+      sanctions_match: 'Sanctions screening result',
+      blacklisted_country_link: 'Link to a blacklisted country',
+      pep_status: 'Politically exposed person (PEP) status',
+      adverse_media_material: 'Material adverse media',
+      hnwi: 'High-net-worth individual',
+    },
     historyTitle: 'Assessment history',
     historyEmpty: 'No assessments recorded yet.',
     historyColumns: {
@@ -558,6 +625,27 @@ export const messages = {
       DuplicateCustomerReferenceError:
         'A customer with this external reference already exists in this company with different details.',
       CustomerWriteError: 'The customer could not be saved. Try again.',
+      InvalidFactorAnswerError:
+        'One of the answers is not allowed by the current policy. Reload the page and try again.',
+      MissingOverrideAnswerError: 'Answer every screening question.',
+      InvalidOverrideAnswerError:
+        'One of the screening answers is not allowed by the current policy. Reload the page and try again.',
+      AssessmentPolicyChangedError:
+        'The risk policy changed while this form was open. Reload the page to use the current policy.',
+      AssessmentCorrelationConflictError:
+        'This form was already submitted with different answers. Reload the page to run a new assessment.',
+      NoPublishedCraPolicyError:
+        'Your company has no published risk policy yet',
+      InvalidAssessmentFactsError:
+        'The assessment could not be recorded. Nothing was stored.',
+      CustomerNotFoundForAssessmentError:
+        'This customer could not be found in your active company.',
+      CustomerAssessmentWriteError:
+        'The assessment could not be recorded. Try again.',
+      CustomerAssessmentReadError:
+        'The assessment form could not be loaded. Reload the page and try again.',
+      InvalidAssessmentRequestError:
+        'This assessment request is incomplete. Reload the page and try again.',
       ForbiddenError: 'Your role does not have this capability.',
       NoActiveTenantMembershipError:
         'Your account is not a member of any company.',

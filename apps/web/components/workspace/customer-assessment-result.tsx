@@ -216,6 +216,7 @@ export function CustomerAssessmentResult({
         </div>
         <div className="min-w-0">
           <dt className="text-muted-foreground">{t.policyLabel}</dt>
+          {view.policyLabel ? <dd className="mt-1 font-medium">{view.policyLabel}</dd> : null}
           <dd className="mt-1 break-all font-mono text-xs">{view.policyVersionId}</dd>
         </div>
         <div className="min-w-0">

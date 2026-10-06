@@ -19,18 +19,26 @@ function shortId(id: string): string {
 
 // Persisted assessment history, newest first as read from the database.
 // "Assessed by" shows the caller as "You"; other users are identified by a
-// short id because no profile read path exists for this slice.
+// short id because no profile read path exists for this slice. The policy
+// label is known only for the current policy (from the assessment form);
+// other versions show a short id.
 export function CustomerAssessmentHistory({
   assessments,
   currentUserId,
+  currentPolicy = null,
 }: {
   assessments: CustomerAssessment[];
   currentUserId: string;
+  currentPolicy?: { id: string; label: string } | null;
 }) {
   const t = messages.customerWorkspace;
   const columns = t.historyColumns;
   const assessedBy = (assessment: CustomerAssessment) =>
     assessment.assessedBy === currentUserId ? t.assessedByYou : shortId(assessment.assessedBy);
+  const policy = (assessment: CustomerAssessment) =>
+    currentPolicy && assessment.policyVersionId === currentPolicy.id
+      ? currentPolicy.label
+      : shortId(assessment.policyVersionId);
 
   return (
     <section
@@ -61,11 +69,8 @@ export function CustomerAssessmentHistory({
                 {assessments.map((assessment) => (
                   <TableRow key={assessment.id}>
                     <TableCell>{formatDateTime(assessment.assessedAt)}</TableCell>
-                    <TableCell
-                      className="font-mono text-xs"
-                      title={assessment.policyVersionId}
-                    >
-                      {shortId(assessment.policyVersionId)}
+                    <TableCell className="text-xs" title={assessment.policyVersionId}>
+                      {policy(assessment)}
                     </TableCell>
                     <TableCell className="tabular-nums">
                       {formatNumber(assessment.overallScore)}
@@ -130,9 +135,7 @@ export function CustomerAssessmentHistory({
                   </div>
                   <div>
                     <dt className="text-muted-foreground">{columns.policy}</dt>
-                    <dd className="font-mono text-xs">
-                      {shortId(assessment.policyVersionId)}
-                    </dd>
+                    <dd className="text-xs break-words">{policy(assessment)}</dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">{columns.assessedBy}</dt>

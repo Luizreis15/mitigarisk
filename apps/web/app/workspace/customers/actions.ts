@@ -5,8 +5,13 @@ import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
 import { createCustomer } from '@/lib/supabase/customers-repository';
+import {
+  getCustomerAssessmentForm,
+  runCustomerAssessment,
+} from '@/lib/supabase/customer-assessments-repository';
 import { validateCreateCustomerInput, type CreateCustomerInput } from '@/lib/domain/customer';
-import type { TenantId } from '@/lib/domain/ids';
+import { buildAssessmentFacts } from '@/lib/domain/customer-assessment-facts';
+import { isUuid, type CorrelationId, type CustomerId, type TenantId } from '@/lib/domain/ids';
 
 // Server Actions for the customer CRA experience
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Same
@@ -17,14 +22,15 @@ import type { TenantId } from '@/lib/domain/ids';
 // it against the caller's real active memberships and the required
 // capability on every call. Each write is a thin call to a security-definer,
 // capability-checked, audited RPC (public.create_customer,
-// supabase/migrations/20260927100000_customer_assessment.sql).
-//
-// The run-assessment action arrives with phase B: the facts it forwards are
-// shaped by the form getCustomerAssessmentForm (TASK-034) generates. It will
-// only ever forward facts and a server-generated correlation id; the
-// database alone computes and persists the score, band, DD level and outcome.
+// public.run_customer_assessment —
+// supabase/migrations/20260927100000_customer_assessment.sql and later
+// redefinitions). An assessment forwards only facts and the correlation id
+// generated at render; the database alone computes and persists the score,
+// band, DD level and outcome.
 
-export type CustomerActionResult = { status: 'success' } | { status: 'error'; code: string };
+export type CustomerActionResult =
+  | { status: 'success' }
+  | { status: 'error'; code: string; correlationId?: string };
 
 function readFormValue(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -75,6 +81,68 @@ export async function createCustomerAction(
   } catch (error) {
     return { status: 'error', code: errorCode(error) };
   }
+
+  redirect(`/workspace/customers/${customerId}?tenant=${tenantId}`);
+}
+
+class AssessmentPolicyChangedError extends Error {
+  constructor() {
+    super('The published policy changed after the form was rendered');
+    this.name = 'AssessmentPolicyChangedError';
+  }
+}
+
+export async function runCustomerAssessmentAction(
+  _previousState: CustomerActionResult | null,
+  formData: FormData,
+): Promise<CustomerActionResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
+  const client = await createServerSupabaseClient();
+
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const customerId = readFormValue(formData, 'customerId');
+  const correlationId = readFormValue(formData, 'correlationId');
+
+  let tenantId: TenantId;
+  try {
+    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'assessment.run');
+    tenantId = context.tenantId;
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') redirect('/denied');
+    return { status: 'error', code: errorCode(error) };
+  }
+
+  if (!isUuid(customerId) || !isUuid(correlationId)) {
+    return { status: 'error', code: 'InvalidAssessmentRequestError' };
+  }
+
+  let denied = false;
+  try {
+    // The form is re-read server-side: only the keys and values it lists can
+    // become facts, whatever the browser submitted.
+    const form = await getCustomerAssessmentForm(client, tenantId);
+    if (readFormValue(formData, 'policyVersionId') !== form.policyVersionId) {
+      throw new AssessmentPolicyChangedError();
+    }
+    const facts = buildAssessmentFacts(form, (name) => {
+      const value = formData.get(name);
+      return typeof value === 'string' ? value : null;
+    });
+    await runCustomerAssessment(client, {
+      tenantId,
+      customerId: customerId as CustomerId,
+      facts,
+      correlationId: correlationId as CorrelationId,
+    });
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') {
+      denied = true;
+    } else {
+      return { status: 'error', code: errorCode(error), correlationId };
+    }
+  }
+  if (denied) redirect('/denied');
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}`);
 }

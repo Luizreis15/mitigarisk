@@ -15,6 +15,8 @@ export interface AssessmentResultSource {
   result: CraResult;
   nextReviewDue: string;
   policyVersionId: string;
+  /** Known only when the assessment used the policy the current form was read from. */
+  policyLabel?: string | null;
   assessedAt: string;
   correlationId: string;
 }
@@ -59,6 +61,7 @@ export interface AssessmentResultView {
   nextReviewDue: string;
   nextReviewDueText: string;
   policyVersionId: string;
+  policyLabel: string | null;
   assessedAtText: string;
   correlationId: string;
 }
@@ -132,6 +135,7 @@ export function buildAssessmentResultView(source: AssessmentResultSource): Asses
     nextReviewDue: source.nextReviewDue,
     nextReviewDueText: formatDate(source.nextReviewDue),
     policyVersionId: source.policyVersionId,
+    policyLabel: source.policyLabel ?? null,
     assessedAtText: formatDateTime(source.assessedAt),
     correlationId: source.correlationId,
   };

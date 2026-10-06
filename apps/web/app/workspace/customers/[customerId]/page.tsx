@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
@@ -5,14 +6,20 @@ import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
 import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { getCustomerById } from '@/lib/supabase/customers-repository';
-import { listCustomerAssessments } from '@/lib/supabase/customer-assessments-repository';
+import {
+  getCustomerAssessmentForm,
+  listCustomerAssessments,
+} from '@/lib/supabase/customer-assessments-repository';
 import { isUuid, type CustomerId, type TenantId } from '@/lib/domain/ids';
 import { CustomerProfile } from '@/components/workspace/customer-profile';
 import { CustomerAssessmentResult } from '@/components/workspace/customer-assessment-result';
 import { CustomerAssessmentHistory } from '@/components/workspace/customer-assessment-history';
-import { CustomerAssessmentFormPlaceholder } from '@/components/workspace/customer-assessment-form-placeholder';
+import { CustomerAssessmentForm } from '@/components/workspace/customer-assessment-form';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import type { CustomerAssessmentForm as AssessmentFormData } from '@/lib/domain/customer-assessment';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
 import { buildAssessmentResultView } from '@/lib/i18n/customer-assessment';
+import { buildAssessmentFormView } from '@/lib/i18n/customer-assessment-form';
 import { messages } from '@/lib/i18n/messages';
 
 // Customer profile, latest persisted assessment, and history
@@ -75,6 +82,24 @@ export default async function CustomerDetailPage({
   ]);
   const latest = assessments[0] ?? null;
 
+  // Read only for callers holding assessment.run (the RPC requires it too),
+  // so an auditor never receives the form or any assessment control.
+  let form: AssessmentFormData | null = null;
+  let formUnavailable: 'no_policy' | 'error' | null = null;
+  if (canRunAssessment) {
+    try {
+      form = await getCustomerAssessmentForm(client, tenantId);
+    } catch (error) {
+      formUnavailable =
+        error instanceof Error && error.name === 'NoPublishedCraPolicyError' ? 'no_policy' : 'error';
+    }
+  }
+  const currentPolicy = form ? { id: form.policyVersionId, label: form.policyLabel } : null;
+  // Generated on every server render and never derived from browser input:
+  // a double submit of this rendered form replays idempotently, and a
+  // reload allows a genuinely new assessment.
+  const correlationId = randomUUID();
+
   return (
     <WorkspaceRealFrame
       title={customer.fullName}
@@ -93,7 +118,13 @@ export default async function CustomerDetailPage({
           {t.latestTitle}
         </h2>
         {latest ? (
-          <CustomerAssessmentResult view={buildAssessmentResultView(latest)} />
+          <CustomerAssessmentResult
+            view={buildAssessmentResultView({
+              ...latest,
+              policyLabel:
+                currentPolicy && latest.policyVersionId === currentPolicy.id ? currentPolicy.label : null,
+            })}
+          />
         ) : (
           <div className="rounded-lg bg-muted/40 p-4">
             <p className="text-sm font-medium">{t.noAssessmentTitle}</p>
@@ -103,8 +134,29 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </section>
-      {canRunAssessment ? <CustomerAssessmentFormPlaceholder /> : null}
-      <CustomerAssessmentHistory assessments={assessments} currentUserId={identity.userId} />
+      {canRunAssessment && form ? (
+        <CustomerAssessmentForm
+          view={buildAssessmentFormView(form)}
+          tenantId={tenantId}
+          customerId={customer.id}
+          correlationId={correlationId}
+        />
+      ) : null}
+      {canRunAssessment && formUnavailable ? (
+        <Alert variant={formUnavailable === 'no_policy' ? 'default' : 'destructive'}>
+          <AlertTitle>
+            {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyTitle : t.assessmentForm.unavailableTitle}
+          </AlertTitle>
+          <AlertDescription>
+            {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyBody : t.assessmentForm.unavailableBody}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <CustomerAssessmentHistory
+        assessments={assessments}
+        currentUserId={identity.userId}
+        currentPolicy={currentPolicy}
+      />
     </WorkspaceRealFrame>
   );
 }
