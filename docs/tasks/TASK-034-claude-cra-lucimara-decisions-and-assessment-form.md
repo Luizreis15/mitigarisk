@@ -266,3 +266,79 @@ No other code or seed file mentioned either term.
 - `supabase/tests/README.md` still lists only the original suites (it was already behind before this task).
 
 **Recommended reviewer:** the orchestrator (Claude, Cowork).
+
+### Amendment 1 (REVIEW-TASK-033 L1): factor facts bounded
+
+**Outcome:** Implemented. `public.run_customer_assessment` now accepts a factor fact only if it is absent, JSON null, or a JSON string of at most 64 characters. Any other value (a number, boolean, array, object, or longer string) is rejected with `22023` before anything is stored, so nothing unbounded or non-string can reach the append-only `customer_assessments.facts`. Unmapped strings within the limit keep the missing-data semantics (`DATA_MISSING_*`/`INVALID_VALUE_*`). The 24 casebook replays still pass in suites 090 and 100 and in the TypeScript tests. The longest casebook factor value is 23 characters.
+
+**Commits:**
+
+```text
+4645071 docs(task): add TASK-034 amendment 1
+a33c855 fix(cra): bound factor facts before an assessment is persisted
+10c2a99 test(cra): cover the factor fact bound and form agreement
+c9d6f1c feat(cra): export the factor fact length limit for the assessment form UI
+```
+The next commit records this subsection. The branch tip at delivery is reported in the reply.
+
+**Files changed:**
+- `supabase/migrations/20261006110000_bound_factor_facts.sql` (new). No earlier migration was edited, including this task's own `20261006100000_customer_assessment_form.sql`. It contains:
+  - `app.cra_factor_value_max_length()` (immutable, returns 64; not executable by `authenticated`/`anon`), the single SQL source of the limit;
+  - `public.run_customer_assessment` redefined. The body is identical to the previous version except for a factor-fact loop added right after the unknown-key check. Signature, grants and comment are unchanged;
+  - `app.validate_cra_factor_value_length_on_publish()` and the trigger `trg_policy_versions_cra_factor_value_length`, described under "Form agreement" below.
+- `supabase/tests/100-customer-assessment.sql`: new section 2b with 13 assertions.
+- `supabase/tests/110-assessment-form.sql`: new sections 3b and 5 with 6 assertions.
+- `apps/web/lib/domain/customer-assessment.ts`: adds `CRA_FACTOR_VALUE_MAX_LENGTH = 64`.
+- `apps/web/tests/domain/customer-assessment-sql-sync.test.ts` (new, 2 tests). It checks that the constant equals the value returned by the latest migration that defines `app.cra_factor_value_max_length()`, using the same approach as `tenancy-sql-sync.test.ts`. It also checks that every casebook factor value fits within the limit.
+
+The TS repository is unchanged: the new rejections are `22023`, which already maps to `InvalidAssessmentFactsError`, and the existing test covers that mapping.
+
+**Form agreement:** `get_customer_assessment_form` lists a factor's points-map keys as its values. The new publish-time trigger refuses to publish any `cra_v2` version whose points map has a key longer than the limit. It returns `22023` on the same draft-to-published transition as the existing validator, so a rejected version stays draft. `app.validate_cra_policy_on_publish()` itself is untouched. As a result, the form can never list a value that `run_customer_assessment` would reject. The form's output shape is unchanged. The UI can use `CRA_FACTOR_VALUE_MAX_LENGTH` for input bounds.
+
+**Where the negatives live, and why:**
+- **Suite 100 holds the rejection tests.** It already holds TASK-033's strict intake negatives for this same RPC, and these are more of the same.
+- **Suite 110 holds the agreement tests,** because they concern the form.
+
+**Suite 100, section 2b (13 assertions):**
+- a number, a boolean, an array, an object, a 65-character string and a 4 MiB string are each rejected with `22023`, each with its own zero-rows proof (12);
+- a 64-character unmapped string is accepted and scored as `DATA_MISSING`/`INVALID_VALUE_PURPOSE` (1).
+
+**Suite 110, sections 3b and 5 (6 assertions):**
+- all 43 listed factor values are strings within the limit and are accepted and scored, not counted as missing (1);
+- publishing is blocked with `22023` when a points-map key has 65 characters, and the version stays draft (2);
+- a 64-character key publishes, the form then lists it, and `run_customer_assessment` accepts and scores it (3).
+
+**Per-suite SQL counts:** `./supabase/tests/run-local-verification.sh`: **SQL=0**.
+
+| Suite | Assertions | Failures |
+|---|---:|---:|
+| 010–080 | 16/21/18/43/26/28/40/26 (unchanged) | 0 |
+| 090-cra-engine-v2 | 121 (unchanged since TASK-034) | 0 |
+| 100-customer-assessment | 84 (71 + 13) | 0 |
+| 110-assessment-form | 51 (45 + 6) | 0 |
+| **Total** | **474** | **0** |
+
+**Checks and exact results (Node v24.11.1, npm 11.6.2):**
+
+| Check | Result |
+|---|---|
+| `./supabase/tests/run-local-verification.sh` | **SQL=0** (474 assertions) |
+| `npm ci` | **CI=0** |
+| `npm test` | **TEST=0**: 294 passed (292 + 2 new), 0 failed |
+| `npx tsc --noEmit -p tsconfig.json` | **TSC=0** |
+| `npm run lint` | **LINT=0** |
+| `npm run build` | **BUILD=0** |
+| `npm run build:vercel && npm run verify:vercel` | **VERCEL=0** |
+| `./scripts/check-secrets.sh` | **SECRETS=0** |
+| `git diff --check` | **DIFF=0** |
+
+**Decisions:**
+- The limit counts characters (`char_length`), not bytes, as the amendment states. A 64-character string of multibyte characters can be up to 256 bytes.
+- The new suite-100 block runs as `authenticated`, which correctly cannot read the `app` schema. The 64-character limit is therefore proven at the boundary (65 rejected, 64 accepted) rather than by calling the helper directly.
+- No assertion in suites 010–110 was changed; the amendment only adds assertions.
+
+**Security/tenant/audit impact:** stricter intake only. No capability, grant, RLS policy or table changed. Rejected input writes nothing, so there is no assessment row and no audit event. Factor values that a valid assessment can persist are now bounded, which reduces the personal-data surface of the immutable facts snapshot.
+
+**Migration and rollback:** forward-only. Rollback steps are in the migration's trailing comment: drop the trigger and its function, re-apply `run_customer_assessment` from `20261006100000_customer_assessment_form.sql`, drop `app.cra_factor_value_max_length()`.
+
+**Known limitations:** assessments already persisted before this migration are not re-validated. Locally there are none outside the dev seed, and hosted Supabase is untouched. If any existed in a hosted database, finding factor values over the limit would need a separate one-off review query.
