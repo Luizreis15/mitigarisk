@@ -1,0 +1,53 @@
+{
+  "template_key": "eu-payments-gaming-cra",
+  "version_label": "v1-DRAFT",
+  "status_note": "DRAFT: provisional weights and points pending compliance-lead sign-off (see CRA-TEMPLATE-v1-DRAFT.md Q1-Q8)",
+  "missing_factor_points": 50,
+  "rounding": "half-up to 2 decimals at category and overall level",
+  "categories": [
+    {"key": "customer", "label": "Customer", "weight": 20, "factors": [
+      {"key": "purpose", "weight": 30, "points": {"ecommerce": 0, "gambling": 50, "multipurpose": 100}},
+      {"key": "employment_status", "weight": 20, "points": {"employed": 0, "self_employed": 50, "retired": 50, "student": 50, "unemployed": 100}},
+      {"key": "occupation_risk", "weight": 20, "points": {"standard": 0, "cash_intensive": 50, "high_risk": 100}},
+      {"key": "adverse_media_non_material", "weight": 15, "points": {"none": 0, "single": 50, "multiple": 100}},
+      {"key": "prior_str", "weight": 15, "points": {"none": 0, "one_or_more": 100}}
+    ]},
+    {"key": "geography", "label": "Geography", "weight": 10, "factors": [
+      {"key": "residence_country_risk", "weight": 40, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}},
+      {"key": "nationality_risk", "weight": 30, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}},
+      {"key": "sow_country_risk", "weight": 30, "points": {"standard": 0, "higher": 50, "high_risk_third_country": 100}}
+    ]},
+    {"key": "product_payment", "label": "Product / Service / Payment", "weight": 15, "factors": [
+      {"key": "payment_method", "weight": 60, "points": {"bank_transfer": 0, "card": 50, "cash": 100}},
+      {"key": "product_type", "weight": 40, "points": {"closed_loop": 0, "open_loop": 100}}
+    ]},
+    {"key": "channel", "label": "Delivery channel", "weight": 10, "factors": [
+      {"key": "channel", "weight": 100, "points": {"face_to_face": 0, "non_face_to_face": 100}}
+    ]},
+    {"key": "transactions", "label": "Transactions", "weight": 45, "factors": [
+      {"key": "affordability", "weight": 50, "points": {"not_observed": 0, "within": 0, "near_limit": 50, "above_limit": 100}},
+      {"key": "behaviour_change", "weight": 30, "points": {"not_observed": 0, "none": 0, "moderate": 50, "significant": 100}},
+      {"key": "high_value_transactions", "weight": 20, "points": {"not_observed": 0, "no": 0, "yes": 100}}
+    ]}
+  ],
+  "overrides": [
+    {"code": "OVR_SANCTIONS_CONFIRMED", "fact": "sanctions_match", "in": ["confirmed"], "effect": "reject", "actions": ["FREEZE_FUNDS_AND_BLOCK_IF_EXISTING", "REJECT_IF_PROSPECT", "REPORT_TO_MLRO"]},
+    {"code": "OVR_BLACKLISTED_COUNTRY", "fact": "blacklisted_country_link", "in": [true], "effect": "reject", "actions": ["REJECT_OR_TERMINATE", "REPORT_TO_MLRO"]},
+    {"code": "OVR_SANCTIONS_INCONCLUSIVE", "fact": "sanctions_match", "in": ["inconclusive"], "effect": "force_high", "actions": ["BLOCK_PENDING_MANUAL_REVIEW"]},
+    {"code": "OVR_PEP", "fact": "pep_status", "in": ["confirmed", "self_declared"], "effect": "force_high", "actions": [], "approvals": ["MLRO", "BOARD"]},
+    {"code": "OVR_ADVERSE_MEDIA_MATERIAL", "fact": "adverse_media_material", "in": ["material"], "effect": "force_high", "actions": ["REPORT_TO_MLRO"]},
+    {"code": "OVR_ADVERSE_MEDIA_POTENTIAL", "fact": "adverse_media_material", "in": ["potential"], "effect": "force_high", "actions": []},
+    {"code": "OVR_HNWI", "fact": "hnwi", "in": [true], "effect": "force_high", "actions": []}
+  ],
+  "bands": [
+    {"band": "LOW", "min": 0, "max_exclusive": 36, "dd_level": "SDD", "review_months": 36, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING"]},
+    {"band": "MEDIUM", "min": 36, "max_exclusive": 76, "dd_level": "CDD", "review_months": 24, "approvals": [], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE"]},
+    {"band": "HIGH", "min": 76, "max_inclusive": 100, "dd_level": "EDD", "review_months": 12, "approvals": ["MLRO", "BOARD"], "actions": ["IDENTIFY_CUSTOMER", "VERIFY_ID", "ONGOING_SCREENING", "OBTAIN_PURPOSE_AND_NATURE", "OBTAIN_SOW_SOF_DOCUMENTS"]}
+  ],
+  "rules": {
+    "override_precedence": "reject > force_high; all hit overrides are reported",
+    "reject_outcome": "band HIGH, dd_level EDD, outcome REJECT (score still computed and reported)",
+    "force_high_outcome": "band HIGH, dd_level EDD, outcome REVIEW_REQUIRED",
+    "missing_factor": "factor fact absent or value not in map -> missing_factor_points and DATA_MISSING_<factor> reason; value not in map is also INVALID_VALUE_<factor>"
+  }
+}
