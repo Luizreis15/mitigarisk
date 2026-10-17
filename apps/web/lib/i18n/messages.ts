@@ -403,6 +403,14 @@ export const messages = {
     emptyBody: 'No fictional customer has been registered in this company yet.',
     emptyBodyCanCreate:
       'Register the first fictional customer to begin a risk assessment.',
+    summary: {
+      label: 'Portfolio snapshot',
+      total: '{count} customers',
+      low: '{count} low',
+      medium: '{count} medium',
+      high: '{count} high',
+      unassessed: '{count} not assessed',
+    },
     columns: {
       name: 'Name',
       externalReference: 'External reference',
@@ -415,6 +423,7 @@ export const messages = {
     notAssessed: 'Not assessed yet',
     emptyValue: '—',
     open: 'Open',
+    openCustomer: 'Open {name}',
     newTitle: 'New customer',
     newIntro:
       'Record a fictional customer. Use invented names, references, and dates only.',
