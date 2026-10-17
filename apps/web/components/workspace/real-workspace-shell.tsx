@@ -228,6 +228,37 @@ export function RealWorkspaceShell({
           </div>
         </div>
       </div>
+
+      <nav
+        aria-label={t.primaryNav}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[color-mix(in_srgb,var(--color-bg-surface)_94%,transparent)] px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+      >
+        <ul
+          className={cn(
+            'mx-auto grid max-w-lg gap-1',
+            nav.length >= 4 ? 'grid-cols-4' : 'grid-cols-3',
+          )}
+        >
+          {nav.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={item.href}
+                aria-label={item.label}
+                aria-current={active === item.id ? 'page' : undefined}
+                className={cn(
+                  'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[0.65rem] font-medium transition-colors',
+                  active === item.id
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                )}
+              >
+                <item.icon className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }
