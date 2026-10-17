@@ -121,9 +121,11 @@ export default async function WorkspacePage({
     }
   }
 
-  // The Customers entry is shown only with a server-confirmed customer.view
-  // on the verified tenant; a failed capability read hides it (fail closed).
+  // Module entries are shown only with a server-confirmed capability on the
+  // verified tenant; a failed capability read hides the entry (fail closed).
   let customerEntryTenantId: TenantId | null = null;
+  let accessEntryTenantId: TenantId | null = null;
+  let supplierEntryTenantId: TenantId | null = null;
   if (activeTenantId) {
     try {
       if (await hasCapability(client, activeTenantId, 'customer.view')) {
@@ -131,6 +133,20 @@ export default async function WorkspacePage({
       }
     } catch {
       customerEntryTenantId = null;
+    }
+    try {
+      if (await hasCapability(client, activeTenantId, 'tenant.view')) {
+        accessEntryTenantId = activeTenantId;
+      }
+    } catch {
+      accessEntryTenantId = null;
+    }
+    try {
+      if (await hasCapability(client, activeTenantId, 'supplier.view')) {
+        supplierEntryTenantId = activeTenantId;
+      }
+    } catch {
+      supplierEntryTenantId = null;
     }
   }
 
@@ -147,8 +163,9 @@ export default async function WorkspacePage({
         tenantOptions,
         selectedTenantName,
       })}
-      realEntryTenantId={activeTenantId}
+      realEntryTenantId={supplierEntryTenantId}
       customerEntryTenantId={customerEntryTenantId}
+      accessEntryTenantId={accessEntryTenantId}
     />
   );
 }
