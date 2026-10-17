@@ -32,9 +32,12 @@ export default async function NewCustomerPage({
   const requestedTenantId = rawTenant ? (rawTenant as TenantId) : null;
 
   let tenantId: TenantId;
+  let tenantName: string | null = null;
   try {
     const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.view');
     tenantId = context.tenantId;
+    tenantName =
+      context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
   } catch {
     redirect('/workspace');
   }
@@ -43,6 +46,8 @@ export default async function NewCustomerPage({
     redirect(`/workspace/customers?tenant=${tenantId}`);
   }
 
+  const { data: userData } = await client.auth.getUser();
+  const signedInEmail = userData.user?.email ?? null;
   const t = messages.customerWorkspace;
   const listHref = `/workspace/customers?tenant=${tenantId}`;
 
@@ -54,6 +59,9 @@ export default async function NewCustomerPage({
       fictionalNotice={t.fictionalNotice}
       backHref={listHref}
       backLabel={t.backToCustomers}
+      tenantId={tenantId}
+      tenantName={tenantName}
+      signedInEmail={signedInEmail}
     >
       <CustomerCreateForm tenantId={tenantId} countries={countryOptions()} cancelHref={listHref} />
     </WorkspaceRealFrame>

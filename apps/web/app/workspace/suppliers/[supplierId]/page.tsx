@@ -56,6 +56,7 @@ export default async function SupplierDetailPage({
   const requestedTenantId = rawTenant ? (rawTenant as TenantId) : null;
 
   let tenantId: TenantId;
+  let tenantName: string | null = null;
   try {
     const context = await resolveAuthorizedTenantContext(
       client,
@@ -64,9 +65,15 @@ export default async function SupplierDetailPage({
       'supplier.view',
     );
     tenantId = context.tenantId;
+    tenantName =
+      context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
   } catch {
     redirect('/workspace');
   }
+
+  const { data: userData } = await client.auth.getUser();
+  const signedInEmail = userData.user?.email ?? null;
+  const shell = { tenantId, tenantName, signedInEmail } as const;
 
   // A malformed id (not the UUID shape the database column expects) must
   // fail the same generic way a well-formed but missing/cross-tenant id
@@ -79,6 +86,8 @@ export default async function SupplierDetailPage({
       <WorkspaceRealFrame
         title={messages.supplierWorkspace.missingTitle}
         intro={messages.supplierWorkspace.missingBody}
+        backHref={`/workspace/suppliers?tenant=${tenantId}`}
+        {...shell}
       >
         <></>
       </WorkspaceRealFrame>
@@ -116,6 +125,7 @@ export default async function SupplierDetailPage({
       intro={messages.supplierWorkspace.detailIntro}
       backHref={`/workspace/suppliers?tenant=${tenantId}`}
       backLabel={messages.supplierWorkspace.backToSuppliers}
+      {...shell}
     >
       <SupplierJourney
         evidenceCount={evidence.length}

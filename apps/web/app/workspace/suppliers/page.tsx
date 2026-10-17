@@ -44,12 +44,18 @@ export default async function SuppliersPage({
   const requestedTenantId = rawTenant ? (rawTenant as TenantId) : null;
 
   let tenantId: TenantId;
+  let tenantName: string | null = null;
   try {
     const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'supplier.view');
     tenantId = context.tenantId;
+    tenantName =
+      context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
   } catch {
     redirect('/workspace');
   }
+
+  const { data: userData } = await client.auth.getUser();
+  const signedInEmail = userData.user?.email ?? null;
 
   const [suppliers, canManageSuppliers] = await Promise.all([
     listSuppliers(client, tenantId),
@@ -57,7 +63,14 @@ export default async function SuppliersPage({
   ]);
 
   return (
-    <WorkspaceRealFrame title={messages.supplierWorkspace.listTitle} intro={messages.supplierWorkspace.listIntro}>
+    <WorkspaceRealFrame
+      title={messages.supplierWorkspace.listTitle}
+      intro={messages.supplierWorkspace.listIntro}
+      backHref={`/workspace?tenant=${tenantId}`}
+      tenantId={tenantId}
+      tenantName={tenantName}
+      signedInEmail={signedInEmail}
+    >
       <SupplierList suppliers={suppliers} tenantId={tenantId} />
       {canManageSuppliers ? <SupplierCreateForm tenantId={tenantId} /> : null}
     </WorkspaceRealFrame>

@@ -49,15 +49,25 @@ export default async function CustomerDetailPage({
   const requestedTenantId = rawTenant ? (rawTenant as TenantId) : null;
 
   let tenantId: TenantId;
+  let tenantName: string | null = null;
   try {
     const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.view');
     tenantId = context.tenantId;
+    tenantName =
+      context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
   } catch {
     redirect('/workspace');
   }
 
+  const { data: userData } = await client.auth.getUser();
+  const signedInEmail = userData.user?.email ?? null;
   const t = messages.customerWorkspace;
   const listHref = `/workspace/customers?tenant=${tenantId}`;
+  const shell = {
+    tenantId,
+    tenantName,
+    signedInEmail,
+  } as const;
   const customer = isUuid(customerId)
     ? await getCustomerById(client, tenantId, customerId as CustomerId)
     : null;
@@ -70,6 +80,7 @@ export default async function CustomerDetailPage({
         fictionalNotice={t.fictionalNotice}
         backHref={listHref}
         backLabel={t.backToCustomers}
+        {...shell}
       >
         <></>
       </WorkspaceRealFrame>
@@ -108,6 +119,7 @@ export default async function CustomerDetailPage({
       fictionalNotice={t.fictionalNotice}
       backHref={listHref}
       backLabel={t.backToCustomers}
+      {...shell}
     >
       <CustomerProfile customer={customer} />
       <section
