@@ -102,9 +102,15 @@ export function RealWorkspaceShell({
           aria-label={t.primaryNav}
         >
           <div className="flex h-[var(--topbar-height)] items-center border-b border-white/10 px-4 lg:px-5">
-            <Link href={nav[0]?.href ?? '/workspace'} className="rounded-md">
-              <MitigaMark compact className="lg:hidden text-white" />
-              <MitigaMark className="hidden text-white lg:inline-flex" />
+            <Link
+              href={nav[0]?.href ?? '/workspace'}
+              className="inline-flex items-center rounded-md text-white"
+              aria-label={messages.brand}
+            >
+              <MitigaMark compact className="text-white" />
+              <span className="ml-2.5 hidden text-[0.95rem] font-semibold tracking-[0.12em] uppercase lg:inline">
+                {messages.brand}
+              </span>
             </Link>
           </div>
           <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -112,6 +118,7 @@ export function RealWorkspaceShell({
               <Link
                 key={item.id}
                 href={item.href}
+                aria-label={item.label}
                 aria-current={active === item.id ? 'page' : undefined}
                 title={item.description}
                 className={cn(
@@ -123,7 +130,6 @@ export function RealWorkspaceShell({
               >
                 <item.icon className="size-4 shrink-0" aria-hidden="true" />
                 <span className="hidden lg:inline">{item.label}</span>
-                <span className="sr-only lg:hidden">{item.label}</span>
               </Link>
             ))}
           </nav>
