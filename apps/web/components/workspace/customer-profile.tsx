@@ -19,7 +19,7 @@ export function CustomerProfile({ customer }: { customer: Customer }) {
   return (
     <section
       aria-labelledby="customer-profile"
-      className="space-y-4 rounded-xl border border-border p-5 sm:p-6"
+      className="space-y-4 rounded-xl border border-border bg-card p-5 sm:p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="customer-profile" className="text-base font-medium">

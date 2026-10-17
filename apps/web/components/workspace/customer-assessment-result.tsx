@@ -94,11 +94,21 @@ export function CustomerAssessmentResult({
             </div>
           </dl>
         </div>
-        <Alert className="mt-5 border-primary/20 bg-background/70">
-          <InfoIcon aria-hidden="true" />
-          <AlertTitle>{t.classificationNotice}</AlertTitle>
-          <AlertDescription>{t.databaseNotice}</AlertDescription>
-        </Alert>
+        {view.overrides.length > 0 ? (
+          <Alert className="mt-5 border-[#e2c4c2] bg-[#f3e4e2]/70">
+            <InfoIcon aria-hidden="true" />
+            <AlertTitle>{t.howToReadTitle}</AlertTitle>
+            <AlertDescription>
+              {interpolate(t.overrideDroveBand, { band: view.bandLabel })}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="mt-5 border-primary/20 bg-background/70">
+            <InfoIcon aria-hidden="true" />
+            <AlertTitle>{t.classificationNotice}</AlertTitle>
+            <AlertDescription>{t.databaseNotice}</AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <section aria-labelledby={`${headingId}-approvals`} className="space-y-3">
@@ -204,7 +214,7 @@ export function CustomerAssessmentResult({
         </ul>
       </section>
 
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-xl border border-border p-5 text-sm sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-xl border border-border bg-card p-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-muted-foreground">{t.nextReviewLabel}</dt>
           <dd className="mt-1 font-medium">{view.nextReviewDueText}</dd>
@@ -216,18 +226,15 @@ export function CustomerAssessmentResult({
           <dt className="text-muted-foreground">{t.assessedAtLabel}</dt>
           <dd className="mt-1">{view.assessedAtText}</dd>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 sm:col-span-2">
           <dt className="text-muted-foreground">{t.policyLabel}</dt>
-          {view.policyLabel ? <dd className="mt-1 font-medium">{view.policyLabel}</dd> : null}
-          <dd className="mt-1 break-all font-mono text-xs">{view.policyVersionId}</dd>
-        </div>
-        <div className="min-w-0">
-          <dt className="text-muted-foreground">{t.correlationLabel}</dt>
-          <dd className="mt-1 break-all font-mono text-xs">{view.correlationId}</dd>
+          <dd className="mt-1 font-medium">
+            {view.policyLabel ?? view.policyVersionId.slice(0, 8)}
+          </dd>
         </div>
       </dl>
 
-      <details className="group rounded-xl border border-border">
+      <details className="group rounded-xl border border-border bg-card">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-5 py-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
           {t.whyTitle}
           <ChevronDownIcon
@@ -283,6 +290,19 @@ export function CustomerAssessmentResult({
               ))}
             </ul>
           </div>
+          <dl className="grid grid-cols-1 gap-4 border-t border-border pt-4 text-sm sm:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">{t.policyLabel}</dt>
+              {view.policyLabel ? (
+                <dd className="mt-1 font-medium">{view.policyLabel}</dd>
+              ) : null}
+              <dd className="mt-1 break-all font-mono text-xs">{view.policyVersionId}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-muted-foreground">{t.correlationLabel}</dt>
+              <dd className="mt-1 break-all font-mono text-xs">{view.correlationId}</dd>
+            </div>
+          </dl>
         </div>
       </details>
     </div>

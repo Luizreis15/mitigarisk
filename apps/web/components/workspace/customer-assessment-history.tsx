@@ -43,7 +43,7 @@ export function CustomerAssessmentHistory({
   return (
     <section
       aria-labelledby="customer-assessment-history"
-      className="space-y-4 rounded-xl border border-border p-5 sm:p-6"
+      className="space-y-4 rounded-xl border border-border bg-card p-5 sm:p-6"
     >
       <h2 id="customer-assessment-history" className="text-base font-medium">
         {t.historyTitle}
