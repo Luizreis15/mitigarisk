@@ -1,5 +1,10 @@
 import Link from 'next/link';
-import { ArrowRightIcon, ClipboardCheckIcon, UsersIcon } from 'lucide-react';
+import {
+  ArrowRightIcon,
+  ClipboardCheckIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+} from 'lucide-react';
 
 import { WorkspaceSessionActions } from '@/components/workspace/workspace-session-actions';
 import { WorkspaceStatus } from '@/components/workspace/workspace-status';
@@ -14,10 +19,12 @@ export function WorkspaceExperience({
   model,
   realEntryTenantId,
   customerEntryTenantId,
+  accessEntryTenantId,
 }: {
   model: WorkspaceViewModel;
   realEntryTenantId?: TenantId | null;
   customerEntryTenantId?: TenantId | null;
+  accessEntryTenantId?: TenantId | null;
 }) {
   const hub = messages.realShell.hub;
   const isActiveMember = model.kind === 'active_member';
@@ -95,7 +102,7 @@ export function WorkspaceExperience({
           <p className="text-xs font-medium text-muted-foreground">{hub.demoNote}</p>
         </header>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {customerEntryTenantId ? (
             <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
               <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -131,6 +138,25 @@ export function WorkspaceExperience({
                 render={<Link href={`/workspace/suppliers?tenant=${realEntryTenantId}`} />}
               >
                 {hub.suppliersAction}
+                <ArrowRightIcon aria-hidden="true" />
+              </Button>
+            </article>
+          ) : null}
+
+          {accessEntryTenantId ? (
+            <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
+              <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ShieldCheckIcon className="size-5" aria-hidden="true" />
+              </div>
+              <h2 className="text-xl font-medium">{hub.accessTitle}</h2>
+              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+                {hub.accessBody}
+              </p>
+              <Button
+                className="mt-6 h-11 w-full sm:w-auto"
+                render={<Link href={`/workspace/access?tenant=${accessEntryTenantId}`} />}
+              >
+                {hub.accessAction}
                 <ArrowRightIcon aria-hidden="true" />
               </Button>
             </article>

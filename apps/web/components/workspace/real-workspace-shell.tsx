@@ -9,6 +9,7 @@ import {
   HomeIcon,
   LogOutIcon,
   MenuIcon,
+  ShieldCheckIcon,
   UsersIcon,
 } from 'lucide-react';
 
@@ -26,7 +27,7 @@ import { signOutAction } from '@/app/auth-actions';
 import { messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-export type WorkspaceNavId = 'home' | 'customers' | 'suppliers';
+export type WorkspaceNavId = 'home' | 'customers' | 'suppliers' | 'access';
 
 type NavItem = {
   id: WorkspaceNavId;
@@ -60,12 +61,20 @@ function buildNav(tenantId: string | null): NavItem[] {
       icon: ClipboardListIcon,
       description: messages.realShell.nav.suppliersHint,
     },
+    {
+      id: 'access',
+      label: messages.realShell.nav.access,
+      href: `/workspace/access${q}`,
+      icon: ShieldCheckIcon,
+      description: messages.realShell.nav.accessHint,
+    },
   ];
 }
 
 function resolveActive(pathname: string): WorkspaceNavId {
   if (pathname.startsWith('/workspace/customers')) return 'customers';
   if (pathname.startsWith('/workspace/suppliers')) return 'suppliers';
+  if (pathname.startsWith('/workspace/access')) return 'access';
   return 'home';
 }
 
@@ -200,7 +209,9 @@ export function RealWorkspaceShell({
                   ? t.context.customers
                   : active === 'suppliers'
                     ? t.context.suppliers
-                    : t.context.home}
+                    : active === 'access'
+                      ? t.context.access
+                      : t.context.home}
               </p>
             </div>
 
