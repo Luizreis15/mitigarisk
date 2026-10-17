@@ -38,12 +38,18 @@ export default async function CustomersPage({
   const requestedTenantId = rawTenant ? (rawTenant as TenantId) : null;
 
   let tenantId: TenantId;
+  let tenantName: string | null = null;
   try {
     const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.view');
     tenantId = context.tenantId;
+    tenantName =
+      context.memberships.find((m) => m.tenantId === context.tenantId)?.tenantName ?? null;
   } catch {
     redirect('/workspace');
   }
+
+  const { data: userData } = await client.auth.getUser();
+  const signedInEmail = userData.user?.email ?? null;
 
   const [customers, canManageCustomers] = await Promise.all([
     listCustomers(client, tenantId),
@@ -65,6 +71,9 @@ export default async function CustomersPage({
       fictionalNotice={t.fictionalNotice}
       backLabel={t.backToWorkspace}
       backHref={`/workspace?tenant=${tenantId}`}
+      tenantId={tenantId}
+      tenantName={tenantName}
+      signedInEmail={signedInEmail}
     >
       {canManageCustomers ? (
         <div className="flex justify-end">

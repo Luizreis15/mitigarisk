@@ -130,6 +130,42 @@ export const messages = {
       'The signed-in session is still valid, but membership details could not be loaded. No tenant context is assumed. Try again or sign out.',
     backToSignIn: 'Back to sign-in',
   },
+  realShell: {
+    skipToContent: 'Skip to main content',
+    primaryNav: 'Workspace navigation',
+    openMenu: 'Open menu',
+    companyLabel: 'Company',
+    noCompany: 'No company selected',
+    nav: {
+      home: 'Home',
+      homeHint: 'Overview of what you can do in this company',
+      customers: 'Customers',
+      customersHint: 'Register customers and run risk assessments',
+      suppliers: 'Suppliers',
+      suppliersHint: 'Assess and decide on suppliers',
+    },
+    context: {
+      home: 'Company workspace',
+      customers: 'Customer risk assessment',
+      suppliers: 'Supplier risk assessment',
+    },
+    hub: {
+      title: 'What do you want to do?',
+      subtitle:
+        'Choose a module. Each one opens a clear workflow — no guesswork.',
+      signedIn: 'Signed in as {email}',
+      company: 'Working in {tenantName}',
+      customersTitle: 'Customers',
+      customersBody:
+        'Onboard a customer, run the CRA, see the risk band and decision, and review history.',
+      customersAction: 'Go to customers',
+      suppliersTitle: 'Suppliers',
+      suppliersBody:
+        'Register a supplier, attach evidence, run evaluation, and record the company decision.',
+      suppliersAction: 'Go to suppliers',
+      demoNote: 'This company uses fictional demonstration data only.',
+    },
+  },
   supplierWorkspace: {
     kicker: 'Supplier risk assessment',
     fictionalNotice: 'Fictional demonstration data only',
