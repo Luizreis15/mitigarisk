@@ -10,7 +10,12 @@ import {
   signOut,
   updatePassword,
 } from '@/lib/supabase/auth';
-import { getAuthConfirmUrl } from '@/lib/supabase/site-url';
+import {
+  getAuthConfirmUrl,
+  isPasswordActionCallbackType,
+  isSupportedAuthCallbackType,
+  safeAuthDestination,
+} from '@/lib/supabase/site-url';
 
 // Server Actions wiring the real Supabase auth boundary from TASK-013 to
 // the sign-in and password-recovery forms
@@ -89,4 +94,42 @@ export async function signOutAction(): Promise<void> {
   const client = await createServerSupabaseClient();
   await signOut(client);
   redirect('/');
+}
+
+/**
+ * Completes an invite/recovery/signup link after an explicit human POST
+ * from /auth/continue. Never call verifyOtp from a bare GET handler.
+ */
+export async function confirmAuthLinkAction(formData: FormData): Promise<void> {
+  const tokenHash = readFormValue(formData, 'token_hash');
+  const rawType = readFormValue(formData, 'type');
+  const destination = safeAuthDestination(readFormValue(formData, 'next') || null);
+
+  if (!tokenHash || !isSupportedAuthCallbackType(rawType)) {
+    redirect('/auth/error?reason=invalid_link');
+  }
+
+  const client = await createServerSupabaseClient();
+  const { error } = await client.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: rawType,
+  });
+
+  if (error) {
+    redirect('/auth/error?reason=expired_link');
+  }
+
+  const cookieStore = await cookies();
+  if (isPasswordActionCallbackType(rawType)) {
+    cookieStore.set('mitiga-password-action', rawType, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60,
+      path: '/',
+    });
+    redirect(destination);
+  }
+
+  redirect('/workspace');
 }

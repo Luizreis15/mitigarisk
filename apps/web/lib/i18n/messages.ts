@@ -90,6 +90,11 @@ export const messages = {
     body: 'It may be incomplete, expired, or already used. Request a new password reset link to continue securely.',
     action: 'Request a new link',
   },
+  authContinue: {
+    title: 'Continue securely',
+    body: 'Open this step once, from this device. Email previews can invalidate a link before you click — confirming here finishes the secure sign-in.',
+    action: 'Continue to set password',
+  },
   workspace: {
     kicker: 'Signed in',
     title: 'Your MITIGA account',
