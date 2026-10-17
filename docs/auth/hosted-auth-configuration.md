@@ -27,14 +27,22 @@ notifications, but this auth flow does not read it.
 
 ## Supabase URL configuration
 
-- Site URL: `https://mitiga.online`
-- Exact production redirect: `https://mitiga.online/auth/confirm`
+Production serves on **www**; the apex `mitiga.online` 308-redirects to www.
+Auth Site URL and redirects must use www so cookies and OTP verification share one origin.
+
+- Site URL: `https://www.mitiga.online`
+- Exact production redirect: `https://www.mitiga.online/auth/confirm`
+- Also allow (optional, for old emails): `https://mitiga.online/auth/confirm`
 - Local redirect: `http://localhost:3000/auth/confirm`
 - Preview wildcard only in a non-production test environment when needed:
   `https://*-*.vercel.app/auth/confirm`
 
 Avoid a broad wildcard on the production domain. Set Vercel
-`NEXT_PUBLIC_SITE_URL=https://mitiga.online` with Config visibility for Production.
+`NEXT_PUBLIC_SITE_URL=https://www.mitiga.online` with Config visibility for Production.
+
+**Recovery link UX:** `/auth/confirm` only validates params and redirects to
+`/auth/continue`, where a human POST runs `verifyOtp`. This stops Outlook
+SafeLinks and other email scanners from burning one-time tokens on GET prefetch.
 
 ## Template mapping
 
