@@ -121,10 +121,9 @@ export default async function CustomerDetailPage({
       backLabel={t.backToCustomers}
       {...shell}
     >
-      <CustomerProfile customer={customer} />
       <section
         aria-labelledby="customer-latest-assessment"
-        className="space-y-5 rounded-xl border border-border p-5 sm:p-6"
+        className="space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6"
       >
         <h2 id="customer-latest-assessment" className="text-base font-medium">
           {t.latestTitle}
@@ -134,7 +133,9 @@ export default async function CustomerDetailPage({
             view={buildAssessmentResultView({
               ...latest,
               policyLabel:
-                currentPolicy && latest.policyVersionId === currentPolicy.id ? currentPolicy.label : null,
+                currentPolicy && latest.policyVersionId === currentPolicy.id
+                  ? currentPolicy.label
+                  : null,
             })}
           />
         ) : (
@@ -146,6 +147,7 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </section>
+      <CustomerProfile customer={customer} />
       {canRunAssessment && form ? (
         <CustomerAssessmentForm
           view={buildAssessmentFormView(form)}
@@ -157,10 +159,14 @@ export default async function CustomerDetailPage({
       {canRunAssessment && formUnavailable ? (
         <Alert variant={formUnavailable === 'no_policy' ? 'default' : 'destructive'}>
           <AlertTitle>
-            {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyTitle : t.assessmentForm.unavailableTitle}
+            {formUnavailable === 'no_policy'
+              ? t.assessmentForm.noPolicyTitle
+              : t.assessmentForm.unavailableTitle}
           </AlertTitle>
           <AlertDescription>
-            {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyBody : t.assessmentForm.unavailableBody}
+            {formUnavailable === 'no_policy'
+              ? t.assessmentForm.noPolicyBody
+              : t.assessmentForm.unavailableBody}
           </AlertDescription>
         </Alert>
       ) : null}

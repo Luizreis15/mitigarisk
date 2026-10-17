@@ -457,17 +457,17 @@ export const messages = {
     missingBody:
       'This identifier is not a customer in your active company, or it belongs to another tenant.',
     detailIntro:
-      'Customer profile, the latest persisted risk assessment, and the full assessment history.',
+      'Start with the latest risk result, then the customer profile, a new assessment if needed, and history.',
     profileTitle: 'Customer profile',
     recordedLabel: 'Recorded (UTC)',
-    latestTitle: 'Latest assessment',
+    latestTitle: 'Latest risk result',
     noAssessmentTitle: 'No assessment yet',
     noAssessmentBody:
-      'This customer has not been assessed. The latest result appears here once an assessment is recorded.',
+      'This customer has not been assessed. Run an assessment below to record the first risk result.',
     assessmentForm: {
       title: 'Run a risk assessment',
       intro:
-        'Answer from the facts you hold about this fictional customer. The database applies your published risk policy and records the result; this form never shows weights or points.',
+        'Answer from the facts you hold about this fictional customer. Your published risk policy scores the answers and records the result. Weights stay in the policy, not on this form.',
       policyLabel: 'Current policy',
       factorsTitle: 'Risk factors',
       factorsHelp:
@@ -548,10 +548,13 @@ export const messages = {
     assessedByYou: 'You',
     result: {
       eyebrow: 'Risk classification',
+      howToReadTitle: 'How to read this',
       databaseNotice:
-        'Calculated and stored by the database from the published policy. This screen only displays the persisted result.',
+        "Produced by your company's published risk policy. This screen shows the recorded result.",
       classificationNotice:
-        'This is a risk classification, not a final onboarding decision.',
+        'This is a risk classification for due diligence — not the final onboarding approval.',
+      overrideDroveBand:
+        'Hard screening rules raised the band to {band} even when the numeric score looks low. Follow the band, due-diligence level, and outcome — not the score alone.',
       overallScoreLabel: 'Overall score',
       scoreOutOf: '{score} out of 100',
       scoreOutOfSuffix: '/ 100',
@@ -560,13 +563,13 @@ export const messages = {
       outcomeLabel: 'Outcome',
       categoryScoresTitle: 'Category scores',
       categoryScoreAria: '{category}: {score} out of 100',
-      overridesTitle: 'Overrides that fired',
+      overridesTitle: 'Hard rules applied',
       overridesHelp:
-        'An override applies regardless of the score. Each one below changed this result.',
-      noOverrides: 'No override fired.',
+        'A hard rule applies regardless of the numeric score. Each item below changed this result.',
+      noOverrides: 'No hard screening rule applied.',
       requiredActionsTitle: 'Required actions',
       requiredActionsHelp:
-        'Checklist for the due-diligence team. Display only; completion is not recorded here.',
+        'Checklist for the due-diligence team. Shown for guidance; completion is not tracked on this screen.',
       approvalsTitle: 'Required approvals',
       noApprovals: 'No additional approval is required.',
       approvalPending: 'Pending',
@@ -574,12 +577,12 @@ export const messages = {
         'Sign-off is not available in this release; it remains pending.',
       nextReviewLabel: 'Next review due',
       reviewCycle: 'Review cycle: every {months} months',
-      policyLabel: 'Policy version',
+      policyLabel: 'Policy',
       assessedAtLabel: 'Assessed (UTC)',
-      correlationLabel: 'Correlation',
+      correlationLabel: 'Audit reference',
       whyTitle: 'Why this result',
       whyHelp:
-        'Technical detail behind the classification, including the raw reason codes recorded with the assessment.',
+        'Supporting detail for auditors: missing facts, hard-rule codes, and reason codes stored with the assessment.',
       missingFactorsTitle: 'Missing information',
       missingFactorsHelp:
         'These facts were not known, so the policy applied its missing-data points.',
@@ -587,8 +590,8 @@ export const messages = {
       reasonCodesTitle: 'Reason codes',
       rejectTitle: 'Do not onboard — report to MLRO',
       rejectBody:
-        'A reject override fired. The customer must not be onboarded, and the case must be reported to the MLRO.',
-      rejectReasonsLabel: 'Override reasons',
+        'A hard reject rule applied. Do not onboard this customer; report the case to the MLRO.',
+      rejectReasonsLabel: 'Reject reasons',
     },
     bands: {
       LOW: 'Low',
