@@ -107,32 +107,30 @@ export const messages = {
       'Your account is not a member of any company yet. Ask a company administrator to invite you, or a platform administrator to set up your company.',
     membershipCountOne: '{count} active company membership.',
     membershipCountOther: '{count} active company memberships.',
-    membershipBody:
-      'This tenant context was selected and verified by the server against your own active memberships.',
+    membershipBody: 'You are signed into a verified company workspace.',
     selectedTenantNotice: 'Selected company: {tenantName}.',
     tenantSelectionTitle: 'Choose a company',
     tenantSelectionBody:
-      'Your account has more than one active company membership. Select one to continue; the server re-verifies this choice on every request.',
+      'Your account belongs to more than one company. Choose which company to open.',
     invalidSelectionTitle: 'That company selection could not be used',
     invalidSelectionBody:
-      'The requested company is not one of your active memberships. This can happen with an old link, a bookmark, or a membership that has changed. Start over to choose again.',
+      'That company is not one of your active memberships. This can happen with an old link or a membership that changed. Start over to choose again.',
     tryAgainLink: 'Start over',
     tenantContextUnavailable:
-      'Tenant-specific Operator and policy workspaces are unavailable until this task connects them. This page does not list roles or capabilities.',
-    buildingNotice:
-      'Full workspace views are still being connected to this real session.',
+      'Additional company modules are not available for this account yet.',
+    buildingNotice: 'Open a module from the menu to continue.',
     demoPreviewTitle: 'Sample data preview',
     demoPreviewLink: 'Open sample data preview',
     demoPreviewHint:
-      'The sample-data preview is fictional demonstration content. It is not this account, not a real tenant workspace, and not authorization.',
+      'Fictional demonstration content only — not this account and not a live company workspace.',
     signOut: 'Sign out',
     skipToContent: 'Skip to workspace status',
     configUnavailableTitle: 'Workspace is not configured',
     configUnavailableBody:
-      'Public Supabase configuration is missing. This screen does not sign anyone in and does not fall back to a fictional session.',
+      'Sign-in is unavailable in this environment. Contact your MITIGA administrator.',
     readFailureTitle: 'Workspace details could not be read',
     readFailureBody:
-      'The signed-in session is still valid, but membership details could not be loaded. No tenant context is assumed. Try again or sign out.',
+      'You are still signed in, but company details could not be loaded. Try again or sign out.',
     backToSignIn: 'Back to sign-in',
   },
   realShell: {

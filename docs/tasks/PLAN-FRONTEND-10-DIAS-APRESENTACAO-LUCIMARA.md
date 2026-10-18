@@ -31,13 +31,13 @@ Se ainda precisar explicar a tela, **não está pronto**.
 
 | Dias | Datas | Entrega | Checkpoint com Edu |
 |---|---|---|---|
-| 1–2 | 16–17/10 | App shell (sidebar/topbar) + hub sem lixo de engenharia | Fim dia 2 |
-| 3–4 | 18–19/10 | Lista Clientes apresentável | — |
-| 5–6 | 20–21/10 | Detalhe + avaliação + resultado autoexplicativos | Fim dia 5–6 |
-| 7 | 22/10 | Fornecedores no mesmo shell ou fora do menu | — |
-| 8 | 23/10 | Acessos / quem fez o quê | Checkpoint |
-| 9 | 24/10 | Polimento visual + mobile + cópia | — |
-| 10 | 25–26/10 | Walkthrough interno + Lucimara | **Apresentação 26/10** |
+| 1–2 | 16–17/10 | App shell (sidebar/topbar) + hub sem lixo de engenharia | ✅ PR #14 |
+| 3–4 | 18–19/10 | Lista Clientes apresentável | ✅ PR #16 |
+| 5–6 | 20–21/10 | Detalhe + avaliação + resultado autoexplicativos | ✅ PR #17 |
+| 7 | 22/10 | Fornecedores no mesmo shell ou fora do menu | ✅ (shell + lista) |
+| 8 | 23/10 | Acessos / quem fez o quê | ✅ PR #18 |
+| 9 | 24/10 | Polimento visual + mobile + cópia | ✅ (este PR) |
+| 10 | 25–26/10 | Walkthrough interno + Lucimara | ver `WALKTHROUGH-LUCIMARA-26-OUT-2026.md` |
 
 ## Regra de corte
 

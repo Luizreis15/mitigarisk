@@ -28,7 +28,8 @@ export function WorkspaceExperience({
 }) {
   const hub = messages.realShell.hub;
   const isActiveMember = model.kind === 'active_member';
-  const tenantId = customerEntryTenantId ?? realEntryTenantId ?? null;
+  const tenantId =
+    customerEntryTenantId ?? realEntryTenantId ?? accessEntryTenantId ?? null;
 
   if (
     model.kind === 'config_unavailable' ||
