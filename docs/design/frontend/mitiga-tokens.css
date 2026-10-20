@@ -19,11 +19,19 @@
   --mitiga-slate-500: #687780;
   --mitiga-slate-700: #3d4d57;
 
-  /* Semantics */
-  --mitiga-info: #4b7086;
-  --mitiga-success: #4f7d72;
-  --mitiga-warning: #a68352;
-  --mitiga-danger: #9b5e64;
+  /* Semantics — saturated enough to read as risk signal on a light canvas */
+  --mitiga-info: #2f6f8f;
+  --mitiga-success: #2f8a78;
+  --mitiga-warning: #c4892e;
+  --mitiga-danger: #c45a63;
+  --mitiga-risk-low-fg: #1f5c52;
+  --mitiga-risk-low-bg: #d4ebe4;
+  --mitiga-risk-medium-fg: #7a4f12;
+  --mitiga-risk-medium-bg: #f6e6c8;
+  --mitiga-risk-high-fg: #8a3038;
+  --mitiga-risk-high-bg: #f4d9db;
+  --mitiga-risk-neutral-fg: #315b68;
+  --mitiga-risk-neutral-bg: #dce8eb;
 
   /* Surfaces and text */
   --color-bg-canvas: var(--mitiga-porcelain);
@@ -40,8 +48,10 @@
   --gradient-brand: linear-gradient(120deg, #244b5a 0%, #4f7d72 58%, #6b6f8e 100%);
   --gradient-shell: linear-gradient(135deg, #1c3443 0%, #315b68 55%, #607884 100%);
   --gradient-canvas: linear-gradient(135deg, #edf4f2 0%, #f5f6f7 54%, #eeeef4 100%);
-  --gradient-risk-low: linear-gradient(90deg, #dcebe8 0%, #bcd7d0 100%);
-  --gradient-risk-high: linear-gradient(90deg, #eedfda 0%, #c9918f 100%);
+  --gradient-risk-low: linear-gradient(135deg, #d4ebe4 0%, #8ec4b6 100%);
+  --gradient-risk-medium: linear-gradient(135deg, #f6e6c8 0%, #e0b56a 100%);
+  --gradient-risk-high: linear-gradient(135deg, #f4d9db 0%, #d97a82 100%);
+  --gradient-risk-neutral: linear-gradient(135deg, #dce8eb 0%, #7aa3b2 100%);
 
   /* Typography */
   --font-sans: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
