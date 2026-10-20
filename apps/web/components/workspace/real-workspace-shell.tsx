@@ -29,12 +29,20 @@ import { cn } from '@/lib/utils';
 
 export type WorkspaceNavId = 'home' | 'customers' | 'suppliers' | 'access';
 
+type NavChild = {
+  id: string;
+  label: string;
+  href: string;
+  match: (pathname: string) => boolean;
+};
+
 type NavItem = {
   id: WorkspaceNavId;
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
+  children?: NavChild[];
 };
 
 function buildNav(tenantId: string | null): NavItem[] {
@@ -53,6 +61,25 @@ function buildNav(tenantId: string | null): NavItem[] {
       href: `/workspace/customers${q}`,
       icon: UsersIcon,
       description: messages.realShell.nav.customersHint,
+      children: tenantId
+        ? [
+            {
+              id: 'customers-all',
+              label: messages.realShell.nav.customersAll,
+              href: `/workspace/customers${q}`,
+              match: (pathname) =>
+                pathname === '/workspace/customers' ||
+                (pathname.startsWith('/workspace/customers/') &&
+                  !pathname.startsWith('/workspace/customers/new')),
+            },
+            {
+              id: 'customers-new',
+              label: messages.realShell.nav.customersNew,
+              href: `/workspace/customers/new${q}`,
+              match: (pathname) => pathname.startsWith('/workspace/customers/new'),
+            },
+          ]
+        : undefined,
     },
     {
       id: 'suppliers',
@@ -60,6 +87,16 @@ function buildNav(tenantId: string | null): NavItem[] {
       href: `/workspace/suppliers${q}`,
       icon: ClipboardListIcon,
       description: messages.realShell.nav.suppliersHint,
+      children: tenantId
+        ? [
+            {
+              id: 'suppliers-all',
+              label: messages.realShell.nav.suppliersAll,
+              href: `/workspace/suppliers${q}`,
+              match: (pathname) => pathname.startsWith('/workspace/suppliers'),
+            },
+          ]
+        : undefined,
     },
     {
       id: 'access',
@@ -76,6 +113,35 @@ function resolveActive(pathname: string): WorkspaceNavId {
   if (pathname.startsWith('/workspace/suppliers')) return 'suppliers';
   if (pathname.startsWith('/workspace/access')) return 'access';
   return 'home';
+}
+
+function NavLink({
+  item,
+  active,
+  compact = false,
+}: {
+  item: NavItem;
+  active: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      aria-current={active ? 'page' : undefined}
+      title={item.description}
+      className={cn(
+        'relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm transition-[background-color,color,box-shadow] duration-[var(--duration-fast)]',
+        active
+          ? 'bg-white/14 text-white shadow-[inset_3px_0_0_0_var(--mitiga-mineral-100)]'
+          : 'text-white/75 hover:bg-white/10 hover:text-white',
+        compact && 'justify-center px-0',
+      )}
+    >
+      <item.icon className="size-4 shrink-0" aria-hidden="true" />
+      {!compact ? <span className="font-medium">{item.label}</span> : null}
+    </Link>
+  );
 }
 
 export function RealWorkspaceShell({
@@ -117,36 +183,64 @@ export function RealWorkspaceShell({
               aria-label={messages.brand}
             >
               <MitigaMark compact className="text-white" />
-              <span className="ml-2.5 hidden text-[0.95rem] font-semibold tracking-[0.12em] uppercase lg:inline">
+              <span className="ml-2.5 hidden text-[0.85rem] font-semibold tracking-[0.14em] uppercase lg:inline">
                 {messages.brand}
               </span>
             </Link>
           </div>
-          <nav className="flex flex-1 flex-col gap-1 p-3">
-            {nav.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                aria-label={item.label}
-                aria-current={active === item.id ? 'page' : undefined}
-                title={item.description}
-                className={cn(
-                  'flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm transition-[background-color,color] duration-[var(--duration-fast)]',
-                  active === item.id
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white',
-                )}
-              >
-                <item.icon className="size-4 shrink-0" aria-hidden="true" />
-                <span className="hidden lg:inline">{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-          <div className="hidden space-y-2 border-t border-white/10 px-5 py-4 lg:block">
-            <p className="text-[0.65rem] font-medium tracking-[0.12em] text-white/50 uppercase">
+
+          <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+            <p className="mb-1 hidden px-3 text-[0.65rem] font-semibold tracking-[0.14em] text-white/45 uppercase lg:block">
+              {t.navSection}
+            </p>
+            <nav className="flex flex-col gap-1">
+              {nav.map((item) => {
+                const isActive = active === item.id;
+                const showChildren = Boolean(item.children?.length) && isActive;
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <div className="lg:hidden">
+                      <NavLink item={item} active={isActive} compact />
+                    </div>
+                    <div className="hidden lg:block">
+                      <NavLink item={item} active={isActive} />
+                    </div>
+                    {showChildren ? (
+                      <ul className="hidden space-y-0.5 pb-1 pl-4 lg:block">
+                        {item.children!.map((child) => {
+                          const childActive = child.match(pathname);
+                          return (
+                            <li key={child.id}>
+                              <Link
+                                href={child.href}
+                                aria-current={childActive ? 'page' : undefined}
+                                className={cn(
+                                  'flex min-h-9 items-center rounded-md px-3 text-[0.8rem] transition-colors',
+                                  childActive
+                                    ? 'bg-white/10 font-medium text-white'
+                                    : 'text-white/60 hover:bg-white/8 hover:text-white/90',
+                                )}
+                              >
+                                {child.label}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="hidden space-y-2 border-t border-white/10 bg-black/10 px-5 py-4 lg:block">
+            <p className="text-[0.65rem] font-semibold tracking-[0.12em] text-[var(--mitiga-mineral-100)]/80 uppercase">
               {t.companyLabel}
             </p>
-            <p className="truncate text-sm text-white/90">{tenantName ?? t.noCompany}</p>
+            <p className="truncate text-sm font-medium text-white">
+              {tenantName ?? t.noCompany}
+            </p>
             {signedInEmail ? (
               <p className="truncate text-xs text-white/55">{signedInEmail}</p>
             ) : null}
@@ -178,33 +272,65 @@ export function RealWorkspaceShell({
                   </SheetDescription>
                 </SheetHeader>
                 <nav className="mt-4 flex flex-col gap-1 px-2">
-                  {nav.map((item) => (
-                    <SheetTrigger
-                      key={item.id}
-                      render={
-                        <Link
-                          href={item.href}
-                          className="flex min-h-11 flex-col justify-center rounded-lg px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10"
-                        />
-                      }
-                    >
-                      <span className="inline-flex items-center gap-3 font-medium">
-                        <item.icon className="size-4" aria-hidden="true" />
-                        {item.label}
-                      </span>
-                      <span className="mt-0.5 pl-7 text-xs text-white/55">{item.description}</span>
-                    </SheetTrigger>
-                  ))}
+                  {nav.map((item) => {
+                    const isActive = active === item.id;
+                    return (
+                      <div key={item.id} className="space-y-1">
+                        <SheetTrigger
+                          render={
+                            <Link
+                              href={item.href}
+                              className={cn(
+                                'flex min-h-11 flex-col justify-center rounded-lg px-3 py-2 text-left text-sm',
+                                isActive ? 'bg-white/14 text-white' : 'text-white/90 hover:bg-white/10',
+                              )}
+                            />
+                          }
+                        >
+                          <span className="inline-flex items-center gap-3 font-medium">
+                            <item.icon className="size-4" aria-hidden="true" />
+                            {item.label}
+                          </span>
+                          <span className="mt-0.5 pl-7 text-xs text-white/55">
+                            {item.description}
+                          </span>
+                        </SheetTrigger>
+                        {isActive && item.children?.length ? (
+                          <ul className="space-y-0.5 pb-1 pl-7">
+                            {item.children.map((child) => (
+                              <li key={child.id}>
+                                <SheetTrigger
+                                  render={
+                                    <Link
+                                      href={child.href}
+                                      className={cn(
+                                        'flex min-h-10 items-center rounded-md px-3 text-sm',
+                                        child.match(pathname)
+                                          ? 'bg-white/10 text-white'
+                                          : 'text-white/70 hover:bg-white/8',
+                                      )}
+                                    />
+                                  }
+                                >
+                                  {child.label}
+                                </SheetTrigger>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </nav>
               </SheetContent>
             </Sheet>
 
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-[0.7rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">
+              <p className="flex items-center gap-1.5 text-[0.65rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">
                 <Building2Icon className="size-3.5" aria-hidden="true" />
                 {tenantName ?? t.noCompany}
               </p>
-              <p className="truncate text-sm text-foreground">
+              <p className="truncate text-sm font-medium text-foreground">
                 {active === 'customers'
                   ? t.context.customers
                   : active === 'suppliers'
@@ -225,7 +351,7 @@ export function RealWorkspaceShell({
 
           <div
             id="main-content"
-            className="mx-auto w-full max-w-[var(--content-max-width)] flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+            className="mx-auto w-full max-w-[var(--content-max-width)] flex-1 px-4 py-6 sm:px-6 sm:py-7 lg:px-8"
           >
             {children}
           </div>
