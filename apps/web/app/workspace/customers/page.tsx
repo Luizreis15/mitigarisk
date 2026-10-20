@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
@@ -8,11 +7,9 @@ import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { listCustomers } from '@/lib/supabase/customers-repository';
 import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments-repository';
 import type { TenantId } from '@/lib/domain/ids';
-import { Button } from '@/components/ui/button';
 import { CustomerList } from '@/components/workspace/customer-list';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
 import { messages } from '@/lib/i18n/messages';
-import { PlusIcon } from 'lucide-react';
 
 // Real, authenticated tenant-scoped customer list
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Same
@@ -75,17 +72,6 @@ export default async function CustomersPage({
       tenantName={tenantName}
       signedInEmail={signedInEmail}
     >
-      {canManageCustomers ? (
-        <div className="flex justify-end">
-          <Button
-            className="h-11 w-full sm:w-auto"
-            render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}
-          >
-            <PlusIcon aria-hidden="true" />
-            {t.newCustomer}
-          </Button>
-        </div>
-      ) : null}
       <CustomerList rows={rows} tenantId={tenantId} canCreate={canManageCustomers} />
     </WorkspaceRealFrame>
   );

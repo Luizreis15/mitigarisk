@@ -475,6 +475,16 @@ export const messages = {
     emptyBody: 'No fictional customer has been registered in this company yet.',
     emptyBodyCanCreate:
       'Register the first fictional customer to begin a risk assessment.',
+    listFilters: {
+      searchLabel: 'Search customers',
+      searchPlaceholder: 'Search by name or reference',
+      bandLabel: 'Filter by risk band',
+      all: 'All ({count})',
+      showing: 'Showing {shown} of {total}',
+      noResultsTitle: 'No customers match these filters',
+      noResultsBody: 'Clear search or choose another risk band.',
+      clearFilters: 'Clear filters',
+    },
     summary: {
       label: 'Portfolio snapshot',
       total: '{count} customers',
