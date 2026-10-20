@@ -512,6 +512,7 @@ export const messages = {
     createFormTitle: 'Customer details',
     createFormHint:
       'All fields are required. Use fictional data only; never enter a real person.',
+    fieldNeedsAttention: 'Check this field and try again.',
     required: 'Required',
     selectCountry: 'Choose a country',
     externalReferencePlaceholder: 'CUST-DEMO-010',
@@ -561,6 +562,7 @@ export const messages = {
       provisionalTag: 'provisional (pending compliance confirmation)',
       submit: 'Run assessment',
       submitting: 'Running…',
+      fieldNeedsAttention: 'Check this answer and try again.',
       noPolicyTitle: 'Your company has no published risk policy yet',
       noPolicyBody:
         'An assessment can run only after a risk policy is published for this company.',
