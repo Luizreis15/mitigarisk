@@ -46,20 +46,28 @@ export function CustomerAssessmentResult({
         </Alert>
       ) : null}
 
-      <div className="rounded-xl border-2 border-primary/30 bg-primary/[0.04] p-5 sm:p-6">
+      <div
+        className={
+          view.band === 'LOW'
+            ? 'rounded-xl border border-border border-l-4 border-l-[var(--mitiga-success)] bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5'
+            : view.band === 'MEDIUM'
+              ? 'rounded-xl border border-border border-l-4 border-l-[var(--mitiga-warning)] bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5'
+              : 'rounded-xl border border-border border-l-4 border-l-[var(--mitiga-danger)] bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5'
+        }
+      >
         <p
           id={headingId}
-          className="text-xs font-semibold tracking-[0.12em] text-primary uppercase"
+          className="text-[0.65rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
         >
           {t.eyebrow}
         </p>
-        <div className="mt-3 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-end">
+        <div className="mt-2.5 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
           <div>
             <p className="text-sm text-muted-foreground">{t.overallScoreLabel}</p>
-            <p className="text-4xl font-semibold tracking-tight">
+            <p className="text-3xl font-semibold tracking-tight">
               <span aria-hidden="true">
                 {view.overallScoreText}
-                <span className="text-base font-normal text-muted-foreground">
+                <span className="text-sm font-normal text-muted-foreground">
                   {' '}
                   {t.scoreOutOfSuffix}
                 </span>

@@ -104,6 +104,16 @@ function buildNav(tenantId: string | null): NavItem[] {
       href: `/workspace/access${q}`,
       icon: ShieldCheckIcon,
       description: messages.realShell.nav.accessHint,
+      children: tenantId
+        ? [
+            {
+              id: 'access-people',
+              label: messages.accessWorkspace.membersTitle,
+              href: `/workspace/access${q}`,
+              match: (pathname) => pathname.startsWith('/workspace/access'),
+            },
+          ]
+        : undefined,
     },
   ];
 }
