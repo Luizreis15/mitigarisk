@@ -10,9 +10,12 @@ import { WorkspaceSessionActions } from '@/components/workspace/workspace-sessio
 import { WorkspaceStatus } from '@/components/workspace/workspace-status';
 import { WorkspaceTenantSelection } from '@/components/workspace/workspace-tenant-selection';
 import { RealWorkspaceShell } from '@/components/workspace/real-workspace-shell';
+import { WorkspaceDashboard } from '@/components/workspace/workspace-dashboard';
 import { Button } from '@/components/ui/button';
+import type { AuditEventRow } from '@/lib/domain/audit-event';
+import type { CompanyDashboardSnapshot } from '@/lib/domain/workspace-dashboard';
 import type { WorkspaceViewModel } from '@/lib/domain/workspace-access';
-import type { TenantId } from '@/lib/domain/ids';
+import type { TenantId, UserId } from '@/lib/domain/ids';
 import { interpolate, messages } from '@/lib/i18n/messages';
 
 export function WorkspaceExperience({
@@ -20,11 +23,21 @@ export function WorkspaceExperience({
   realEntryTenantId,
   customerEntryTenantId,
   accessEntryTenantId,
+  dashboardSnapshot = null,
+  dashboardUnavailable = false,
+  recentEvents = [],
+  canViewAudit = false,
+  currentUserId = null,
 }: {
   model: WorkspaceViewModel;
   realEntryTenantId?: TenantId | null;
   customerEntryTenantId?: TenantId | null;
   accessEntryTenantId?: TenantId | null;
+  dashboardSnapshot?: CompanyDashboardSnapshot | null;
+  dashboardUnavailable?: boolean;
+  recentEvents?: AuditEventRow[];
+  canViewAudit?: boolean;
+  currentUserId?: UserId | null;
 }) {
   const hub = messages.realShell.hub;
   const isActiveMember = model.kind === 'active_member';
@@ -75,13 +88,18 @@ export function WorkspaceExperience({
     return null;
   }
 
+  const customersHref = customerEntryTenantId
+    ? `/workspace/customers?tenant=${customerEntryTenantId}`
+    : null;
+  const showDashboard = Boolean(customerEntryTenantId) || dashboardUnavailable;
+
   return (
     <RealWorkspaceShell
       tenantName={model.selectedTenantName}
       signedInEmail={model.signedInEmail}
       tenantId={tenantId}
     >
-      <div className="mx-auto w-full max-w-5xl space-y-8">
+      <div className="mx-auto w-full max-w-[var(--content-max-width)] space-y-8">
         <header className="space-y-3">
           <p className="text-[0.7rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">
             {messages.brand}
@@ -103,66 +121,80 @@ export function WorkspaceExperience({
           <p className="text-xs font-medium text-muted-foreground">{hub.demoNote}</p>
         </header>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {customerEntryTenantId ? (
-            <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
-              <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <UsersIcon className="size-5" aria-hidden="true" />
-              </div>
-              <h2 className="text-xl font-medium">{hub.customersTitle}</h2>
-              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
-                {hub.customersBody}
-              </p>
-              <Button
-                className="mt-6 h-11 w-full sm:w-auto"
-                render={
-                  <Link href={`/workspace/customers?tenant=${customerEntryTenantId}`} />
-                }
-              >
-                {hub.customersAction}
-                <ArrowRightIcon aria-hidden="true" />
-              </Button>
-            </article>
-          ) : null}
+        {showDashboard ? (
+          <WorkspaceDashboard
+            snapshot={dashboardSnapshot}
+            snapshotUnavailable={dashboardUnavailable || !dashboardSnapshot}
+            recentEvents={recentEvents}
+            canViewAudit={canViewAudit}
+            currentUserId={currentUserId}
+            customersHref={customersHref}
+          />
+        ) : null}
 
-          {realEntryTenantId ? (
-            <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
-              <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <ClipboardCheckIcon className="size-5" aria-hidden="true" />
-              </div>
-              <h2 className="text-xl font-medium">{hub.suppliersTitle}</h2>
-              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
-                {hub.suppliersBody}
-              </p>
-              <Button
-                className="mt-6 h-11 w-full sm:w-auto"
-                render={<Link href={`/workspace/suppliers?tenant=${realEntryTenantId}`} />}
-              >
-                {hub.suppliersAction}
-                <ArrowRightIcon aria-hidden="true" />
-              </Button>
-            </article>
-          ) : null}
+        <section aria-label={hub.modulesTitle} className="space-y-4">
+          <h2 className="text-lg font-medium text-foreground">{hub.modulesTitle}</h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {customerEntryTenantId ? (
+              <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
+                <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <UsersIcon className="size-5" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-medium">{hub.customersTitle}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+                  {hub.customersBody}
+                </p>
+                <Button
+                  className="mt-6 h-11 w-full sm:w-auto"
+                  render={
+                    <Link href={`/workspace/customers?tenant=${customerEntryTenantId}`} />
+                  }
+                >
+                  {hub.customersAction}
+                  <ArrowRightIcon aria-hidden="true" />
+                </Button>
+              </article>
+            ) : null}
 
-          {accessEntryTenantId ? (
-            <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
-              <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <ShieldCheckIcon className="size-5" aria-hidden="true" />
-              </div>
-              <h2 className="text-xl font-medium">{hub.accessTitle}</h2>
-              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
-                {hub.accessBody}
-              </p>
-              <Button
-                className="mt-6 h-11 w-full sm:w-auto"
-                render={<Link href={`/workspace/access?tenant=${accessEntryTenantId}`} />}
-              >
-                {hub.accessAction}
-                <ArrowRightIcon aria-hidden="true" />
-              </Button>
-            </article>
-          ) : null}
-        </div>
+            {realEntryTenantId ? (
+              <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
+                <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ClipboardCheckIcon className="size-5" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-medium">{hub.suppliersTitle}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+                  {hub.suppliersBody}
+                </p>
+                <Button
+                  className="mt-6 h-11 w-full sm:w-auto"
+                  render={<Link href={`/workspace/suppliers?tenant=${realEntryTenantId}`} />}
+                >
+                  {hub.suppliersAction}
+                  <ArrowRightIcon aria-hidden="true" />
+                </Button>
+              </article>
+            ) : null}
+
+            {accessEntryTenantId ? (
+              <article className="flex flex-col rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-sm)]">
+                <div className="mb-4 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <ShieldCheckIcon className="size-5" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-medium">{hub.accessTitle}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+                  {hub.accessBody}
+                </p>
+                <Button
+                  className="mt-6 h-11 w-full sm:w-auto"
+                  render={<Link href={`/workspace/access?tenant=${accessEntryTenantId}`} />}
+                >
+                  {hub.accessAction}
+                  <ArrowRightIcon aria-hidden="true" />
+                </Button>
+              </article>
+            ) : null}
+          </div>
+        </section>
       </div>
     </RealWorkspaceShell>
   );

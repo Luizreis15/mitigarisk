@@ -105,9 +105,9 @@ export function RealWorkspaceShell({
         {t.skipToContent}
       </a>
 
-      <div className="lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
+      <div className="md:grid md:grid-cols-[var(--sidebar-rail-width)_minmax(0,1fr)] lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]">
         <aside
-          className="sticky top-0 hidden h-screen flex-col bg-[image:var(--gradient-shell)] text-sidebar-foreground md:flex md:w-[5.5rem] lg:w-[var(--sidebar-width)]"
+          className="sticky top-0 hidden h-screen flex-col bg-[image:var(--gradient-shell)] text-sidebar-foreground md:flex"
           aria-label={t.primaryNav}
         >
           <div className="flex h-[var(--topbar-height)] items-center border-b border-white/10 px-4 lg:px-5">
@@ -223,7 +223,10 @@ export function RealWorkspaceShell({
             </form>
           </header>
 
-          <div id="main-content" className="flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div
+            id="main-content"
+            className="mx-auto w-full max-w-[var(--content-max-width)] flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+          >
             {children}
           </div>
         </div>
