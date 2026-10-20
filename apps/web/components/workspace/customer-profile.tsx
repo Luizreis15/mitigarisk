@@ -19,15 +19,15 @@ export function CustomerProfile({ customer }: { customer: Customer }) {
   return (
     <section
       aria-labelledby="customer-profile"
-      className="space-y-4 rounded-xl border border-border bg-card p-5 sm:p-6"
+      className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="customer-profile" className="text-base font-medium">
+        <h2 id="customer-profile" className="text-sm font-semibold">
           {t.profileTitle}
         </h2>
         <Badge variant="outline">{customerStatusLabel(customer.status)}</Badge>
       </div>
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
         <div className="min-w-0">
           <dt className="text-muted-foreground">{t.fields.externalReference}</dt>
           <dd className="mt-1 break-words font-mono text-xs">

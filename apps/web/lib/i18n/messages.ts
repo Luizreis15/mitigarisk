@@ -203,8 +203,7 @@ export const messages = {
     fictionalNotice: 'Fictional demonstration data only',
     backToWorkspace: 'Back to workspace',
     listTitle: 'Access',
-    listIntro:
-      'People in this company and the recent activity trail. Email addresses are not listed here.',
+    listIntro: 'People in this company and the recent activity trail.',
     membersTitle: 'People',
     membersEmpty: 'No memberships are visible for this company.',
     membersLabel: 'Company members',
