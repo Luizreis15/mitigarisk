@@ -183,7 +183,9 @@ void test('customer pages deny platform admins and gate every read on customer.v
 void test('create and assess controls render only for server-confirmed capabilities', () => {
   const list = read(join(customersDir, 'page.tsx'));
   assert.match(list, /hasCapability\(client, tenantId, 'customer\.manage'\)/);
-  assert.match(list, /\{canManageCustomers \? \(/);
+  assert.match(list, /canCreate=\{canManageCustomers\}/);
+  const listComponent = read(join(appWeb, 'components/workspace/customer-list.tsx'));
+  assert.match(listComponent, /\{canCreate \? \(/);
 
   const create = read(join(customersDir, 'new/page.tsx'));
   assert.match(create, /hasCapability\(client, tenantId, 'customer\.manage'\)/);
