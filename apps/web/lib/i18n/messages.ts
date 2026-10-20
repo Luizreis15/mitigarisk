@@ -445,11 +445,11 @@ export const messages = {
     backToCustomers: 'All customers',
     entryTitle: 'Customers',
     entryBody:
-      'Register fictional customers and review their persisted customer risk assessments.',
+      'Register fictional customers and review their latest customer risk assessments.',
     entryAction: 'Open customers',
     listTitle: 'Customers',
     listIntro:
-      'Fictional customers in your company and the latest risk classification recorded by the database for each one.',
+      'Fictional customers in your company and the latest risk classification for each one.',
     listLabel: 'Customer list',
     newCustomer: 'New customer',
     emptyTitle: 'No customers yet',
