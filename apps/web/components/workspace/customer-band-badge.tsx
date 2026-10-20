@@ -12,10 +12,11 @@ import type { CraBandName } from '@/lib/domain/cra-engine';
 // identically across MITIGA. The label is always rendered as text: colour is
 // never the only signal.
 const toneClass: Record<CraBandName, string> = {
-  LOW: 'border-[#bcd7d0] bg-[#dcebe8] text-[#244b5a]',
-  MEDIUM: 'border-[#ead9b8] bg-[#f4ead8] text-[#6b5328]',
-  HIGH: 'border-[#e2c4c2] bg-[#f3e4e2] text-[#7a3f45]',
-};
+  LOW: 'border-[color-mix(in_srgb,var(--mitiga-success)_45%,transparent)] bg-[var(--mitiga-risk-low-bg)] text-[var(--mitiga-risk-low-fg)]',
+  MEDIUM:
+    'border-[color-mix(in_srgb,var(--mitiga-warning)_45%,transparent)] bg-[var(--mitiga-risk-medium-bg)] text-[var(--mitiga-risk-medium-fg)]',
+  HIGH: 'border-[color-mix(in_srgb,var(--mitiga-danger)_45%,transparent)] bg-[var(--mitiga-risk-high-bg)] text-[var(--mitiga-risk-high-fg)]',
+}
 
 export function CustomerBandBadge({
   band,
