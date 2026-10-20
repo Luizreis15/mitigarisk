@@ -93,7 +93,8 @@ void test('supplier lists provide distinct narrow and wide presentations', () =>
   const list =
     workspaceSources().find((file) => file.name === 'supplier-list.tsx')
       ?.source ?? '';
-  assert.match(list, /hidden overflow-hidden rounded-xl border border-border bg-card sm:block/);
+  assert.match(list, /hidden sm:block/);
+  assert.match(list, /-mx-4 overflow-x-auto border-y border-border/);
   assert.match(list, /sm:hidden/);
   assert.match(list, /focus-visible:ring-2/);
 });
