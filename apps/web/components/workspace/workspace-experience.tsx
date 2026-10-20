@@ -99,14 +99,14 @@ export function WorkspaceExperience({
       tenantId={tenantId}
     >
       <div className="mx-auto w-full max-w-[var(--content-max-width)] space-y-7">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
               {hub.title}
             </h1>
             <p className="text-sm text-muted-foreground">{hub.subtitle}</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-[color-mix(in_srgb,var(--mitiga-mineral-600)_35%,transparent)] bg-[var(--mitiga-mineral-100)] px-3 py-1 text-[0.7rem] font-semibold tracking-[0.08em] text-[var(--mitiga-petrol-800)] uppercase">
+          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.06em] text-muted-foreground uppercase">
             {hub.demoNote}
           </span>
         </header>
@@ -132,8 +132,8 @@ export function WorkspaceExperience({
                 href={`/workspace/customers?tenant=${customerEntryTenantId}`}
                 className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-mineral-600)] hover:bg-[var(--mitiga-mineral-100)]/40"
               >
-                <span className="inline-flex size-11 items-center justify-center rounded-xl bg-[image:var(--gradient-risk-low)] text-[var(--mitiga-risk-low-fg)]">
-                  <UsersIcon className="size-5" aria-hidden="true" />
+                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-risk-low-bg)] text-[var(--mitiga-risk-low-fg)]">
+                  <UsersIcon className="size-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-foreground">
@@ -155,8 +155,8 @@ export function WorkspaceExperience({
                 href={`/workspace/suppliers?tenant=${realEntryTenantId}`}
                 className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-petrol-700)] hover:bg-[var(--mitiga-risk-neutral-bg)]/50"
               >
-                <span className="inline-flex size-11 items-center justify-center rounded-xl bg-[image:var(--gradient-risk-neutral)] text-[var(--mitiga-risk-neutral-fg)]">
-                  <ClipboardCheckIcon className="size-5" aria-hidden="true" />
+                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-risk-neutral-bg)] text-[var(--mitiga-risk-neutral-fg)]">
+                  <ClipboardCheckIcon className="size-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-foreground">
@@ -178,8 +178,8 @@ export function WorkspaceExperience({
                 href={`/workspace/access?tenant=${accessEntryTenantId}`}
                 className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-violet-500)] hover:bg-[var(--mitiga-violet-100)]/60"
               >
-                <span className="inline-flex size-11 items-center justify-center rounded-xl bg-[var(--mitiga-violet-100)] text-[var(--mitiga-violet-500)]">
-                  <ShieldCheckIcon className="size-5" aria-hidden="true" />
+                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-violet-100)] text-[var(--mitiga-violet-500)]">
+                  <ShieldCheckIcon className="size-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-foreground">{hub.accessTitle}</span>

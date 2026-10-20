@@ -25,39 +25,39 @@ const toneStyles: Record<
   { card: string; iconWrap: string; value: string; Icon: typeof UsersIcon }
 > = {
   neutral: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-info)_28%,transparent)] bg-[image:var(--gradient-risk-neutral)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-neutral-fg)]',
-    value: 'text-[var(--mitiga-risk-neutral-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-neutral-bg)] text-[var(--mitiga-risk-neutral-fg)]',
+    value: 'text-foreground',
     Icon: UsersIcon,
   },
   low: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-success)_35%,transparent)] bg-[image:var(--gradient-risk-low)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-low-fg)]',
-    value: 'text-[var(--mitiga-risk-low-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-low-bg)] text-[var(--mitiga-risk-low-fg)]',
+    value: 'text-foreground',
     Icon: CheckCircle2Icon,
   },
   medium: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-warning)_40%,transparent)] bg-[image:var(--gradient-risk-medium)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-medium-fg)]',
-    value: 'text-[var(--mitiga-risk-medium-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-medium-bg)] text-[var(--mitiga-risk-medium-fg)]',
+    value: 'text-foreground',
     Icon: AlertTriangleIcon,
   },
   high: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-danger)_40%,transparent)] bg-[image:var(--gradient-risk-high)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-high-fg)]',
-    value: 'text-[var(--mitiga-risk-high-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-high-bg)] text-[var(--mitiga-risk-high-fg)]',
+    value: 'text-foreground',
     Icon: ShieldAlertIcon,
   },
   warn: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-warning)_40%,transparent)] bg-[image:var(--gradient-risk-medium)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-medium-fg)]',
-    value: 'text-[var(--mitiga-risk-medium-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-medium-bg)] text-[var(--mitiga-risk-medium-fg)]',
+    value: 'text-foreground',
     Icon: Clock3Icon,
   },
   reject: {
-    card: 'border-[color-mix(in_srgb,var(--mitiga-danger)_45%,transparent)] bg-[image:var(--gradient-risk-high)]',
-    iconWrap: 'bg-white/70 text-[var(--mitiga-risk-high-fg)]',
-    value: 'text-[var(--mitiga-risk-high-fg)]',
+    card: 'border-border bg-card',
+    iconWrap: 'bg-[var(--mitiga-risk-high-bg)] text-[var(--mitiga-risk-high-fg)]',
+    value: 'text-foreground',
     Icon: XCircleIcon,
   },
 };
@@ -75,26 +75,26 @@ function KpiCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border px-4 py-4 shadow-[var(--shadow-sm)]',
+        'relative overflow-hidden rounded-xl border px-3.5 py-3.5 shadow-[var(--shadow-xs)]',
         style.card,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[0.7rem] font-semibold tracking-[0.1em] text-[color-mix(in_srgb,var(--mitiga-ink-950)_72%,transparent)] uppercase">
+        <p className="text-[0.65rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">
           {label}
         </p>
         <span
           className={cn(
-            'inline-flex size-9 shrink-0 items-center justify-center rounded-lg',
+            'inline-flex size-8 shrink-0 items-center justify-center rounded-md',
             style.iconWrap,
           )}
         >
-          <style.Icon className="size-4" aria-hidden="true" />
+          <style.Icon className="size-3.5" aria-hidden="true" />
         </span>
       </div>
       <p
         className={cn(
-          'mt-3 text-4xl font-semibold tracking-tight tabular-nums',
+          'mt-2 text-2xl font-semibold tracking-tight tabular-nums',
           style.value,
         )}
       >
@@ -135,7 +135,7 @@ function RiskMixBar({ snapshot }: { snapshot: CompanyDashboardSnapshot }) {
   ].filter((segment) => segment.count > 0);
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5">
+    <div className="space-y-2.5 rounded-xl border border-border bg-card p-3.5 shadow-[var(--shadow-xs)] sm:p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-foreground">{t.mixLabel}</p>
         <p className="text-xs text-muted-foreground tabular-nums">
@@ -143,7 +143,7 @@ function RiskMixBar({ snapshot }: { snapshot: CompanyDashboardSnapshot }) {
         </p>
       </div>
       <div
-        className="flex h-3.5 overflow-hidden rounded-full bg-muted"
+        className="flex h-2.5 overflow-hidden rounded-full bg-muted"
         aria-hidden="true"
       >
         {segments.length === 0 ? (
@@ -198,26 +198,26 @@ export function WorkspaceDashboard({
           </p>
         ) : (
           <>
-            <div className="overflow-hidden rounded-2xl bg-[image:var(--gradient-brand)] p-5 text-white shadow-[var(--shadow-md)] sm:p-6">
-              <p className="text-[0.7rem] font-semibold tracking-[0.14em] text-white/70 uppercase">
-                {t.heroEyebrow}
-              </p>
-              <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0 border-l-4 border-l-[var(--mitiga-mineral-600)] pl-3.5">
+                <p className="text-[0.65rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                  {t.heroEyebrow}
+                </p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                   {interpolate(t.heroTitle, {
                     count: String(snapshot.customerTotal),
                   })}
                 </h2>
-                {customersHref ? (
-                  <Button
-                    className="h-11 min-h-11 w-full bg-white text-[var(--mitiga-petrol-800)] hover:bg-white/90 sm:w-auto"
-                    render={<Link href={customersHref} />}
-                  >
-                    {t.openCustomers}
-                    <ArrowRightIcon aria-hidden="true" />
-                  </Button>
-                ) : null}
               </div>
+              {customersHref ? (
+                <Button
+                  className="h-10 min-h-10 w-full sm:w-auto"
+                  render={<Link href={customersHref} />}
+                >
+                  {t.openCustomers}
+                  <ArrowRightIcon aria-hidden="true" />
+                </Button>
+              ) : null}
             </div>
 
             <RiskMixBar snapshot={snapshot} />
@@ -242,8 +242,8 @@ export function WorkspaceDashboard({
         )}
       </section>
 
-      <section aria-label={t.recentLabel} className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">{t.recentTitle}</h2>
+      <section aria-label={t.recentLabel} className="space-y-2.5">
+        <h2 className="text-sm font-semibold text-foreground">{t.recentTitle}</h2>
         {!canViewAudit ? (
           <p className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
             {t.recentUnavailable}
@@ -253,7 +253,7 @@ export function WorkspaceDashboard({
             {t.recentEmpty}
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-xs)]">
+          <ul className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-xs)]">
             {recentEvents.map((event, index) => {
               const who =
                 currentUserId && event.actorId === currentUserId
@@ -263,12 +263,12 @@ export function WorkspaceDashboard({
                 <li
                   key={event.id}
                   className={cn(
-                    'flex flex-col gap-1 border-l-4 border-l-[var(--mitiga-petrol-700)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4',
+                    'flex flex-col gap-0.5 border-l-[3px] border-l-[var(--mitiga-petrol-700)]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4',
                     index > 0 && 'border-t border-t-border',
                   )}
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {auditActionLabel(event.action)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
