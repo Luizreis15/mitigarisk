@@ -38,7 +38,7 @@ export function WorkspaceRealFrame({
       tenantId={tenantId}
       showSupplierNav={showSupplierNav}
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[var(--content-max-width)] flex-col gap-6">
         <Link
           href={backHref}
           className="inline-flex w-fit items-center gap-2 rounded-md text-sm text-muted-foreground underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"

@@ -141,7 +141,7 @@ export const messages = {
     noCompany: 'No company selected',
     nav: {
       home: 'Home',
-      homeHint: 'Overview of what you can do in this company',
+      homeHint: 'Company overview — risk bands, reviews, and recent activity',
       customers: 'Customers',
       customersHint: 'Register customers and run risk assessments',
       suppliers: 'Suppliers',
@@ -150,15 +150,15 @@ export const messages = {
       accessHint: 'Who is in this company and what was recorded',
     },
     context: {
-      home: 'Company workspace',
+      home: 'Company overview',
       customers: 'Customer risk assessment',
       suppliers: 'Supplier risk assessment',
       access: 'Company access and activity',
     },
     hub: {
-      title: 'What do you want to do?',
+      title: 'Company overview',
       subtitle:
-        'Choose a module. Each one opens a clear workflow — no guesswork.',
+        'Live counts from this company — risk bands, reviews due, and recent activity.',
       signedIn: 'Signed in as {email}',
       company: 'Working in {tenantName}',
       customersTitle: 'Customers',
@@ -174,6 +174,25 @@ export const messages = {
         'See who belongs to this company and the recent activity trail — who did what.',
       accessAction: 'Go to access',
       demoNote: 'This company uses fictional demonstration data only.',
+      modulesTitle: 'Continue working',
+    },
+    dashboard: {
+      kpiLabel: 'Company risk snapshot',
+      kpiUnavailable:
+        'Customer overview is unavailable right now. Open Customers when you are ready to continue.',
+      customersTotal: 'Customers',
+      bandLow: 'Low risk',
+      bandMedium: 'Medium risk',
+      bandHigh: 'High risk',
+      unassessed: 'Not assessed yet',
+      rejects: 'Reject recommendations',
+      reviewsDue: 'Reviews due (next {days} days)',
+      openCustomers: 'Open customer list',
+      recentLabel: 'Recent activity',
+      recentTitle: 'Recent activity',
+      recentEmpty: 'No recent activity is visible yet.',
+      recentUnavailable:
+        'Recent activity needs audit permission. Ask a company administrator if you should see it.',
     },
   },
   accessWorkspace: {

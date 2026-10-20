@@ -82,10 +82,11 @@
   --duration-standard: 200ms;
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  /* Application shell */
-  --sidebar-width: 16.5rem;
-  --topbar-height: 4.5rem;
-  --content-max-width: 90rem;
+  /* Application shell (P1 layout contract) */
+  --sidebar-width: 16.5rem; /* 264px desktop */
+  --sidebar-rail-width: 5.5rem; /* tablet icon rail */
+  --topbar-height: 4.5rem; /* 72px */
+  --content-max-width: 90rem; /* 1440px */
 }
 
 @media (prefers-reduced-motion: reduce) {

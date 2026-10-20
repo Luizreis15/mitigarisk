@@ -3,11 +3,19 @@ import { buildWorkspaceViewModel } from '@/lib/domain/workspace-access';
 import { classifyTenantSelectionError } from '@/lib/domain/tenant-selection';
 import type { TenantOptionView } from '@/lib/domain/workspace-access';
 import type { TenantId } from '@/lib/domain/ids';
+import type { AuditEventRow } from '@/lib/domain/audit-event';
+import {
+  buildCompanyDashboardSnapshot,
+  type CompanyDashboardSnapshot,
+} from '@/lib/domain/workspace-dashboard';
 import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { resolveActiveTenantContext } from '@/lib/supabase/tenant-context';
+import { listCustomers } from '@/lib/supabase/customers-repository';
+import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments-repository';
+import { listTenantAuditEvents } from '@/lib/supabase/access-repository';
 
 // Real protected product route
 // (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
@@ -150,6 +158,47 @@ export default async function WorkspacePage({
     }
   }
 
+  // Dashboard KPIs + recent activity: only from RLS-scoped reads on the
+  // verified tenant. Never invent counts; a failed read surfaces as
+  // unavailable rather than crashing the home shell.
+  let dashboardSnapshot: CompanyDashboardSnapshot | null = null;
+  let dashboardUnavailable = false;
+  let recentEvents: AuditEventRow[] = [];
+  let canViewAudit = false;
+  const currentUserId = identity.userId;
+
+  if (customerEntryTenantId) {
+    try {
+      const customers = await listCustomers(client, customerEntryTenantId);
+      const latest = await Promise.all(
+        customers.map((customer) =>
+          getLatestCustomerAssessment(client, customerEntryTenantId, customer.id),
+        ),
+      );
+      dashboardSnapshot = buildCompanyDashboardSnapshot(
+        customers.map((customer, index) => ({ customer, latest: latest[index] ?? null })),
+      );
+    } catch {
+      dashboardUnavailable = true;
+      dashboardSnapshot = null;
+    }
+  }
+
+  if (activeTenantId) {
+    try {
+      canViewAudit = await hasCapability(client, activeTenantId, 'audit.view');
+    } catch {
+      canViewAudit = false;
+    }
+    if (canViewAudit) {
+      try {
+        recentEvents = await listTenantAuditEvents(client, activeTenantId, 5);
+      } catch {
+        recentEvents = [];
+      }
+    }
+  }
+
   return (
     <WorkspaceExperience
       model={buildWorkspaceViewModel({
@@ -166,6 +215,11 @@ export default async function WorkspacePage({
       realEntryTenantId={supplierEntryTenantId}
       customerEntryTenantId={customerEntryTenantId}
       accessEntryTenantId={accessEntryTenantId}
+      dashboardSnapshot={dashboardSnapshot}
+      dashboardUnavailable={dashboardUnavailable}
+      recentEvents={recentEvents}
+      canViewAudit={canViewAudit}
+      currentUserId={currentUserId}
     />
   );
 }
