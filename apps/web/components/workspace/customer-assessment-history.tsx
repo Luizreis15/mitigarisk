@@ -41,44 +41,50 @@ export function CustomerAssessmentHistory({
       : shortId(assessment.policyVersionId);
 
   return (
-    <section
-      aria-labelledby="customer-assessment-history"
-      className="space-y-4 rounded-xl border border-border bg-card p-5 sm:p-6"
-    >
-      <h2 id="customer-assessment-history" className="text-base font-medium">
-        {t.historyTitle}
-      </h2>
+    <section aria-labelledby="customer-assessment-history" className="space-y-2.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="customer-assessment-history" className="text-sm font-semibold">
+          {t.historyTitle}
+        </h2>
+        <p className="text-xs text-muted-foreground tabular-nums">{assessments.length}</p>
+      </div>
+
       {assessments.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t.historyEmpty}</p>
       ) : (
         <>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-hidden rounded-xl border border-border bg-card md:block">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>{columns.date}</TableHead>
-                  <TableHead>{columns.policy}</TableHead>
-                  <TableHead>{columns.score}</TableHead>
-                  <TableHead>{columns.band}</TableHead>
-                  <TableHead>{columns.ddLevel}</TableHead>
-                  <TableHead>{columns.outcome}</TableHead>
-                  <TableHead>{columns.assessedBy}</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-10 px-4 text-xs">{columns.date}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.policy}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.score}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.band}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.ddLevel}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.outcome}</TableHead>
+                  <TableHead className="h-10 text-xs">{columns.assessedBy}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {assessments.map((assessment) => (
-                  <TableRow key={assessment.id}>
-                    <TableCell>{formatDateTime(assessment.assessedAt)}</TableCell>
-                    <TableCell className="text-xs" title={assessment.policyVersionId}>
+                  <TableRow key={assessment.id} className="h-12">
+                    <TableCell className="px-4 py-2 text-sm whitespace-nowrap">
+                      {formatDateTime(assessment.assessedAt)}
+                    </TableCell>
+                    <TableCell
+                      className="py-2 text-xs"
+                      title={assessment.policyVersionId}
+                    >
                       {policy(assessment)}
                     </TableCell>
-                    <TableCell className="tabular-nums">
+                    <TableCell className="py-2 tabular-nums">
                       {formatNumber(assessment.overallScore)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <CustomerBandBadge band={assessment.band} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       <Badge variant="outline">
                         {ddLevelShortLabel(assessment.ddLevel)}
                       </Badge>
@@ -86,23 +92,26 @@ export function CustomerAssessmentHistory({
                     <TableCell
                       className={
                         assessment.outcome === 'REJECT'
-                          ? 'font-medium text-destructive'
-                          : undefined
+                          ? 'py-2 font-medium text-destructive'
+                          : 'py-2'
                       }
                     >
                       {outcomeLabel(assessment.outcome)}
                     </TableCell>
-                    <TableCell className="text-xs">{assessedBy(assessment)}</TableCell>
+                    <TableCell className="py-2 text-xs">
+                      {assessedBy(assessment)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
-          <ul className="space-y-3 md:hidden">
+
+          <ul className="space-y-0 md:hidden">
             {assessments.map((assessment) => (
               <li
                 key={assessment.id}
-                className="space-y-2 rounded-xl border border-border p-4 text-sm"
+                className="border-l-[3px] border-l-[var(--mitiga-petrol-700)]/70 border-b border-b-border px-3 py-3 text-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">
@@ -110,38 +119,13 @@ export function CustomerAssessmentHistory({
                   </span>
                   <CustomerBandBadge band={assessment.band} />
                 </div>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  <div>
-                    <dt className="text-muted-foreground">{columns.score}</dt>
-                    <dd className="tabular-nums">
-                      {formatNumber(assessment.overallScore)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">{columns.ddLevel}</dt>
-                    <dd>{ddLevelShortLabel(assessment.ddLevel)}</dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="text-muted-foreground">{columns.outcome}</dt>
-                    <dd
-                      className={
-                        assessment.outcome === 'REJECT'
-                          ? 'font-medium text-destructive'
-                          : undefined
-                      }
-                    >
-                      {outcomeLabel(assessment.outcome)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">{columns.policy}</dt>
-                    <dd className="text-xs break-words">{policy(assessment)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">{columns.assessedBy}</dt>
-                    <dd className="text-xs">{assessedBy(assessment)}</dd>
-                  </div>
-                </dl>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {outcomeLabel(assessment.outcome)}
+                  {' · '}
+                  {ddLevelShortLabel(assessment.ddLevel)}
+                  {' · '}
+                  {formatNumber(assessment.overallScore)}
+                </p>
               </li>
             ))}
           </ul>

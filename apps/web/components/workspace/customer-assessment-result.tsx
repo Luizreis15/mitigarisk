@@ -172,7 +172,13 @@ export function CustomerAssessmentResult({
                 className="h-2 w-full overflow-hidden rounded-full bg-muted"
               >
                 <div
-                  className="h-full rounded-full bg-primary"
+                  className={
+                    view.band === 'LOW'
+                      ? 'h-full rounded-full bg-[var(--mitiga-success)]'
+                      : view.band === 'MEDIUM'
+                        ? 'h-full rounded-full bg-[var(--mitiga-warning)]'
+                        : 'h-full rounded-full bg-[var(--mitiga-danger)]'
+                  }
                   style={{ width: `${category.barPercent}%` }}
                 />
               </div>
@@ -204,17 +210,23 @@ export function CustomerAssessmentResult({
         )}
       </section>
 
-      <section aria-labelledby={`${headingId}-actions`} className="space-y-3">
-        <h3 id={`${headingId}-actions`} className="text-sm font-medium">
+      <section
+        aria-labelledby={`${headingId}-actions`}
+        className="space-y-3 rounded-xl border border-border bg-[var(--mitiga-mineral-100)]/35 p-4 sm:p-5"
+      >
+        <h3 id={`${headingId}-actions`} className="text-sm font-semibold">
           {t.requiredActionsTitle}
         </h3>
         <p className="text-sm text-muted-foreground">{t.requiredActionsHelp}</p>
         <ul className="space-y-2">
           {view.requiredActions.map((action, index) => (
-            <li key={`${action.code}-${index}`} className="flex items-start gap-2 text-sm">
+            <li
+              key={`${action.code}-${index}`}
+              className="flex items-start gap-2 rounded-lg border border-border/70 bg-card px-3 py-2.5 text-sm"
+            >
               <CircleIcon
                 aria-hidden="true"
-                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                className="mt-0.5 size-4 shrink-0 text-[var(--mitiga-mineral-600)]"
               />
               {action.label}
             </li>
@@ -222,7 +234,7 @@ export function CustomerAssessmentResult({
         </ul>
       </section>
 
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-xl border border-border bg-card p-5 text-sm sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-xl border border-border bg-card p-4 text-sm shadow-[var(--shadow-xs)] sm:grid-cols-2 sm:p-5">
         <div>
           <dt className="text-muted-foreground">{t.nextReviewLabel}</dt>
           <dd className="mt-1 font-medium">{view.nextReviewDueText}</dd>
