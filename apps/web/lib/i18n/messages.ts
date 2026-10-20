@@ -541,14 +541,14 @@ export const messages = {
     missingTitle: 'Customer not found',
     missingBody:
       'This identifier is not a customer in your active company, or it belongs to another tenant.',
-    detailIntro:
-      'Start with the latest risk result, then the customer profile, a new assessment if needed, and history.',
+    detailIntro: 'Latest risk result, profile, and assessment history.',
     profileTitle: 'Customer profile',
     recordedLabel: 'Recorded (UTC)',
     latestTitle: 'Latest risk result',
+    runAssessmentJump: 'Run assessment',
     noAssessmentTitle: 'No assessment yet',
     noAssessmentBody:
-      'This customer has not been assessed. Run an assessment below to record the first risk result.',
+      'Run an assessment to record the first risk result for this customer.',
     assessmentForm: {
       title: 'Run a risk assessment',
       intro:

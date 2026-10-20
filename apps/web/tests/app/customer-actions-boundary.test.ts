@@ -194,7 +194,9 @@ void test('create and assess controls render only for server-confirmed capabilit
   const detail = read(join(customersDir, '[customerId]/page.tsx'));
   assert.match(detail, /hasCapability\(client, tenantId, 'assessment\.run'\)/);
   assert.match(detail, /if \(canRunAssessment\) \{\s*try \{\s*form = await getCustomerAssessmentForm\(client, tenantId\);/);
-  assert.match(detail, /\{canRunAssessment && form \? \(\s*<CustomerAssessmentForm/);
+  assert.match(detail, /\{canRunAssessment && form \? \(/);
+  assert.match(detail, /<CustomerAssessmentForm/);
+  assert.match(detail, /id="run-customer-assessment"/);
   assert.match(detail, /\{canRunAssessment && formUnavailable \? \(/);
   assert.ok(!detail.includes('Placeholder'), 'the phase A placeholder is gone');
 });

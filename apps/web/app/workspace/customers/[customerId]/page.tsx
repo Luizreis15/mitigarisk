@@ -21,6 +21,7 @@ import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame'
 import { buildAssessmentResultView } from '@/lib/i18n/customer-assessment';
 import { buildAssessmentFormView } from '@/lib/i18n/customer-assessment-form';
 import { messages } from '@/lib/i18n/messages';
+import { ArrowDownIcon } from 'lucide-react';
 
 // Customer profile, latest persisted assessment, and history
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Every read
@@ -121,13 +122,22 @@ export default async function CustomerDetailPage({
       backLabel={t.backToCustomers}
       {...shell}
     >
-      <section
-        aria-labelledby="customer-latest-assessment"
-        className="space-y-5 rounded-xl border border-border bg-card p-5 sm:p-6"
-      >
-        <h2 id="customer-latest-assessment" className="text-base font-medium">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="customer-latest-assessment" className="text-sm font-semibold text-foreground">
           {t.latestTitle}
         </h2>
+        {canRunAssessment && form ? (
+          <a
+            href="#run-customer-assessment"
+            className="inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground shadow-[var(--shadow-xs)] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t.runAssessmentJump}
+            <ArrowDownIcon aria-hidden="true" className="size-4" />
+          </a>
+        ) : null}
+      </div>
+
+      <section aria-labelledby="customer-latest-assessment" className="space-y-4">
         {latest ? (
           <CustomerAssessmentResult
             view={buildAssessmentResultView({
@@ -139,7 +149,7 @@ export default async function CustomerDetailPage({
             })}
           />
         ) : (
-          <div className="rounded-lg bg-muted/40 p-4">
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-5">
             <p className="text-sm font-medium">{t.noAssessmentTitle}</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               {t.noAssessmentBody}
@@ -147,14 +157,18 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </section>
+
       <CustomerProfile customer={customer} />
+
       {canRunAssessment && form ? (
-        <CustomerAssessmentForm
-          view={buildAssessmentFormView(form)}
-          tenantId={tenantId}
-          customerId={customer.id}
-          correlationId={correlationId}
-        />
+        <div id="run-customer-assessment" className="scroll-mt-28">
+          <CustomerAssessmentForm
+            view={buildAssessmentFormView(form)}
+            tenantId={tenantId}
+            customerId={customer.id}
+            correlationId={correlationId}
+          />
+        </div>
       ) : null}
       {canRunAssessment && formUnavailable ? (
         <Alert variant={formUnavailable === 'no_policy' ? 'default' : 'destructive'}>
@@ -170,6 +184,7 @@ export default async function CustomerDetailPage({
           </AlertDescription>
         </Alert>
       ) : null}
+
       <CustomerAssessmentHistory
         assessments={assessments}
         currentUserId={identity.userId}
