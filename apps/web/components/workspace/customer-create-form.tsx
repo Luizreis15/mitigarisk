@@ -69,13 +69,13 @@ function CountrySelect({
   const known = options.some((option) => option.code === defaultValue);
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>
+      <Label htmlFor={id} className="text-sm font-medium">
         {label} <RequiredMark />
       </Label>
       <NativeSelect
         id={id}
         name={id}
-        className="h-11 w-full"
+        className="h-11 min-h-11 w-full"
         defaultValue={known ? defaultValue : ''}
         required
         {...invalidProps(invalid)}
@@ -120,34 +120,41 @@ export function CustomerCreateForm({
   const invalid = (name: string) => error?.field === name;
   const channel = value('onboardingChannel', 'face_to_face');
 
+  const fieldHint = (name: string) =>
+    invalid(name) ? (
+      <p id={`${name}-hint`} className="text-sm text-destructive">
+        {t.fieldNeedsAttention}
+      </p>
+    ) : null;
+
   return (
     <form
       key={error?.attempt ?? 'initial'}
-      className="space-y-6 rounded-xl border border-border p-5 sm:p-6"
+      className="space-y-8 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-xs)] sm:p-7"
       action={formAction}
       aria-describedby="customer-form-hint"
     >
-      <div>
-        <h2 className="text-base font-medium">{t.createFormTitle}</h2>
+      <div className="space-y-2">
+        <h2 className="text-lg font-medium tracking-tight">{t.createFormTitle}</h2>
         <p
           id="customer-form-hint"
-          className="mt-1 text-sm leading-6 text-muted-foreground"
+          className="text-sm leading-6 text-muted-foreground"
         >
           {t.createFormHint}
         </p>
       </div>
 
       {error ? (
-        <Alert variant="destructive" role="alert" id={ERROR_ID}>
+        <Alert variant="destructive" role="alert" id={ERROR_ID} className="scroll-mt-24">
           <AlertTitle>{customerErrorMessage(error.code)}</AlertTitle>
         </Alert>
       ) : null}
 
       <input type="hidden" name="tenantId" value={tenantId} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="externalReference">
+          <Label htmlFor="externalReference" className="text-sm font-medium">
             {t.fields.externalReference} <RequiredMark />
           </Label>
           <Input
@@ -157,12 +164,14 @@ export function CustomerCreateForm({
             maxLength={100}
             placeholder={t.externalReferencePlaceholder}
             autoComplete="off"
+            className="h-11 min-h-11"
             defaultValue={value('externalReference')}
             {...invalidProps(invalid('externalReference'))}
           />
+          {fieldHint('externalReference')}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="fullName">
+          <Label htmlFor="fullName" className="text-sm font-medium">
             {t.fields.fullName} <RequiredMark />
           </Label>
           <Input
@@ -171,12 +180,14 @@ export function CustomerCreateForm({
             required
             maxLength={200}
             autoComplete="off"
+            className="h-11 min-h-11"
             defaultValue={value('fullName')}
             {...invalidProps(invalid('fullName'))}
           />
+          {fieldHint('fullName')}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dateOfBirth">
+          <Label htmlFor="dateOfBirth" className="text-sm font-medium">
             {t.fields.dateOfBirth} <RequiredMark />
           </Label>
           <Input
@@ -184,18 +195,20 @@ export function CustomerCreateForm({
             name="dateOfBirth"
             type="date"
             required
+            className="h-11 min-h-11"
             defaultValue={value('dateOfBirth')}
             {...invalidProps(invalid('dateOfBirth'))}
           />
+          {fieldHint('dateOfBirth')}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="onboardingChannel">
+          <Label htmlFor="onboardingChannel" className="text-sm font-medium">
             {t.fields.onboardingChannel} <RequiredMark />
           </Label>
           <NativeSelect
             id="onboardingChannel"
             name="onboardingChannel"
-            className="h-11 w-full"
+            className="h-11 min-h-11 w-full"
             defaultValue={
               (ONBOARDING_CHANNELS as readonly string[]).includes(channel)
                 ? channel
@@ -210,35 +223,45 @@ export function CustomerCreateForm({
               </NativeSelectOption>
             ))}
           </NativeSelect>
+          {fieldHint('onboardingChannel')}
         </div>
-        <CountrySelect
-          id="countryOfBirth"
-          label={t.fields.countryOfBirth}
-          options={countries}
-          defaultValue={value('countryOfBirth')}
-          invalid={invalid('countryOfBirth')}
-        />
-        <CountrySelect
-          id="nationality"
-          label={t.fields.nationality}
-          options={countries}
-          defaultValue={value('nationality')}
-          invalid={invalid('nationality')}
-        />
-        <CountrySelect
-          id="residenceCountry"
-          label={t.fields.residenceCountry}
-          options={countries}
-          defaultValue={value('residenceCountry')}
-          invalid={invalid('residenceCountry')}
-        />
+        <div className="space-y-2">
+          <CountrySelect
+            id="countryOfBirth"
+            label={t.fields.countryOfBirth}
+            options={countries}
+            defaultValue={value('countryOfBirth')}
+            invalid={invalid('countryOfBirth')}
+          />
+          {fieldHint('countryOfBirth')}
+        </div>
+        <div className="space-y-2">
+          <CountrySelect
+            id="nationality"
+            label={t.fields.nationality}
+            options={countries}
+            defaultValue={value('nationality')}
+            invalid={invalid('nationality')}
+          />
+          {fieldHint('nationality')}
+        </div>
+        <div className="space-y-2 sm:col-span-2 sm:max-w-md">
+          <CountrySelect
+            id="residenceCountry"
+            label={t.fields.residenceCountry}
+            options={countries}
+            defaultValue={value('residenceCountry')}
+            invalid={invalid('residenceCountry')}
+          />
+          {fieldHint('residenceCountry')}
+        </div>
       </div>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
         <SubmitButton />
         <Button
           variant="ghost"
-          className="h-11 w-full sm:w-auto"
+          className="h-11 min-h-11 w-full sm:w-auto"
           render={<Link href={cancelHref} />}
         >
           {t.cancel}

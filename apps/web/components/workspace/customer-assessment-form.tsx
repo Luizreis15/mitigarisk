@@ -21,6 +21,7 @@ import {
   type CustomerActionResult,
 } from '@/app/workspace/customers/actions';
 import type { TenantId } from '@/lib/domain/ids';
+import { cn } from '@/lib/utils';
 
 const initialState: CustomerActionResult | null = null;
 
@@ -68,12 +69,12 @@ export function CustomerAssessmentForm({
     <form
       key={error?.attempt ?? 'initial'}
       action={formAction}
-      className="space-y-6 rounded-xl border border-border p-5 sm:p-6"
+      className="space-y-8 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-xs)] sm:p-7"
       aria-labelledby="customer-assessment-form"
       aria-describedby="customer-assessment-form-intro"
     >
       <div className="space-y-2">
-        <h2 id="customer-assessment-form" className="text-base font-medium">
+        <h2 id="customer-assessment-form" className="text-lg font-medium tracking-tight">
           {t.title}
         </h2>
         <p
@@ -89,7 +90,12 @@ export function CustomerAssessmentForm({
       </div>
 
       {error ? (
-        <Alert variant="destructive" role="alert" id="customer-assessment-form-error">
+        <Alert
+          variant="destructive"
+          role="alert"
+          id="customer-assessment-form-error"
+          className="scroll-mt-24"
+        >
           <AlertTitle>{customerErrorMessage(error.code)}</AlertTitle>
           {error.correlationId ? (
             <AlertDescription className="font-mono text-xs break-all">
@@ -114,32 +120,40 @@ export function CustomerAssessmentForm({
         {shown.categories.map((category) => (
           <fieldset
             key={category.key}
-            className="grid gap-4 rounded-lg border border-border p-4 sm:grid-cols-2"
+            className="grid gap-5 rounded-lg border border-border p-4 sm:grid-cols-2 sm:p-5"
           >
             <legend className="px-1 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
               {category.label}
             </legend>
-            {category.factors.map((factor) => (
-              <div key={factor.key} className="space-y-2">
-                <Label htmlFor={factor.name}>{factor.label}</Label>
-                <NativeSelect
-                  id={factor.name}
-                  name={factor.name}
-                  className="h-11 w-full"
-                  defaultValue={factor.defaultValue}
-                  aria-invalid={error?.field === factor.name ? true : undefined}
-                  aria-describedby={
-                    error?.field === factor.name ? 'customer-assessment-form-error' : undefined
-                  }
-                >
-                  {factor.options.map((option, index) => (
-                    <NativeSelectOption key={`${option.value}-${index}`} value={option.value}>
-                      {option.label}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </div>
-            ))}
+            {category.factors.map((factor) => {
+              const factorInvalid = error?.field === factor.name;
+              return (
+                <div key={factor.key} className="space-y-2">
+                  <Label htmlFor={factor.name} className="text-sm font-medium">
+                    {factor.label}
+                  </Label>
+                  <NativeSelect
+                    id={factor.name}
+                    name={factor.name}
+                    className="h-11 min-h-11 w-full"
+                    defaultValue={factor.defaultValue}
+                    aria-invalid={factorInvalid ? true : undefined}
+                    aria-describedby={
+                      factorInvalid ? 'customer-assessment-form-error' : undefined
+                    }
+                  >
+                    {factor.options.map((option, index) => (
+                      <NativeSelectOption key={`${option.value}-${index}`} value={option.value}>
+                        {option.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                  {factorInvalid ? (
+                    <p className="text-sm text-destructive">{t.fieldNeedsAttention}</p>
+                  ) : null}
+                </div>
+              );
+            })}
           </fieldset>
         ))}
       </div>
@@ -149,53 +163,64 @@ export function CustomerAssessmentForm({
           <h3 className="text-sm font-medium">{t.overridesTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t.overridesHelp}</p>
         </div>
-        {shown.overrides.map((override) => (
-          <fieldset
-            key={override.factKey}
-            className="space-y-3 rounded-lg border border-border p-4"
-            aria-describedby={
-              error?.field === override.name ? 'customer-assessment-form-error' : undefined
-            }
-          >
-            <legend className="flex flex-wrap items-center gap-2 px-1 text-sm font-medium">
-              {override.label}
-              <span className="text-xs font-normal text-muted-foreground">
-                ({messages.customerWorkspace.required})
-              </span>
-              {override.provisional ? (
-                <Badge variant="outline" className="font-normal">
-                  {t.provisionalTag}
-                </Badge>
+        {shown.overrides.map((override) => {
+          const overrideInvalid = error?.field === override.name;
+          return (
+            <fieldset
+              key={override.factKey}
+              className={cn(
+                'space-y-3 rounded-lg border border-border p-4 sm:p-5',
+                overrideInvalid && 'border-destructive/50',
+              )}
+              aria-describedby={
+                overrideInvalid ? 'customer-assessment-form-error' : undefined
+              }
+            >
+              <legend className="flex flex-wrap items-center gap-2 px-1 text-sm font-medium">
+                {override.label}
+                <span className="text-xs font-normal text-muted-foreground">
+                  ({messages.customerWorkspace.required})
+                </span>
+                {override.provisional ? (
+                  <Badge variant="outline" className="font-normal">
+                    {t.provisionalTag}
+                  </Badge>
+                ) : null}
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {override.options.map((option, index) => {
+                  const id = `${override.name}-${index}`;
+                  return (
+                    <label
+                      key={`${option.value}-${index}`}
+                      htmlFor={id}
+                      className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border bg-[color-mix(in_srgb,var(--color-bg-subtle)_55%,transparent)] px-3 py-2.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+                    >
+                      <input
+                        id={id}
+                        type="radio"
+                        name={override.name}
+                        value={option.value}
+                        required={override.required}
+                        defaultChecked={override.defaultValue === option.value}
+                        className="size-4 shrink-0 accent-primary focus-visible:outline-none"
+                      />
+                      {option.label}
+                    </label>
+                  );
+                })}
+              </div>
+              {overrideInvalid ? (
+                <p className="text-sm text-destructive">{t.fieldNeedsAttention}</p>
               ) : null}
-            </legend>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {override.options.map((option, index) => {
-                const id = `${override.name}-${index}`;
-                return (
-                  <label
-                    key={`${option.value}-${index}`}
-                    htmlFor={id}
-                    className="flex min-h-11 cursor-pointer items-center gap-2 text-sm"
-                  >
-                    <input
-                      id={id}
-                      type="radio"
-                      name={override.name}
-                      value={option.value}
-                      required={override.required}
-                      defaultChecked={override.defaultValue === option.value}
-                      className="size-4 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    />
-                    {option.label}
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
-        ))}
+            </fieldset>
+          );
+        })}
       </div>
 
-      <SubmitButton />
+      <div className="border-t border-border pt-6">
+        <SubmitButton />
+      </div>
     </form>
   );
 }
