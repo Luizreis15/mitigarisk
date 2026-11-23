@@ -11,6 +11,21 @@ export const messages = {
       'Visual prototype with fictional data. No authentication, API, or real customer data is connected.',
     environmentBanner: 'Prototype environment',
   },
+  demoSwitcher: {
+    title: 'Test environment',
+    introLocked: 'Enter the test access code to switch between the system roles with demo accounts.',
+    introUnlocked:
+      'Enter as a demo account to see what each role sees. Demo accounts only — fictional customers, no real data.',
+    codeLabel: 'Test access code',
+    unlock: 'Unlock role switcher',
+    unlocking: 'Checking…',
+    errors: {
+      disabled: 'The role switcher is not available in this environment.',
+      bad_code: 'That access code is not valid.',
+      locked: 'Unlock the role switcher with the access code first.',
+      sign_in_failed: 'That demo account could not sign in. Try again or use your own account.',
+    },
+  },
   login: {
     kicker: 'Risk field',
     headline: 'Quiet confidence for auditable decisions.',

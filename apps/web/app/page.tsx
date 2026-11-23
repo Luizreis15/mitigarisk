@@ -10,14 +10,27 @@ import { MitigaMark } from '@/components/prototype/mitiga-mark';
 import { ConfigMissingNotice } from '@/components/auth/config-missing-notice';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
+import { cookies } from 'next/headers';
+import { DemoRoleSwitcher } from '@/components/auth/demo-role-switcher';
+import {
+  DEMO_ACCESS_COOKIE,
+  DEMO_ROLES,
+  isDemoAccessCookieValid,
+  isDemoSwitcherEnabled,
+} from '@/lib/demo-switcher';
 
 // Server Component: whether the real sign-in form or the "not configured"
 // state renders is decided here, server-side, from process.env — never in
 // client code (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
 // "absence of privileged configuration in client code"). The interactive
 // form itself is the separate client component SignInForm.
-export default function LoginPage() {
+export default async function LoginPage() {
   const configured = hasPublicSupabaseConfig();
+  // Test-environment role switcher (lib/demo-switcher.ts): rendered only
+  // when the server enables it; unlocked only by a valid access cookie.
+  const demoEnabled = configured && isDemoSwitcherEnabled();
+  const demoUnlocked =
+    demoEnabled && (await isDemoAccessCookieValid((await cookies()).get(DEMO_ACCESS_COOKIE)?.value));
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[image:var(--gradient-canvas)]">
@@ -60,6 +73,7 @@ export default function LoginPage() {
                   body={messages.login.configMissingBody}
                 />
               )}
+              {demoEnabled ? <DemoRoleSwitcher unlocked={demoUnlocked} roles={DEMO_ROLES} /> : null}
             </CardContent>
           </Card>
         </section>
