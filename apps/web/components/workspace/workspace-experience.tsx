@@ -11,6 +11,9 @@ import { WorkspaceStatus } from '@/components/workspace/workspace-status';
 import { WorkspaceTenantSelection } from '@/components/workspace/workspace-tenant-selection';
 import { RealWorkspaceShell } from '@/components/workspace/real-workspace-shell';
 import { WorkspaceDashboard } from '@/components/workspace/workspace-dashboard';
+import { OperatorWorkQueue } from '@/components/workspace/operator-work-queue';
+import type { WorkQueue } from '@/lib/domain/work-queue';
+import type { WorkspacePersona } from '@/lib/domain/workspace-persona';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
 import type { CompanyDashboardSnapshot } from '@/lib/domain/workspace-dashboard';
 import type { WorkspaceViewModel } from '@/lib/domain/workspace-access';
@@ -27,6 +30,9 @@ export function WorkspaceExperience({
   recentEvents = [],
   canViewAudit = false,
   currentUserId = null,
+  persona = null,
+  workQueue = null,
+  canManageCustomers = false,
 }: {
   model: WorkspaceViewModel;
   realEntryTenantId?: TenantId | null;
@@ -37,6 +43,9 @@ export function WorkspaceExperience({
   recentEvents?: AuditEventRow[];
   canViewAudit?: boolean;
   currentUserId?: UserId | null;
+  persona?: WorkspacePersona | null;
+  workQueue?: WorkQueue | null;
+  canManageCustomers?: boolean;
 }) {
   const hub = messages.realShell.hub;
   const isActiveMember = model.kind === 'active_member';
@@ -91,27 +100,45 @@ export function WorkspaceExperience({
     ? `/workspace/customers?tenant=${customerEntryTenantId}`
     : null;
   const showDashboard = Boolean(customerEntryTenantId) || dashboardUnavailable;
+  const showWorkQueue = persona === 'operator' && Boolean(customerEntryTenantId);
+  const title = showWorkQueue ? messages.workQueue.title : hub.title;
+  const subtitle = showWorkQueue ? messages.workQueue.subtitle : hub.subtitle;
 
   return (
     <RealWorkspaceShell
       tenantName={model.selectedTenantName}
       signedInEmail={model.signedInEmail}
       tenantId={tenantId}
+      homeContextLabel={showWorkQueue ? messages.workQueue.title : undefined}
     >
       <div className="mx-auto w-full max-w-[var(--content-max-width)] space-y-7">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-0.5">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-              {hub.title}
+              {title}
             </h1>
-            <p className="text-sm text-muted-foreground">{hub.subtitle}</p>
+            <p className="text-sm text-muted-foreground">{subtitle}</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.06em] text-muted-foreground uppercase">
-            {hub.demoNote}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {persona ? (
+              <span className="inline-flex items-center rounded-full bg-[var(--mitiga-petrol-700)] px-2.5 py-1 text-[0.7rem] font-medium text-white">
+                {messages.personas[persona]}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+              {hub.demoNote}
+            </span>
+          </div>
         </header>
 
-        {showDashboard ? (
+        {showWorkQueue && customerEntryTenantId ? (
+          <OperatorWorkQueue
+            queue={workQueue}
+            tenantId={customerEntryTenantId}
+            canCreate={canManageCustomers}
+            unavailable={dashboardUnavailable}
+          />
+        ) : showDashboard ? (
           <WorkspaceDashboard
             snapshot={dashboardSnapshot}
             snapshotUnavailable={dashboardUnavailable || !dashboardSnapshot}
