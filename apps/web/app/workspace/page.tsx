@@ -18,6 +18,9 @@ import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments
 import { listTenantAuditEvents } from '@/lib/supabase/access-repository';
 import { buildWorkQueue, type WorkQueue } from '@/lib/domain/work-queue';
 import { personaFromCapabilities, type WorkspacePersona } from '@/lib/domain/workspace-persona';
+import { decisionStatusFor } from '@/lib/domain/customer-decision';
+import { listTenantCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
+import type { DecisionInboxItem } from '@/components/workspace/decision-inbox';
 
 // Real protected product route
 // (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
@@ -170,17 +173,29 @@ export default async function WorkspacePage({
   const currentUserId = identity.userId;
 
   let workQueue: WorkQueue | null = null;
+  let decisionInbox: DecisionInboxItem[] = [];
   if (customerEntryTenantId) {
     try {
-      const customers = await listCustomers(client, customerEntryTenantId);
+      const [customers, decisions] = await Promise.all([
+        listCustomers(client, customerEntryTenantId),
+        listTenantCustomerDecisions(client, customerEntryTenantId),
+      ]);
       const latest = await Promise.all(
         customers.map((customer) =>
           getLatestCustomerAssessment(client, customerEntryTenantId, customer.id),
         ),
       );
-      const rows = customers.map((customer, index) => ({ customer, latest: latest[index] ?? null }));
+      const rows = customers.map((customer, index) => {
+        const latestAssessment = latest[index] ?? null;
+        const status = decisionStatusFor(latestAssessment, decisions);
+        return { customer, latest: latestAssessment, decisionState: status.state, pendingLevel: status.pendingLevel };
+      });
       dashboardSnapshot = buildCompanyDashboardSnapshot(rows);
       workQueue = buildWorkQueue(rows);
+      decisionInbox = rows
+        .filter((row) => row.latest && row.pendingLevel)
+        .map((row) => ({ customer: row.customer, latest: row.latest!, pendingLevel: row.pendingLevel! }))
+        .sort((a, b) => Date.parse(a.latest.assessedAt) - Date.parse(b.latest.assessedAt));
     } catch {
       dashboardUnavailable = true;
       dashboardSnapshot = null;
@@ -236,6 +251,7 @@ export default async function WorkspacePage({
       currentUserId={currentUserId}
       persona={persona}
       workQueue={workQueue}
+      decisionInbox={decisionInbox}
       canManageCustomers={canManageCustomers}
     />
   );

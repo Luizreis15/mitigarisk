@@ -1,5 +1,6 @@
 import type { Customer } from './customer.ts';
 import type { CustomerAssessment } from './customer-assessment.ts';
+import type { DecisionState } from './customer-decision.ts';
 
 // Operator (1st line) work queue: every customer on file, placed in the
 // stage that says what has to happen next. Derived only from persisted
@@ -32,6 +33,8 @@ export const REVIEW_LEAD_DAYS = 90;
 export interface WorkQueueRow {
   customer: Customer;
   latest: CustomerAssessment | null;
+  /** Human decision on the latest assessment, when it required one. */
+  decisionState?: DecisionState;
 }
 
 export interface WorkQueueItem extends WorkQueueRow {
@@ -91,10 +94,15 @@ export function workStageFor(
   latest: CustomerAssessment | null,
   now: Date,
   leadDays = REVIEW_LEAD_DAYS,
+  decisionState: DecisionState = 'not_required',
 ): WorkStage {
   if (!latest) return 'needs_assessment';
   if (latest.outcome === 'REJECT') return 'do_not_onboard';
-  if (latest.outcome === 'REVIEW_REQUIRED') return 'awaiting_compliance';
+  if (latest.outcome === 'REVIEW_REQUIRED') {
+    // The MLRO (or the board) decides; until then the case waits.
+    if (decisionState === 'rejected') return 'do_not_onboard';
+    if (decisionState !== 'approved') return 'awaiting_compliance';
+  }
   const dueIn = daysUntil(latest.nextReviewDue, now);
   if (dueIn !== null && dueIn <= leadDays) return 'review_due';
   return 'cleared';
@@ -104,7 +112,7 @@ export function buildWorkQueue(rows: WorkQueueRow[], now: Date = new Date(), lea
   const counts = Object.fromEntries(WORK_STAGE_ORDER.map((s) => [s, 0])) as Record<WorkStage, number>;
 
   const items = rows.map((row): WorkQueueItem => {
-    const stage = workStageFor(row.latest, now, leadDays);
+    const stage = workStageFor(row.latest, now, leadDays, row.decisionState);
     counts[stage] += 1;
     return {
       ...row,

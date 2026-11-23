@@ -22,6 +22,10 @@ import { buildAssessmentResultView } from '@/lib/i18n/customer-assessment';
 import { buildAssessmentFormView } from '@/lib/i18n/customer-assessment-form';
 import { messages } from '@/lib/i18n/messages';
 import { ArrowDownIcon } from 'lucide-react';
+import { CustomerDecisionPanel } from '@/components/workspace/customer-decision-panel';
+import { listCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
+import { decisionStatusFor, type CustomerDecision } from '@/lib/domain/customer-decision';
+import { formatDateTime } from '@/lib/i18n/presentation';
 
 // Customer profile, latest persisted assessment, and history
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Every read
@@ -88,11 +92,24 @@ export default async function CustomerDetailPage({
     );
   }
 
-  const [assessments, canRunAssessment] = await Promise.all([
+  const [assessments, canRunAssessment, canDecide, decisions] = await Promise.all([
     listCustomerAssessments(client, tenantId, customer.id),
     hasCapability(client, tenantId, 'assessment.run'),
+    hasCapability(client, tenantId, 'case.decide').catch(() => false),
+    listCustomerDecisions(client, tenantId, customer.id).catch((): CustomerDecision[] => []),
   ]);
   const latest = assessments[0] ?? null;
+  const decisionStatus = decisionStatusFor(latest, decisions);
+  const decisionTrail = [decisionStatus.mlro, decisionStatus.board]
+    .filter((d): d is CustomerDecision => d !== null)
+    .map((d) => ({
+      id: d.id,
+      level: d.level,
+      decision: d.decision,
+      rationale: d.rationale,
+      who: d.decidedBy === identity.userId ? messages.customerDecision.byYou : messages.customerDecision.byMember,
+      date: formatDateTime(d.decidedAt),
+    }));
 
   // Read only for callers holding assessment.run (the RPC requires it too),
   // so an auditor never receives the form or any assessment control.
@@ -157,6 +174,19 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </section>
+
+      {latest && decisionStatus.state !== 'not_required' ? (
+        <CustomerDecisionPanel
+          state={decisionStatus.state}
+          pendingLevel={decisionStatus.pendingLevel}
+          trail={decisionTrail}
+          canDecide={canDecide}
+          tenantId={tenantId}
+          customerId={customer.id}
+          assessmentId={latest.id}
+          correlationId={randomUUID()}
+        />
+      ) : null}
 
       <CustomerProfile customer={customer} />
 

@@ -20,6 +20,8 @@ import {
 import { customerErrorField, pickSubmittedCustomerValues } from '@/lib/domain/customer-form-state';
 import type { CustomerAssessmentForm } from '@/lib/domain/customer-assessment';
 import { isUuid, type CorrelationId, type CustomerId, type TenantId } from '@/lib/domain/ids';
+import { validateDecisionInput } from '@/lib/domain/customer-decision';
+import { recordCustomerDecision } from '@/lib/supabase/customer-decisions-repository';
 
 // Server Actions for the customer CRA experience
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Same
@@ -180,4 +182,55 @@ export async function runCustomerAssessmentAction(
   if (denied) redirect('/denied');
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}`);
+}
+
+/**
+ * Records the MLRO (or board) onboarding decision on the customer's latest
+ * assessment. Authorization lives in public.record_customer_decision
+ * (case.decide, active member); the tenant is proven server-side first.
+ */
+export async function recordCustomerDecisionAction(
+  _previousState: CustomerActionResult | null,
+  formData: FormData,
+): Promise<CustomerActionResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
+  const client = await createServerSupabaseClient();
+
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const customerId = readFormValue(formData, 'customerId');
+  const assessmentId = readFormValue(formData, 'assessmentId');
+  const correlationId = readFormValue(formData, 'correlationId');
+  const values = {
+    decision: readFormValue(formData, 'decision'),
+    rationale: readFormValue(formData, 'rationale'),
+  };
+
+  let tenantId: TenantId;
+  try {
+    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'case.decide');
+    tenantId = context.tenantId;
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') redirect('/denied');
+    return { status: 'error', code: errorCode(error) };
+  }
+
+  if (!isUuid(customerId) || !isUuid(assessmentId) || !isUuid(correlationId)) {
+    return { status: 'error', code: 'InvalidDecisionRequestError' };
+  }
+
+  let denied = false;
+  try {
+    const input = validateDecisionInput(values);
+    await recordCustomerDecision(client, { tenantId, assessmentId, correlationId, ...input });
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') {
+      denied = true;
+    } else {
+      return { status: 'error', code: errorCode(error), attempt: randomUUID(), correlationId, values };
+    }
+  }
+  if (denied) redirect('/denied');
+
+  redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#customer-decision`);
 }

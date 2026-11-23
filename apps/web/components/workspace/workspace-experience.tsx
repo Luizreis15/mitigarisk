@@ -12,6 +12,7 @@ import { WorkspaceTenantSelection } from '@/components/workspace/workspace-tenan
 import { RealWorkspaceShell } from '@/components/workspace/real-workspace-shell';
 import { WorkspaceDashboard } from '@/components/workspace/workspace-dashboard';
 import { OperatorWorkQueue } from '@/components/workspace/operator-work-queue';
+import { DecisionInbox, type DecisionInboxItem } from '@/components/workspace/decision-inbox';
 import type { WorkQueue } from '@/lib/domain/work-queue';
 import type { WorkspacePersona } from '@/lib/domain/workspace-persona';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
@@ -32,6 +33,7 @@ export function WorkspaceExperience({
   currentUserId = null,
   persona = null,
   workQueue = null,
+  decisionInbox = [],
   canManageCustomers = false,
 }: {
   model: WorkspaceViewModel;
@@ -45,6 +47,7 @@ export function WorkspaceExperience({
   currentUserId?: UserId | null;
   persona?: WorkspacePersona | null;
   workQueue?: WorkQueue | null;
+  decisionInbox?: DecisionInboxItem[];
   canManageCustomers?: boolean;
 }) {
   const hub = messages.realShell.hub;
@@ -138,7 +141,13 @@ export function WorkspaceExperience({
             canCreate={canManageCustomers}
             unavailable={dashboardUnavailable}
           />
-        ) : showDashboard ? (
+        ) : null}
+
+        {!showWorkQueue && customerEntryTenantId && (persona === 'mlro' || persona === 'analyst') ? (
+          <DecisionInbox items={decisionInbox} tenantId={customerEntryTenantId} mode={persona} />
+        ) : null}
+
+        {!showWorkQueue && showDashboard ? (
           <WorkspaceDashboard
             snapshot={dashboardSnapshot}
             snapshotUnavailable={dashboardUnavailable || !dashboardSnapshot}
