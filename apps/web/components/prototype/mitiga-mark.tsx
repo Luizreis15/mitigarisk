@@ -25,7 +25,7 @@ export function MitigaMark({
         height={side}
         className="shrink-0 object-contain"
         unoptimized
-        priority
+        preload
       />
       {compact ? null : (
         <span className="text-[0.95rem] font-semibold tracking-[0.12em] text-inherit uppercase">
