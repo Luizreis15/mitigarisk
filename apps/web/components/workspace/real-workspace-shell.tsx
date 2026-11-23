@@ -160,12 +160,15 @@ export function RealWorkspaceShell({
   tenantId,
   children,
   showSupplierNav = true,
+  homeContextLabel,
 }: {
   tenantName: string | null;
   signedInEmail: string | null;
   tenantId: string | null;
   children: ReactNode;
   showSupplierNav?: boolean;
+  /** Overrides the topbar label on Home (e.g. the operator's work queue). */
+  homeContextLabel?: string;
 }) {
   const pathname = usePathname() || '/workspace';
   const active = resolveActive(pathname);
@@ -347,7 +350,7 @@ export function RealWorkspaceShell({
                     ? t.context.suppliers
                     : active === 'access'
                       ? t.context.access
-                      : t.context.home}
+                      : (homeContextLabel ?? t.context.home)}
               </p>
             </div>
 

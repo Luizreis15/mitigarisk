@@ -16,6 +16,8 @@ import { resolveActiveTenantContext } from '@/lib/supabase/tenant-context';
 import { listCustomers } from '@/lib/supabase/customers-repository';
 import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments-repository';
 import { listTenantAuditEvents } from '@/lib/supabase/access-repository';
+import { buildWorkQueue, type WorkQueue } from '@/lib/domain/work-queue';
+import { personaFromCapabilities, type WorkspacePersona } from '@/lib/domain/workspace-persona';
 
 // Real protected product route
 // (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
@@ -167,6 +169,7 @@ export default async function WorkspacePage({
   let canViewAudit = false;
   const currentUserId = identity.userId;
 
+  let workQueue: WorkQueue | null = null;
   if (customerEntryTenantId) {
     try {
       const customers = await listCustomers(client, customerEntryTenantId);
@@ -175,21 +178,32 @@ export default async function WorkspacePage({
           getLatestCustomerAssessment(client, customerEntryTenantId, customer.id),
         ),
       );
-      dashboardSnapshot = buildCompanyDashboardSnapshot(
-        customers.map((customer, index) => ({ customer, latest: latest[index] ?? null })),
-      );
+      const rows = customers.map((customer, index) => ({ customer, latest: latest[index] ?? null }));
+      dashboardSnapshot = buildCompanyDashboardSnapshot(rows);
+      workQueue = buildWorkQueue(rows);
     } catch {
       dashboardUnavailable = true;
       dashboardSnapshot = null;
+      workQueue = null;
     }
   }
 
+  // Landing view per line of defence, from server-confirmed capabilities
+  // only (lib/domain/workspace-persona.ts). A failed read counts as "no".
+  let persona: WorkspacePersona | null = null;
+  let canManageCustomers = false;
   if (activeTenantId) {
     try {
       canViewAudit = await hasCapability(client, activeTenantId, 'audit.view');
     } catch {
       canViewAudit = false;
     }
+    const [caseDecide, customerManage] = await Promise.all([
+      hasCapability(client, activeTenantId, 'case.decide').catch(() => false),
+      hasCapability(client, activeTenantId, 'customer.manage').catch(() => false),
+    ]);
+    canManageCustomers = customerManage;
+    persona = personaFromCapabilities({ caseDecide, auditView: canViewAudit, customerManage });
     if (canViewAudit) {
       try {
         recentEvents = await listTenantAuditEvents(client, activeTenantId, 5);
@@ -220,6 +234,9 @@ export default async function WorkspacePage({
       recentEvents={recentEvents}
       canViewAudit={canViewAudit}
       currentUserId={currentUserId}
+      persona={persona}
+      workQueue={workQueue}
+      canManageCustomers={canManageCustomers}
     />
   );
 }

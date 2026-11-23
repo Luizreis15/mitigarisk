@@ -92,6 +92,10 @@ export function outcomeLabel(outcome: CraOutcome): string {
   return lookup(t.outcomes, outcome);
 }
 
+export function requiredActionLabel(code: string): string {
+  return lookup(t.requiredActions, code);
+}
+
 export function approvalLabel(approval: CraApproval): string {
   return lookup(t.approvals, approval);
 }
