@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import {
   Card,
   CardContent,
@@ -7,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { messages } from '@/lib/i18n/messages';
 import { MitigaMark } from '@/components/prototype/mitiga-mark';
 import { ConfigMissingNotice } from '@/components/auth/config-missing-notice';
@@ -63,19 +60,6 @@ export default function LoginPage() {
                   body={messages.login.configMissingBody}
                 />
               )}
-
-              <nav
-                aria-label={messages.login.shortcutsLabel}
-                className="space-y-2 border-t border-border pt-4"
-              >
-                <p className="text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
-                  {messages.login.demoEntryTitle}
-                </p>
-                <Button variant="outline" className="h-11 w-full" render={<Link href="/tenants" />}>
-                  {messages.login.demoEntry}
-                </Button>
-                <p className="text-xs text-muted-foreground">{messages.login.demoEntryHint}</p>
-              </nav>
             </CardContent>
           </Card>
         </section>

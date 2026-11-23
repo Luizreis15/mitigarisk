@@ -2,9 +2,9 @@ export const messages = {
   brand: 'MITIGA',
   brandMarkAlt: 'MITIGA symbol',
   meta: {
-    title: 'MITIGA — risk management prototype',
+    title: 'MITIGA — Customer risk assessment',
     description:
-      'Navigable prototype of login, workspace selection, onboarding, Company, Super admin, and Operator views.',
+      'Configurable, explainable and auditable customer risk assessment and due diligence for EU obliged entities.',
   },
   prototype: {
     notice:
@@ -15,23 +15,18 @@ export const messages = {
     kicker: 'Risk field',
     headline: 'Quiet confidence for auditable decisions.',
     intro:
-      'Sign in with your MITIGA Development account, or continue with sample data to review the interface with no real session.',
+      'Risk ratings, due-diligence levels and a decision trail your regulator can follow — your team keeps the final say.',
     footer: 'MITIGA',
     title: 'Sign in',
-    subtitle: 'Use your MITIGA Development account email and password.',
+    subtitle: 'Use your MITIGA account email and password.',
     emailLabel: 'Email',
     passwordLabel: 'Password',
     submit: 'Sign in',
     submitting: 'Signing in…',
     recover: 'Forgot your password?',
-    demoEntryTitle: 'Development preview',
-    demoEntry: 'Continue with sample data',
-    demoEntryHint:
-      'Opens fictional workspace, case, and policy screens. No real session is created and no backend is called.',
-    shortcutsLabel: 'Development preview shortcuts',
     configMissingTitle: 'Sign-in is not available',
     configMissingBody:
-      'This environment is missing its public Supabase configuration (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY). Sample data is still available below.',
+      'This environment is missing its public Supabase configuration (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).',
     errors: {
       InvalidEmailError: 'Enter a valid email address.',
       InvalidPasswordShapeError: 'Enter your password.',
