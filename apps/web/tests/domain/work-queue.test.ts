@@ -148,3 +148,14 @@ void test('required actions are shown most decisive first, keeping stored order 
   );
   assert.deepEqual(prioritizeRequiredActions(['CUSTOM_B', 'CUSTOM_A', 'VERIFY_ID']), ['VERIFY_ID', 'CUSTOM_B', 'CUSTOM_A']);
 });
+
+void test('the MLRO or board decision moves a REVIEW_REQUIRED case out of the compliance stage', () => {
+  const held = assessment('REVIEW_REQUIRED', '2027-11-23');
+  assert.equal(workStageFor(held, NOW, 90, 'awaiting_mlro'), 'awaiting_compliance');
+  assert.equal(workStageFor(held, NOW, 90, 'awaiting_board'), 'awaiting_compliance');
+  assert.equal(workStageFor(held, NOW, 90, 'approved'), 'cleared');
+  assert.equal(workStageFor(held, NOW, 90, 'rejected'), 'do_not_onboard');
+  assert.equal(workStageFor(assessment('REVIEW_REQUIRED', '2026-12-01'), NOW, 90, 'approved'), 'review_due');
+  // A policy reject cannot be overturned by a decision.
+  assert.equal(workStageFor(assessment('REJECT', '2027-11-23'), NOW, 90, 'approved'), 'do_not_onboard');
+});

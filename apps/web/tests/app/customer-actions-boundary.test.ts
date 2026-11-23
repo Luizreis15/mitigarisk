@@ -109,6 +109,12 @@ const ALLOWED_FORM_FIELDS = new Set([
   'nationality',
   'residenceCountry',
   'onboardingChannel',
+  // MLRO/board decision (recordCustomerDecisionAction): the target
+  // assessment, the chosen decision and its rationale. Never a score,
+  // band or outcome — the database reads those from the stored assessment.
+  'assessmentId',
+  'decision',
+  'rationale',
 ]);
 
 void test('customer actions read only allow-listed FormData fields, never a score, band, or outcome', () => {
@@ -145,7 +151,7 @@ void test('every customer Server Action denies platform admins before resolving 
     const body = source.slice(start, end === -1 ? undefined : end);
     const identityIndex = body.indexOf('await requireAuthenticatedIdentity()');
     const guardIndex = body.indexOf('if (identity.isPlatformAdmin)');
-    const tenantIndex = body.search(/resolveAuthorizedTenantContext\(client, identity, requestedTenantId, '(customer\.manage|assessment\.run)'\)/);
+    const tenantIndex = body.search(/resolveAuthorizedTenantContext\(client, identity, requestedTenantId, '(customer\.manage|assessment\.run|case\.decide)'\)/);
     assert.ok(identityIndex >= 0, `${name} must resolve identity`);
     assert.ok(guardIndex > identityIndex, `${name} must check identity.isPlatformAdmin after identity`);
     assert.ok(tenantIndex > guardIndex, `${name} must resolve tenant context with an explicit capability after the guard`);
