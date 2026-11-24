@@ -176,7 +176,7 @@ export function OperatorWorkQueue({
             {t.allCustomers}
           </Button>
           {canCreate ? (
-            <Button className="h-10" render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}>
+            <Button className="h-10 md:hidden" render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}>
               <PlusIcon aria-hidden="true" />
               {t.newCustomer}
             </Button>

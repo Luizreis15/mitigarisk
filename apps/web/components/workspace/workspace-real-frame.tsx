@@ -30,6 +30,12 @@ export function WorkspaceRealFrame({
   tenantId?: string | null;
   showSupplierNav?: boolean;
 }) {
+  // A back link only makes sense below the top level (the sidebar covers the rest).
+  const showBack = !/^\/workspace(\?|$)/.test(backHref);
+  // Kept in the signature for callers; the shell shows the environment once.
+  void kicker;
+  void fictionalNotice;
+
   return (
     <RealWorkspaceShell
       tenantName={tenantName}
@@ -37,31 +43,22 @@ export function WorkspaceRealFrame({
       tenantId={tenantId}
       showSupplierNav={showSupplierNav}
     >
-      <div className="mx-auto flex w-full max-w-[var(--content-max-width)] flex-col gap-5">
-        <Link
-          href={backHref}
-          className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm text-muted-foreground underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
-        >
-          <ArrowLeftIcon aria-hidden="true" className="size-3.5" />
-          {backLabel}
-        </Link>
-
-        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-          <div className="min-w-0 space-y-1">
-            <p className="text-[0.65rem] font-medium tracking-[0.12em] text-muted-foreground uppercase">
-              {kicker}
-            </p>
-            <h1 className="max-w-3xl text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-              {title}
-            </h1>
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{intro}</p>
-          </div>
-          <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.06em] text-muted-foreground uppercase">
-            {fictionalNotice}
-          </span>
+      <div className="flex w-full flex-col gap-6">
+        <header className="space-y-2">
+          {showBack ? (
+            <Link
+              href={backHref}
+              className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+            >
+              <ArrowLeftIcon aria-hidden="true" className="size-3.5" />
+              {backLabel}
+            </Link>
+          ) : null}
+          <h1 className="max-w-3xl text-[1.75rem] leading-tight font-semibold text-foreground sm:text-[2rem]">{title}</h1>
+          {intro ? <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{intro}</p> : null}
         </header>
 
-        <div className="space-y-5">{children}</div>
+        <div className="space-y-6">{children}</div>
       </div>
     </RealWorkspaceShell>
   );

@@ -43,6 +43,21 @@ const BAND_FILTERS: CustomerListBandFilter[] = [
 
 // Renders the persisted latest band/DD level per customer exactly as stored;
 // a customer with no assessment shows "Not assessed yet", never a guess.
+const markerColor = { LOW: 'var(--risk-low)', MEDIUM: 'var(--risk-medium)', HIGH: 'var(--risk-high)' } as const;
+
+/** Stored score on a miniature of the risk scale (display only). */
+function ScoreMarker({ score, band }: { score: number; band: keyof typeof markerColor }) {
+  const position = Math.min(100, Math.max(0, score));
+  return (
+    <span className="inline-flex items-center gap-2.5">
+      <span className="w-9 text-right font-mono text-sm font-medium">{score}</span>
+      <span aria-hidden="true" className="relative h-1.5 w-20 rounded-full bg-[linear-gradient(90deg,var(--mitiga-risk-low-bg)_0_36%,var(--mitiga-risk-medium-bg)_36%_76%,var(--mitiga-risk-high-bg)_76%)]">
+        <span className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-sm" style={{ left: `${position}%`, background: markerColor[band] }} />
+      </span>
+    </span>
+  );
+}
+
 export function CustomerList({
   rows,
   tenantId,
@@ -96,7 +111,7 @@ export function CustomerList({
 
   return (
     <section aria-label={t.listLabel} className="space-y-0">
-      <div className="sticky top-[var(--topbar-height)] z-20 -mx-4 border-b border-border bg-[color-mix(in_srgb,var(--color-bg-canvas)_92%,transparent)] px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="pb-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative min-w-0 flex-1 lg:max-w-md">
             <SearchIcon
@@ -108,12 +123,12 @@ export function CustomerList({
               onChange={(event) => setQuery(event.target.value)}
               placeholder={f.searchPlaceholder}
               aria-label={f.searchLabel}
-              className="h-11 bg-card pl-9"
+              className="h-10 bg-card pl-9"
             />
           </div>
           {canCreate ? (
             <Button
-              className="h-11 w-full shrink-0 sm:w-auto"
+              className="h-10 w-full shrink-0 sm:w-auto md:hidden"
               render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}
             >
               <PlusIcon aria-hidden="true" />
@@ -135,9 +150,9 @@ export function CustomerList({
                   onClick={() => setBand(value)}
                   aria-pressed={active}
                   className={cn(
-                    'inline-flex min-h-11 items-center rounded-lg border px-3 text-sm transition-colors',
+                    'inline-flex h-8 items-center rounded-full border px-3 text-[0.8rem] transition-colors',
                     active
-                      ? 'border-primary bg-primary/10 font-medium text-primary'
+                      ? 'border-[var(--mitiga-ink-950)] bg-[var(--mitiga-ink-950)] font-medium text-white'
                       : 'border-border bg-card text-muted-foreground hover:bg-muted/60 hover:text-foreground',
                   )}
                 >
@@ -175,15 +190,16 @@ export function CustomerList({
       ) : (
         <>
           <div className="mt-0 hidden sm:block">
-            <div className="-mx-4 overflow-x-auto border-b border-border sm:-mx-6 lg:-mx-8">
-              <Table className="min-w-[56rem]">
-                <TableHeader className="sticky top-[calc(var(--topbar-height)+7.5rem)] z-10 bg-card/95 backdrop-blur-sm">
+            <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-[var(--shadow-xs)]">
+              <Table className="min-w-[52rem]">
+                <TableHeader className="bg-muted/60 [&_th]:text-[0.7rem] [&_th]:font-semibold [&_th]:tracking-[0.06em] [&_th]:text-muted-foreground [&_th]:uppercase">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="h-10 px-4 text-xs">{t.columns.name}</TableHead>
                     <TableHead className="h-10 text-xs">{t.columns.externalReference}</TableHead>
                     <TableHead className="h-10 text-xs">
                       {t.columns.nationalityResidence}
                     </TableHead>
+                    <TableHead className="h-10 text-xs">{t.columns.score}</TableHead>
                     <TableHead className="h-10 text-xs">{t.columns.latestBand}</TableHead>
                     <TableHead className="h-10 text-xs">{t.columns.latestDdLevel}</TableHead>
                     <TableHead className="h-10 text-xs">{t.columns.nextReviewDue}</TableHead>
@@ -192,7 +208,7 @@ export function CustomerList({
                 </TableHeader>
                 <TableBody>
                   {filtered.map(({ customer, latest }) => (
-                    <TableRow key={customer.id} className="group relative h-12">
+                    <TableRow key={customer.id} className="group relative h-[3.25rem] transition-colors hover:bg-[var(--mitiga-risk-neutral-bg)]/40">
                       <TableCell className="px-4 py-2 font-medium">
                         <Link
                           href={href(customer)}
@@ -208,6 +224,9 @@ export function CustomerList({
                       </TableCell>
                       <TableCell className="py-2 text-sm">
                         {customer.nationality} / {customer.residenceCountry}
+                      </TableCell>
+                      <TableCell className="py-2">
+                        {latest ? <ScoreMarker score={latest.overallScore} band={latest.band} /> : t.emptyValue}
                       </TableCell>
                       <TableCell className="py-2">
                         {latest ? (
