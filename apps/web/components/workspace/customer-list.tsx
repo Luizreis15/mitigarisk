@@ -26,7 +26,7 @@ import type { Customer } from '@/lib/domain/customer';
 import type { CustomerAssessment } from '@/lib/domain/customer-assessment';
 import type { TenantId } from '@/lib/domain/ids';
 import { cn } from '@/lib/utils';
-import { ArrowRightIcon, PlusIcon, SearchIcon, UploadIcon, UsersIcon } from 'lucide-react';
+import { ArrowRightIcon, FileTextIcon, PlusIcon, SearchIcon, UploadIcon, UsersIcon } from 'lucide-react';
 
 export interface CustomerListRow {
   customer: Customer;
@@ -62,10 +62,13 @@ export function CustomerList({
   rows,
   tenantId,
   canCreate,
+  canReport = false,
 }: {
   rows: CustomerListRow[];
   tenantId: TenantId;
   canCreate: boolean;
+  /** Server-confirmed audit.view: shows the portfolio report entry. */
+  canReport?: boolean;
 }) {
   const t = messages.customerWorkspace;
   const f = t.listFilters;
@@ -126,8 +129,19 @@ export function CustomerList({
               className="h-10 bg-card pl-9"
             />
           </div>
-          {canCreate ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {canReport ? (
+              <Button
+                variant="outline"
+                className="h-10 w-full shrink-0 bg-card sm:w-auto"
+                render={<Link href={`/workspace/customers/report?tenant=${tenantId}`} />}
+              >
+                <FileTextIcon aria-hidden="true" />
+                {messages.portfolioReport.open}
+              </Button>
+            ) : null}
+            {canCreate ? (
+              <>
               <Button
                 className="h-10 w-full shrink-0 sm:w-auto md:hidden"
                 render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}
@@ -143,8 +157,9 @@ export function CustomerList({
                 <UploadIcon aria-hidden="true" />
                 {t.importCustomers}
               </Button>
-            </div>
-          ) : null}
+              </>
+            ) : null}
+          </div>
         </div>
 
         <fieldset className="mt-3 min-w-0">
