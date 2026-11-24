@@ -22,6 +22,12 @@ import type { CustomerAssessmentForm } from '@/lib/domain/customer-assessment';
 import { isUuid, type CorrelationId, type CustomerId, type TenantId } from '@/lib/domain/ids';
 import { validateDecisionInput } from '@/lib/domain/customer-decision';
 import { recordCustomerDecision } from '@/lib/supabase/customer-decisions-repository';
+import {
+  InvalidTransactionInputError,
+  TRANSACTION_FORM_FIELDS,
+  buildTransactionInputs,
+} from '@/lib/domain/transaction-check';
+import { runTransactionCheck } from '@/lib/supabase/transaction-checks-repository';
 
 // Server Actions for the customer CRA experience
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Same
@@ -233,4 +239,55 @@ export async function recordCustomerDecisionAction(
   if (denied) redirect('/denied');
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#customer-decision`);
+}
+
+/**
+ * Runs the transaction trigger check on caller-supplied aggregates. Only
+ * the allow-listed amount fields are read; the database evaluates the
+ * ruleset and stores the result.
+ */
+export async function runTransactionCheckAction(
+  _previousState: CustomerActionResult | null,
+  formData: FormData,
+): Promise<CustomerActionResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
+  const client = await createServerSupabaseClient();
+
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const customerId = readFormValue(formData, 'customerId');
+  const correlationId = readFormValue(formData, 'correlationId');
+  const read = (name: string) => readFormValue(formData, name);
+  // Echo only the allow-listed fields back to the form after an error.
+  const values: Record<string, string> = {};
+  for (const name of TRANSACTION_FORM_FIELDS) values[name] = read(name);
+
+  let tenantId: TenantId;
+  try {
+    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'assessment.run');
+    tenantId = context.tenantId;
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') redirect('/denied');
+    return { status: 'error', code: errorCode(error) };
+  }
+
+  if (!isUuid(customerId) || !isUuid(correlationId)) {
+    return { status: 'error', code: 'InvalidTransactionRequestError' };
+  }
+
+  let denied = false;
+  try {
+    const inputs = buildTransactionInputs(read);
+    await runTransactionCheck(client, { tenantId, customerId, inputs, correlationId });
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') {
+      denied = true;
+    } else {
+      const field = error instanceof InvalidTransactionInputError ? error.field : null;
+      return { status: 'error', code: errorCode(error), attempt: randomUUID(), correlationId, field, values };
+    }
+  }
+  if (denied) redirect('/denied');
+
+  redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#transaction-triggers`);
 }

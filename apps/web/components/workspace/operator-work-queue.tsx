@@ -7,6 +7,7 @@ import {
   HourglassIcon,
   OctagonXIcon,
   PlusIcon,
+  ZapIcon,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -92,7 +93,26 @@ function QueueRow({ item, href }: { item: WorkQueueItem; href: string }) {
           )}
         </div>
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="text-sm font-medium text-foreground">{t.stages[item.stage].next}</p>
+          <p className="text-sm font-medium text-foreground">
+            {(item.triggerActions ?? []).length > 0 && (item.stage === 'cleared' || item.stage === 'review_due')
+              ? t.triggerNext
+              : t.stages[item.stage].next}
+          </p>
+          {(item.triggerActions ?? []).length > 0 ? (
+            <ul className="flex flex-wrap gap-1.5">
+              {(item.triggerActions ?? []).map((code) => (
+                <li
+                  key={code}
+                  className="inline-flex items-center gap-1 rounded-md bg-[var(--mitiga-risk-medium-bg)] px-2 py-0.5 text-xs font-medium text-[var(--mitiga-risk-medium-fg)]"
+                >
+                  <ZapIcon className="size-3" aria-hidden="true" />
+                  {interpolate(t.triggerChip, {
+                    action: (messages.transactionTriggers.actions as Record<string, string>)[code] ?? code,
+                  })}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {shown.length > 0 ? (
             <ul className="flex flex-wrap gap-1.5">
               {shown.map((code) => (

@@ -21,6 +21,8 @@ import { buildWorkQueue, type WorkQueue } from '@/lib/domain/work-queue';
 import { personaFromCapabilities, type WorkspacePersona } from '@/lib/domain/workspace-persona';
 import { decisionStatusFor } from '@/lib/domain/customer-decision';
 import { listTenantCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
+import { listLatestTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
+import type { TransactionCheck } from '@/lib/domain/transaction-check';
 import type { DecisionInboxItem } from '@/components/workspace/decision-inbox';
 
 // Real protected product route
@@ -163,9 +165,10 @@ export default async function WorkspacePage({
   let decisionInbox: DecisionInboxItem[] = [];
   if (customerEntryTenantId) {
     try {
-      const [customers, decisions] = await Promise.all([
+      const [customers, decisions, latestChecks] = await Promise.all([
         listCustomers(client, customerEntryTenantId),
         listTenantCustomerDecisions(client, customerEntryTenantId),
+        listLatestTransactionChecks(client, customerEntryTenantId).catch(() => new Map<string, TransactionCheck>()),
       ]);
       const latest = await Promise.all(
         customers.map((customer) =>
@@ -175,7 +178,13 @@ export default async function WorkspacePage({
       const rows = customers.map((customer, index) => {
         const latestAssessment = latest[index] ?? null;
         const status = decisionStatusFor(latestAssessment, decisions);
-        return { customer, latest: latestAssessment, decisionState: status.state, pendingLevel: status.pendingLevel };
+        return {
+          customer,
+          latest: latestAssessment,
+          decisionState: status.state,
+          pendingLevel: status.pendingLevel,
+          triggerActions: latestChecks.get(customer.id)?.actions ?? [],
+        };
       });
       dashboardSnapshot = buildCompanyDashboardSnapshot(rows);
       workQueue = buildWorkQueue(rows);
