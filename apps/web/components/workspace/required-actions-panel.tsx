@@ -103,7 +103,7 @@ export function RequiredActionsPanel({
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
-            <li key={item.key} className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2.5 sm:flex-row sm:items-start">
+            <li key={item.key} className="flex flex-wrap items-start gap-x-2 gap-y-2 rounded-lg border border-border px-3 py-2.5 sm:flex-nowrap">
               <span className="mt-0.5 shrink-0">
                 {item.completion ? (
                   <CheckCircle2Icon className="size-4 text-[var(--mitiga-success)]" aria-label={t.done} />
@@ -122,7 +122,7 @@ export function RequiredActionsPanel({
                 ) : null}
               </div>
               {!item.completion && canComplete ? (
-                <div className="sm:w-80 sm:shrink-0 sm:text-right">
+                <div className="w-full pl-6 sm:w-80 sm:shrink-0 sm:pl-0 sm:text-right">
                   <CompleteForm item={item} tenantId={tenantId} customerId={customerId} correlationId={correlationIds[item.key] ?? ''} />
                 </div>
               ) : null}

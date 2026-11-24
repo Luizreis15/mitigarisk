@@ -305,3 +305,29 @@ export async function getCustomerAssessmentForm(
 
   return mapAssessmentForm(data);
 }
+
+/**
+ * Latest assessment of every customer of the tenant, in one read
+ * (public.customer_latest_assessments, security_invoker: RLS still applies).
+ * Keyed by customer id; customers never assessed are absent.
+ */
+export async function listLatestCustomerAssessments(
+  client: SupabaseClient,
+  tenantId: TenantId,
+): Promise<Map<string, CustomerAssessment>> {
+  const { data, error } = await client
+    .from("customer_latest_assessments")
+    .select(CUSTOMER_ASSESSMENT_COLUMNS)
+    .eq("tenant_id", tenantId);
+
+  if (error) {
+    throw new CustomerAssessmentReadError(`Failed to list latest assessments: ${error.message}`);
+  }
+
+  const latest = new Map<string, CustomerAssessment>();
+  for (const row of (data ?? []) as CustomerAssessmentRow[]) {
+    const assessment = mapRow(row);
+    latest.set(assessment.customerId, assessment);
+  }
+  return latest;
+}

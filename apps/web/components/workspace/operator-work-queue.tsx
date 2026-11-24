@@ -50,7 +50,8 @@ const stageStyle: Record<WorkStage, { icon: LucideIcon; accent: string; chip: st
 };
 
 function dueText(item: WorkQueueItem): string {
-  if (!item.latest) return t.notAssessed;
+  // "Not assessed" already shows beside the name; no due date to repeat.
+  if (!item.latest) return '';
   const days = item.reviewDueInDays;
   if (item.stage === 'review_due' && days !== null) {
     if (days === 0) return t.dueToday;
@@ -213,7 +214,7 @@ export function OperatorWorkQueue({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-xl leading-6 font-semibold tabular-nums">{count}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{t.stages[stage].title}</span>
+                    <span className="block text-xs leading-tight text-muted-foreground">{t.stages[stage].title}</span>
                   </span>
                 </a>
               );

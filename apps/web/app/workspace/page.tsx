@@ -15,7 +15,7 @@ import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { resolveActiveTenantContext } from '@/lib/supabase/tenant-context';
 import { listCustomers } from '@/lib/supabase/customers-repository';
-import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments-repository';
+import { listLatestCustomerAssessments } from '@/lib/supabase/customer-assessments-repository';
 import { listTenantAuditEvents } from '@/lib/supabase/access-repository';
 import { buildWorkQueue, type WorkQueue } from '@/lib/domain/work-queue';
 import { personaFromCapabilities, type WorkspacePersona } from '@/lib/domain/workspace-persona';
@@ -177,11 +177,8 @@ export default async function WorkspacePage({
         listActionCompletions(client, customerEntryTenantId).catch((): ActionCompletion[] => []),
       ]);
       const completedKeys = new Set(completions.map((c) => completionKey(c.sourceType, c.sourceId, c.actionCode)));
-      const latest = await Promise.all(
-        customers.map((customer) =>
-          getLatestCustomerAssessment(client, customerEntryTenantId, customer.id),
-        ),
-      );
+      const latestByCustomer = await listLatestCustomerAssessments(client, customerEntryTenantId);
+      const latest = customers.map((customer) => latestByCustomer.get(customer.id) ?? null);
       const rows = customers.map((customer, index) => {
         const latestAssessment = latest[index] ?? null;
         const status = decisionStatusFor(latestAssessment, decisions);

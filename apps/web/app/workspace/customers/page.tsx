@@ -5,7 +5,7 @@ import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
 import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
 import { listCustomers } from '@/lib/supabase/customers-repository';
-import { getLatestCustomerAssessment } from '@/lib/supabase/customer-assessments-repository';
+import { listLatestCustomerAssessments } from '@/lib/supabase/customer-assessments-repository';
 import type { TenantId } from '@/lib/domain/ids';
 import { CustomerList } from '@/components/workspace/customer-list';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
@@ -48,16 +48,14 @@ export default async function CustomersPage({
   const { data: userData } = await client.auth.getUser();
   const signedInEmail = userData.user?.email ?? null;
 
-  const [customers, canManageCustomers] = await Promise.all([
+  // Latest assessments come from one RLS-scoped read
+  // (public.customer_latest_assessments), not one read per customer.
+  const [customers, canManageCustomers, latestByCustomer] = await Promise.all([
     listCustomers(client, tenantId),
     hasCapability(client, tenantId, 'customer.manage'),
+    listLatestCustomerAssessments(client, tenantId),
   ]);
-  // One RLS-scoped read per customer: the repositories have no list-level
-  // "latest assessment" read path yet.
-  const latest = await Promise.all(
-    customers.map((customer) => getLatestCustomerAssessment(client, tenantId, customer.id)),
-  );
-  const rows = customers.map((customer, index) => ({ customer, latest: latest[index] }));
+  const rows = customers.map((customer) => ({ customer, latest: latestByCustomer.get(customer.id) ?? null }));
   const t = messages.customerWorkspace;
 
   return (
