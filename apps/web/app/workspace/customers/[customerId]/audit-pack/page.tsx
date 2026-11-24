@@ -18,6 +18,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
 import { hasCapability } from '@/lib/supabase/authorization';
 import { listCustomerTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
+import { listTenantMemberDirectory } from '@/lib/supabase/invitations-repository';
+import type { DirectoryMember } from '@/lib/domain/invitations';
 
 const t = messages.auditPack;
 const L = t.labels;
@@ -85,6 +87,12 @@ export default async function AuditPackPage({
     listCustomerAuditEvents(client, tenantId, customer.id),
   ]);
 
+  // Names for the people in the pack, when the reader may see the member
+  // directory (tenant.view); otherwise identifiers are shown.
+  const directory = await listTenantMemberDirectory(client, tenantId).catch((): DirectoryMember[] => []);
+  const emailById = new Map(directory.map((member) => [member.userId, member.email]));
+  const person = (id: string | null) => (id ? (emailById.get(id) ?? id) : '—');
+
   const generatedAt = new Date().toISOString();
   const pack = buildAuditPack({
     generatedAt,
@@ -145,6 +153,7 @@ export default async function AuditPackPage({
       completed_by: c.completedBy,
       completed_at: c.completedAt,
     })),
+    actors: Object.fromEntries(emailById),
     auditTrail: trail.map((e) => ({
       id: e.id,
       occurred_at: e.occurredAt,
@@ -198,7 +207,7 @@ export default async function AuditPackPage({
           const result = a.result as (typeof assessments)[number]['result'];
           return (
             <div key={String(a.id)} className="space-y-1 rounded border border-border p-3 break-inside-avoid">
-              <p className="text-sm font-semibold">{formatDateTime(String(a.assessed_at))}</p>
+              <p className="text-sm font-semibold">{formatDateTime(String(a.assessed_at))} · {person(String(a.assessed_by))}</p>
               <dl className="space-y-1">
                 <Field label={L.score} value={String(a.overall_score)} />
                 <Field label={L.band} value={bandLabel(result.band)} />
@@ -225,7 +234,7 @@ export default async function AuditPackPage({
             <Field label={L.level} value={decisionLabels.levels[d.level]} />
             <Field label={L.decision} value={decisionLabels.decisions[d.decision]} />
             <Field label={L.rationale} value={d.rationale} />
-            <Field label={L.by} value={<span className="font-mono text-xs">{d.decidedBy}</span>} />
+            <Field label={L.by} value={person(d.decidedBy)} />
           </dl>
         ))}
       </Section>
@@ -234,7 +243,7 @@ export default async function AuditPackPage({
         {checks.length === 0 ? <p className="text-sm">{t.none}</p> : null}
         {[...checks].reverse().map((c) => (
           <div key={c.id} className="space-y-1 rounded border border-border p-3 break-inside-avoid">
-            <p className="text-sm font-semibold">{formatDateTime(c.checkedAt)} · {L.ruleset} {c.rulesetVersion}</p>
+            <p className="text-sm font-semibold">{formatDateTime(c.checkedAt)} · {person(c.checkedBy)} · {L.ruleset} {c.rulesetVersion}</p>
             <ul className="space-y-0.5 text-sm">
               {c.results.map((r) => (
                 <li key={r.code}>
@@ -255,6 +264,7 @@ export default async function AuditPackPage({
             <Field label={L.at} value={formatDateTime(c.completedAt)} />
             <Field label={L.actions} value={c.sourceType === 'assessment' ? requiredActionLabel(c.actionCode) : ((trigger.actions as Record<string, string>)[c.actionCode] ?? c.actionCode)} />
             <Field label={L.source} value={c.sourceType} />
+            <Field label={L.by} value={person(c.completedBy)} />
             <Field label={L.note} value={c.evidenceNote} />
           </dl>
         ))}
@@ -274,7 +284,7 @@ export default async function AuditPackPage({
               <tr key={e.id} className="border-b border-border/60 align-top">
                 <td className="py-1 pr-2 whitespace-nowrap">{formatDateTime(e.occurredAt)}</td>
                 <td className="py-1 pr-2">{e.action}</td>
-                <td className="py-1 font-mono">{e.actorId ?? '—'}</td>
+                <td className="py-1">{person(e.actorId)}</td>
               </tr>
             ))}
           </tbody>

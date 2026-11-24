@@ -7,6 +7,8 @@ export interface AuditPackInput {
   generatedBy: string;
   tenant: { id: string; name: string | null };
   customer: Record<string, unknown>;
+  /** User id → email for the people named in the pack (empty when not visible to the reader). */
+  actors?: Record<string, string>;
   assessments: Array<Record<string, unknown>>;
   decisions: Array<Record<string, unknown>>;
   transactionChecks: Array<Record<string, unknown>>;
@@ -27,6 +29,7 @@ export function buildAuditPack(input: AuditPackInput) {
     generated_by: input.generatedBy,
     tenant: input.tenant,
     customer: input.customer,
+    actors: input.actors ?? {},
     assessments: [...input.assessments].sort(byTime('assessed_at')),
     decisions: [...input.decisions].sort(byTime('decided_at')),
     transaction_checks: [...input.transactionChecks].sort(byTime('checked_at')),

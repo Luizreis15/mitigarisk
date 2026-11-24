@@ -77,3 +77,39 @@ export function PortfolioSpectrum({ points, hrefFor }: { points: PortfolioPoint[
     </figure>
   );
 }
+
+/** One customer's stored score on the calibrated scale. */
+export function ScoreSpectrum({ score, band, overridden }: { score: number; band: keyof typeof bandColor; overridden: boolean }) {
+  const position = Math.min(100, Math.max(0, score));
+  return (
+    <figure className="w-full space-y-1.5">
+      <div className="relative h-7">
+        <div className="absolute inset-x-0 top-1/2 flex h-2.5 -translate-y-1/2 overflow-hidden rounded-full" aria-hidden="true">
+          {ZONES.map((zone) => (
+            <span key={zone.key} className="h-full border-r-2 border-white last:border-r-0" style={{ width: `${zone.to - zone.from}%`, background: zone.bg }} />
+          ))}
+        </div>
+        <span className="sr-only">{`${t.score} ${score}, ${t.zones[band]}`}</span>
+        <span
+          aria-hidden="true"
+          className={cn(
+            'absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 border-[3px] border-white shadow-[0_1px_4px_rgba(10,22,40,0.4)]',
+            overridden ? 'rotate-45 rounded-[3px]' : 'rounded-full',
+          )}
+          style={{ left: `${position}%`, background: bandColor[band] }}
+        />
+      </div>
+      <div className="relative h-4 font-mono text-[0.68rem] text-muted-foreground" aria-hidden="true">
+        {[0, BAND_THRESHOLDS.medium, BAND_THRESHOLDS.high, 100].map((tick) => (
+          <span
+            key={tick}
+            className={cn('absolute', tick === 0 ? 'left-0' : tick === 100 ? 'right-0' : '-translate-x-1/2')}
+            style={tick === 0 || tick === 100 ? undefined : { left: `${tick}%` }}
+          >
+            {tick}
+          </span>
+        ))}
+      </div>
+    </figure>
+  );
+}
