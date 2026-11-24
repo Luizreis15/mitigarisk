@@ -13,6 +13,8 @@ import { RealWorkspaceShell } from '@/components/workspace/real-workspace-shell'
 import { WorkspaceDashboard } from '@/components/workspace/workspace-dashboard';
 import { OperatorWorkQueue } from '@/components/workspace/operator-work-queue';
 import { DecisionInbox, type DecisionInboxItem } from '@/components/workspace/decision-inbox';
+import { PendingInvitations } from '@/components/workspace/pending-invitations';
+import type { PendingInvitation } from '@/lib/domain/invitations';
 import type { WorkQueue } from '@/lib/domain/work-queue';
 import type { WorkspacePersona } from '@/lib/domain/workspace-persona';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
@@ -34,6 +36,7 @@ export function WorkspaceExperience({
   persona = null,
   workQueue = null,
   decisionInbox = [],
+  pendingInvitations = [],
   canManageCustomers = false,
 }: {
   model: WorkspaceViewModel;
@@ -48,6 +51,7 @@ export function WorkspaceExperience({
   persona?: WorkspacePersona | null;
   workQueue?: WorkQueue | null;
   decisionInbox?: DecisionInboxItem[];
+  pendingInvitations?: PendingInvitation[];
   canManageCustomers?: boolean;
 }) {
   const hub = messages.realShell.hub;
@@ -75,6 +79,7 @@ export function WorkspaceExperience({
               {interpolate(messages.workspace.signedInAs, { email: model.signedInEmail })}
             </p>
           ) : null}
+          <PendingInvitations invitations={pendingInvitations} />
           <WorkspaceStatus model={model} />
           {model.kind === 'tenant_selection_required' ? (
             <WorkspaceTenantSelection options={model.tenantOptions} />
@@ -133,6 +138,8 @@ export function WorkspaceExperience({
             </span>
           </div>
         </header>
+
+        <PendingInvitations invitations={pendingInvitations} />
 
         {showWorkQueue && customerEntryTenantId ? (
           <OperatorWorkQueue
