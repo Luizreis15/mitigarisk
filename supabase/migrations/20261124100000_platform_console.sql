@@ -8,7 +8,7 @@
 -- only audit rows a platform admin can read) and a tenant-level event the
 -- tenant's own admins can see.
 
-create or replace function app.require_platform_governance_actor()
+create or replace function app.assert_platform_governance_actor()
 returns void
 language plpgsql
 stable
@@ -22,7 +22,7 @@ begin
 end;
 $$;
 
-revoke all on function app.require_platform_governance_actor() from public;
+revoke all on function app.assert_platform_governance_actor() from public;
 
 -- 1. Tenant overview ----------------------------------------------------------
 
@@ -44,7 +44,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  perform app.require_platform_governance_actor();
+  perform app.assert_platform_governance_actor();
   return query
   select
     t.id, t.name, t.slug, t.status, t.created_at,
@@ -84,7 +84,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  perform app.require_platform_governance_actor();
+  perform app.assert_platform_governance_actor();
   return query
   select m.id, m.user_id, u.email::text, m.role_key, m.status, m.created_at, u.last_sign_in_at
   from public.memberships m
@@ -117,7 +117,7 @@ declare
   v_admin uuid;
   v_tenant public.tenants;
 begin
-  perform app.require_platform_governance_actor();
+  perform app.assert_platform_governance_actor();
 
   if char_length(v_name) not between 2 and 120 then
     raise exception 'Company name must be 2 to 120 characters' using errcode = '22023';
@@ -167,7 +167,7 @@ declare
   v_before public.tenants;
   v_after public.tenants;
 begin
-  perform app.require_platform_governance_actor();
+  perform app.assert_platform_governance_actor();
 
   if p_status is null or p_status not in ('active', 'suspended') then
     raise exception 'Status must be active or suspended' using errcode = '22023';
@@ -220,7 +220,7 @@ declare
   v_before public.memberships;
   v_after public.memberships;
 begin
-  perform app.require_platform_governance_actor();
+  perform app.assert_platform_governance_actor();
 
   if p_status is null or p_status not in ('active', 'suspended') then
     raise exception 'Status must be active or suspended' using errcode = '22023';

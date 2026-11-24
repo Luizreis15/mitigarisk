@@ -15,7 +15,7 @@ import {
 
 // Platform console Server Actions. Each one requires a platform
 // administrator before touching anything; the database re-checks the same
-// rule in every RPC (app.require_platform_governance_actor()).
+// rule in every RPC (app.assert_platform_governance_actor()).
 
 export type PlatformActionResult =
   | { status: 'error'; code: string; attempt: string; values: Record<string, string> }
