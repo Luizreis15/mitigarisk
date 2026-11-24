@@ -157,3 +157,19 @@ export async function recordAuditPackGenerated(
     throw new AuditPackReadError(`Failed to record audit pack generation: ${error.message}`);
   }
 }
+
+/** Records a portfolio report generation (audit.view): digest and row count only. */
+export async function recordPortfolioReportGenerated(
+  client: SupabaseClient,
+  input: { tenantId: string; sha256: string; customerCount: number },
+): Promise<void> {
+  const { error } = await client.rpc('record_portfolio_report_generated', {
+    p_tenant_id: input.tenantId,
+    p_sha256: input.sha256,
+    p_customer_count: input.customerCount,
+  });
+  if (error) {
+    if (error.code === '42501') throw new ForbiddenError('audit.view', input.tenantId as TenantId);
+    throw new AuditPackReadError(`Failed to record portfolio report generation: ${error.message}`);
+  }
+}

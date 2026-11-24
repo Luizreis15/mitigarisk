@@ -50,9 +50,10 @@ export default async function CustomersPage({
 
   // Latest assessments come from one RLS-scoped read
   // (public.customer_latest_assessments), not one read per customer.
-  const [customers, canManageCustomers, latestByCustomer] = await Promise.all([
+  const [customers, canManageCustomers, canViewAudit, latestByCustomer] = await Promise.all([
     listCustomers(client, tenantId),
     hasCapability(client, tenantId, 'customer.manage'),
+    hasCapability(client, tenantId, 'audit.view').catch(() => false),
     listLatestCustomerAssessments(client, tenantId),
   ]);
   const rows = customers.map((customer) => ({ customer, latest: latestByCustomer.get(customer.id) ?? null }));
@@ -70,7 +71,7 @@ export default async function CustomersPage({
       tenantName={tenantName}
       signedInEmail={signedInEmail}
     >
-      <CustomerList rows={rows} tenantId={tenantId} canCreate={canManageCustomers} />
+      <CustomerList rows={rows} tenantId={tenantId} canCreate={canManageCustomers} canReport={canViewAudit} />
     </WorkspaceRealFrame>
   );
 }
