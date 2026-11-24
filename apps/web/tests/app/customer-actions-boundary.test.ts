@@ -115,6 +115,8 @@ const ALLOWED_FORM_FIELDS = new Set([
   'assessmentId',
   'decision',
   'rationale',
+  // Transaction checks read their amount fields only through
+  // TRANSACTION_FORM_FIELDS (asserted in tests/domain/transaction-check.test.ts).
 ]);
 
 void test('customer actions read only allow-listed FormData fields, never a score, band, or outcome', () => {

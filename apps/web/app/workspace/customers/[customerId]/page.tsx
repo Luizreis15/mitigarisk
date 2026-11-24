@@ -26,6 +26,9 @@ import { CustomerDecisionPanel } from '@/components/workspace/customer-decision-
 import { listCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
 import { decisionStatusFor, type CustomerDecision } from '@/lib/domain/customer-decision';
 import { formatDateTime } from '@/lib/i18n/presentation';
+import { TransactionTriggerPanel } from '@/components/workspace/transaction-trigger-panel';
+import { listCustomerTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
+import type { TransactionCheck } from '@/lib/domain/transaction-check';
 
 // Customer profile, latest persisted assessment, and history
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Every read
@@ -98,6 +101,10 @@ export default async function CustomerDetailPage({
     hasCapability(client, tenantId, 'case.decide').catch(() => false),
     listCustomerDecisions(client, tenantId, customer.id).catch((): CustomerDecision[] => []),
   ]);
+  const transactionChecks = await listCustomerTransactionChecks(client, tenantId, customer.id).catch(
+    (): TransactionCheck[] => [],
+  );
+  const latestCheck = transactionChecks[0] ?? null;
   const latest = assessments[0] ?? null;
   const decisionStatus = decisionStatusFor(latest, decisions);
   const decisionTrail = [decisionStatus.mlro, decisionStatus.board]
@@ -187,6 +194,25 @@ export default async function CustomerDetailPage({
           correlationId={randomUUID()}
         />
       ) : null}
+
+      <TransactionTriggerPanel
+        latest={latestCheck}
+        latestWho={
+          latestCheck && latestCheck.checkedBy === identity.userId
+            ? messages.customerDecision.byYou
+            : messages.customerDecision.byMember
+        }
+        latestDate={latestCheck ? formatDateTime(latestCheck.checkedAt) : ''}
+        history={transactionChecks.map((check) => ({
+          id: check.id,
+          date: formatDateTime(check.checkedAt),
+          hitCount: check.hitCount,
+        }))}
+        canRun={canRunAssessment}
+        tenantId={tenantId}
+        customerId={customer.id}
+        correlationId={randomUUID()}
+      />
 
       <CustomerProfile customer={customer} />
 

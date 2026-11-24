@@ -35,6 +35,8 @@ export interface WorkQueueRow {
   latest: CustomerAssessment | null;
   /** Human decision on the latest assessment, when it required one. */
   decisionState?: DecisionState;
+  /** Required actions from the latest transaction check's hits (empty when none). */
+  triggerActions?: string[];
 }
 
 export interface WorkQueueItem extends WorkQueueRow {
