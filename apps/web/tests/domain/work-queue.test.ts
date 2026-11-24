@@ -159,3 +159,9 @@ void test('the MLRO or board decision moves a REVIEW_REQUIRED case out of the co
   // A policy reject cannot be overturned by a decision.
   assert.equal(workStageFor(assessment('REJECT', '2027-11-23'), NOW, 90, 'approved'), 'do_not_onboard');
 });
+
+void test('completed required actions drop out of the queue row', () => {
+  const latest = assessment('REVIEW_REQUIRED', '2027-11-23', ['VERIFY_ID', 'OBTAIN_SOW_SOF_DOCUMENTS']);
+  const queue = buildWorkQueue([{ customer: customer('a'), latest, completedActions: ['OBTAIN_SOW_SOF_DOCUMENTS'] }], NOW);
+  assert.deepEqual(queue.items[0]?.requiredActions, ['VERIFY_ID']);
+});

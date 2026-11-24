@@ -29,6 +29,15 @@ import { formatDateTime } from '@/lib/i18n/presentation';
 import { TransactionTriggerPanel } from '@/components/workspace/transaction-trigger-panel';
 import { listCustomerTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
 import type { TransactionCheck } from '@/lib/domain/transaction-check';
+import { RequiredActionsPanel, type RequiredActionItem } from '@/components/workspace/required-actions-panel';
+import {
+  completionKey,
+  listActionCompletions,
+  type ActionCompletion,
+} from '@/lib/supabase/action-completions-repository';
+import { requiredActionLabel } from '@/lib/i18n/customer-assessment';
+import { interpolate } from '@/lib/i18n/messages';
+import { FileTextIcon } from 'lucide-react';
 
 // Customer profile, latest persisted assessment, and history
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Every read
@@ -101,11 +110,48 @@ export default async function CustomerDetailPage({
     hasCapability(client, tenantId, 'case.decide').catch(() => false),
     listCustomerDecisions(client, tenantId, customer.id).catch((): CustomerDecision[] => []),
   ]);
+  const latest = assessments[0] ?? null;
   const transactionChecks = await listCustomerTransactionChecks(client, tenantId, customer.id).catch(
     (): TransactionCheck[] => [],
   );
   const latestCheck = transactionChecks[0] ?? null;
-  const latest = assessments[0] ?? null;
+  const [completions, canManageCustomer, canViewAudit] = await Promise.all([
+    listActionCompletions(client, tenantId, customer.id).catch((): ActionCompletion[] => []),
+    hasCapability(client, tenantId, 'customer.manage').catch(() => false),
+    hasCapability(client, tenantId, 'audit.view').catch(() => false),
+  ]);
+  const completionByKey = new Map(completions.map((c) => [completionKey(c.sourceType, c.sourceId, c.actionCode), c]));
+  const who = (userId: string) =>
+    userId === identity.userId ? messages.customerDecision.byYou : messages.customerDecision.byMember;
+  const requiredItems: RequiredActionItem[] = [
+    ...(latest
+      ? latest.result.required_actions.map((code) => ({
+          sourceType: 'assessment' as const,
+          sourceId: latest.id,
+          sourceLabel: interpolate(messages.requiredActions.fromAssessment, { date: formatDateTime(latest.assessedAt) }),
+          actionCode: code,
+          label: requiredActionLabel(code),
+        }))
+      : []),
+    ...(latestCheck
+      ? latestCheck.actions.map((code) => ({
+          sourceType: 'transaction_check' as const,
+          sourceId: latestCheck.id,
+          sourceLabel: interpolate(messages.requiredActions.fromCheck, { date: formatDateTime(latestCheck.checkedAt) }),
+          actionCode: code,
+          label: (messages.transactionTriggers.actions as Record<string, string>)[code] ?? code,
+        }))
+      : []),
+  ].map((item) => {
+    const key = completionKey(item.sourceType, item.sourceId, item.actionCode);
+    const done = completionByKey.get(key);
+    return {
+      ...item,
+      key,
+      completion: done ? { who: who(done.completedBy), date: formatDateTime(done.completedAt), note: done.evidenceNote } : null,
+    };
+  });
+  const completionCorrelationIds = Object.fromEntries(requiredItems.map((item) => [item.key, randomUUID()]));
   const decisionStatus = decisionStatusFor(latest, decisions);
   const decisionTrail = [decisionStatus.mlro, decisionStatus.board]
     .filter((d): d is CustomerDecision => d !== null)
@@ -150,6 +196,15 @@ export default async function CustomerDetailPage({
         <h2 id="customer-latest-assessment" className="text-sm font-semibold text-foreground">
           {t.latestTitle}
         </h2>
+        {canViewAudit ? (
+          <a
+            href={`/workspace/customers/${customer.id}/audit-pack?tenant=${tenantId}`}
+            className="inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground shadow-[var(--shadow-xs)] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <FileTextIcon aria-hidden="true" className="size-4" />
+            {messages.auditPack.open}
+          </a>
+        ) : null}
         {canRunAssessment && form ? (
           <a
             href="#run-customer-assessment"
@@ -194,6 +249,14 @@ export default async function CustomerDetailPage({
           correlationId={randomUUID()}
         />
       ) : null}
+
+      <RequiredActionsPanel
+        items={requiredItems}
+        canComplete={canManageCustomer}
+        tenantId={tenantId}
+        customerId={customer.id}
+        correlationIds={completionCorrelationIds}
+      />
 
       <TransactionTriggerPanel
         latest={latestCheck}

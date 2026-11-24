@@ -23,6 +23,7 @@ import { decisionStatusFor } from '@/lib/domain/customer-decision';
 import { listTenantCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
 import { listLatestTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
 import type { TransactionCheck } from '@/lib/domain/transaction-check';
+import { completionKey, listActionCompletions, type ActionCompletion } from '@/lib/supabase/action-completions-repository';
 import type { DecisionInboxItem } from '@/components/workspace/decision-inbox';
 
 // Real protected product route
@@ -165,11 +166,13 @@ export default async function WorkspacePage({
   let decisionInbox: DecisionInboxItem[] = [];
   if (customerEntryTenantId) {
     try {
-      const [customers, decisions, latestChecks] = await Promise.all([
+      const [customers, decisions, latestChecks, completions] = await Promise.all([
         listCustomers(client, customerEntryTenantId),
         listTenantCustomerDecisions(client, customerEntryTenantId),
         listLatestTransactionChecks(client, customerEntryTenantId).catch(() => new Map<string, TransactionCheck>()),
+        listActionCompletions(client, customerEntryTenantId).catch((): ActionCompletion[] => []),
       ]);
+      const completedKeys = new Set(completions.map((c) => completionKey(c.sourceType, c.sourceId, c.actionCode)));
       const latest = await Promise.all(
         customers.map((customer) =>
           getLatestCustomerAssessment(client, customerEntryTenantId, customer.id),
@@ -183,7 +186,15 @@ export default async function WorkspacePage({
           latest: latestAssessment,
           decisionState: status.state,
           pendingLevel: status.pendingLevel,
-          triggerActions: latestChecks.get(customer.id)?.actions ?? [],
+          triggerActions: (() => {
+            const check = latestChecks.get(customer.id);
+            return check ? check.actions.filter((code) => !completedKeys.has(completionKey('transaction_check', check.id, code))) : [];
+          })(),
+          completedActions: latestAssessment
+            ? latestAssessment.result.required_actions.filter((code) =>
+                completedKeys.has(completionKey('assessment', latestAssessment.id, code)),
+              )
+            : [],
         };
       });
       dashboardSnapshot = buildCompanyDashboardSnapshot(rows);
