@@ -588,6 +588,7 @@ export const messages = {
   },
   realShell: {
     skipToContent: 'Skip to main content',
+    loading: 'Loading…',
     primaryNav: 'Workspace navigation',
     openMenu: 'Open menu',
     companyLabel: 'Company',
