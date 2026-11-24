@@ -483,6 +483,10 @@ export const messages = {
     companyLabel: 'Company',
     noCompany: 'No company selected',
     navSection: 'Workspace',
+    collapseSidebar: 'Collapse menu',
+    expandSidebar: 'Expand menu',
+    accountMenu: 'Account menu',
+    testEnvironment: 'Test environment',
     nav: {
       home: 'Home',
       homeHint: 'Company overview — risk bands, reviews, and recent activity',
@@ -493,7 +497,7 @@ export const messages = {
       suppliers: 'Suppliers',
       suppliersHint: 'Assess and decide on suppliers',
       suppliersAll: 'All suppliers',
-      access: 'Access',
+      access: 'Team',
       accessHint: 'Who is in this company and what was recorded',
     },
     context: {

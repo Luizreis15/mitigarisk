@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import {
   ArrowRightIcon,
-  ClipboardCheckIcon,
   ShieldCheckIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -193,28 +192,6 @@ export function WorkspaceExperience({
               </Link>
             ) : null}
 
-            {realEntryTenantId ? (
-              <Link
-                href={`/workspace/suppliers?tenant=${realEntryTenantId}`}
-                className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-petrol-700)] hover:bg-[var(--mitiga-risk-neutral-bg)]/50"
-              >
-                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-risk-neutral-bg)] text-[var(--mitiga-risk-neutral-fg)]">
-                  <ClipboardCheckIcon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground">
-                    {hub.suppliersTitle}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {hub.suppliersBody}
-                  </span>
-                </span>
-                <ArrowRightIcon
-                  aria-hidden="true"
-                  className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-                />
-              </Link>
-            ) : null}
 
             {accessEntryTenantId ? (
               <Link

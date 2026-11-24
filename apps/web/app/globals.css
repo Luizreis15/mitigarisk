@@ -8,9 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Avenir Next", Avenir, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --font-heading: var(--font-sans);
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --font-heading: "Bricolage Grotesque Variable", "IBM Plex Sans", "Segoe UI", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -74,7 +74,7 @@
   --chart-4: var(--mitiga-warning);
   --chart-5: var(--mitiga-info);
   --radius: var(--radius-md);
-  --sidebar: #1c3443;
+  --sidebar: #0b1a33;
   --sidebar-foreground: #eef3f3;
   --sidebar-primary: var(--mitiga-mineral-100);
   --sidebar-primary-foreground: var(--mitiga-ink-950);
@@ -109,6 +109,20 @@ body {
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'tnum' 0;
+  }
+
+  /* Display face for page and section titles; everything else stays Plex. */
+  h1,
+  h2 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
+  }
+
+  .tabular-nums,
+  code,
+  kbd {
+    font-family: var(--font-mono);
   }
 }
 
@@ -121,4 +135,21 @@ body {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Navigation progress (components/workspace/nav-progress.tsx) */
+@keyframes nav-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(-8%);
+  }
+}
+
+.nav-progress-bar {
+  animation: nav-progress 4s var(--ease-standard) forwards;
 }
