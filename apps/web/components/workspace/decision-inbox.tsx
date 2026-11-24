@@ -29,19 +29,17 @@ export function DecisionInbox({
   const title = mode === 'mlro' ? t.mlroTitle : t.analystTitle;
 
   return (
-    <section aria-labelledby="decision-inbox-title" className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-xs)] sm:p-5">
-      <div className="flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-[var(--mitiga-mineral-100)] text-[var(--mitiga-petrol-700)]">
-          <GavelIcon className="size-4" aria-hidden="true" />
-        </span>
-        <h2 id="decision-inbox-title" className="font-semibold">
+    <section id="decision-inbox" aria-labelledby="decision-inbox-title" className="scroll-mt-24 rounded-lg border border-border bg-card shadow-[var(--shadow-xs)]">
+      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+        <h2 id="decision-inbox-title" className="flex items-center gap-2 text-[0.95rem] font-semibold">
+          <GavelIcon className="size-4 text-[var(--risk-high)]" aria-hidden="true" />
           {title}
-          <span className="ml-2 font-normal text-muted-foreground tabular-nums">{items.length}</span>
         </h2>
-      </div>
-
+        <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs font-medium">{items.length}</span>
+      </header>
+      <div className="px-5 py-2">
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{mode === 'mlro' ? t.mlroEmpty : t.analystEmpty}</p>
+        <p className="py-3 text-sm text-muted-foreground">{mode === 'mlro' ? t.mlroEmpty : t.analystEmpty}</p>
       ) : (
         <ul className="divide-y divide-border">
           {items.map((item) => (
@@ -78,6 +76,7 @@ export function DecisionInbox({
           ))}
         </ul>
       )}
+      </div>
     </section>
   );
 }

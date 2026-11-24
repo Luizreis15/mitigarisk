@@ -62,3 +62,47 @@ export function buildCompanyDashboardSnapshot(
     reviewHorizonDays: horizonDays,
   };
 }
+
+/** One assessed customer placed on the 0–100 risk scale. */
+export interface PortfolioPoint {
+  customerId: string;
+  name: string;
+  reference: string;
+  score: number;
+  band: CustomerAssessment['band'];
+  ddLevel: CustomerAssessment['ddLevel'];
+  /** True when an override rule (PEP, sanctions…) set the band, not the score. */
+  overridden: boolean;
+  /** Vertical slot so points with close scores stack instead of overlapping. */
+  stack: number;
+}
+
+/** Policy band thresholds on the score scale (LOW < 36 ≤ MEDIUM < 76 ≤ HIGH). */
+export const BAND_THRESHOLDS = { medium: 36, high: 76 } as const;
+
+/**
+ * Assessed customers as points on the score scale, stacked in buckets of
+ * `bucketWidth` score points. Stored values only: nothing is recomputed.
+ */
+export function buildPortfolioPoints(rows: DashboardCustomerRow[], bucketWidth = 3): PortfolioPoint[] {
+  const assessed = rows
+    .filter((row): row is { customer: Customer; latest: CustomerAssessment } => row.latest !== null)
+    .map(({ customer, latest }) => ({
+      customerId: customer.id as string,
+      name: customer.fullName,
+      reference: customer.externalReference,
+      score: Math.min(100, Math.max(0, Number(latest.overallScore) || 0)),
+      band: latest.band,
+      ddLevel: latest.ddLevel,
+      overridden: latest.result.overrides_hit.length > 0,
+    }))
+    .sort((a, b) => a.score - b.score || a.name.localeCompare(b.name));
+
+  const perBucket = new Map<number, number>();
+  return assessed.map((point) => {
+    const bucket = Math.floor(point.score / bucketWidth);
+    const stack = perBucket.get(bucket) ?? 0;
+    perBucket.set(bucket, stack + 1);
+    return { ...point, stack };
+  });
+}

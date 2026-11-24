@@ -7,7 +7,9 @@ import type { TenantId } from '@/lib/domain/ids';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
 import {
   buildCompanyDashboardSnapshot,
+  buildPortfolioPoints,
   type CompanyDashboardSnapshot,
+  type PortfolioPoint,
 } from '@/lib/domain/workspace-dashboard';
 import { hasCapability } from '@/lib/supabase/authorization';
 import { hasPublicSupabaseConfig } from '@/lib/supabase/env';
@@ -167,6 +169,8 @@ export default async function WorkspacePage({
   const currentUserId = identity.userId;
 
   let workQueue: WorkQueue | null = null;
+  let portfolioPoints: PortfolioPoint[] = [];
+  let openTriggers = 0;
   let decisionInbox: DecisionInboxItem[] = [];
   if (customerEntryTenantId) {
     try {
@@ -199,6 +203,8 @@ export default async function WorkspacePage({
         };
       });
       dashboardSnapshot = buildCompanyDashboardSnapshot(rows);
+      portfolioPoints = buildPortfolioPoints(rows);
+      openTriggers = rows.filter((row) => row.triggerActions.length > 0).length;
       workQueue = buildWorkQueue(rows);
       decisionInbox = rows
         .filter((row) => row.latest && row.pendingLevel)
@@ -261,6 +267,8 @@ export default async function WorkspacePage({
       workQueue={workQueue}
       decisionInbox={decisionInbox}
       pendingInvitations={pendingInvitations}
+      portfolioPoints={portfolioPoints}
+      openTriggers={openTriggers}
       canManageCustomers={canManageCustomers}
     />
   );

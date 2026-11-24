@@ -1,9 +1,4 @@
 import Link from 'next/link';
-import {
-  ArrowRightIcon,
-  ShieldCheckIcon,
-  UsersIcon,
-} from 'lucide-react';
 
 import { WorkspaceSessionActions } from '@/components/workspace/workspace-session-actions';
 import { WorkspaceStatus } from '@/components/workspace/workspace-status';
@@ -16,6 +11,7 @@ import { PendingInvitations } from '@/components/workspace/pending-invitations';
 import type { PendingInvitation } from '@/lib/domain/invitations';
 import type { WorkQueue } from '@/lib/domain/work-queue';
 import type { WorkspacePersona } from '@/lib/domain/workspace-persona';
+import type { PortfolioPoint } from '@/lib/domain/workspace-dashboard';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
 import type { CompanyDashboardSnapshot } from '@/lib/domain/workspace-dashboard';
 import type { WorkspaceViewModel } from '@/lib/domain/workspace-access';
@@ -37,6 +33,8 @@ export function WorkspaceExperience({
   decisionInbox = [],
   pendingInvitations = [],
   canManageCustomers = false,
+  portfolioPoints = [],
+  openTriggers = 0,
 }: {
   model: WorkspaceViewModel;
   realEntryTenantId?: TenantId | null;
@@ -51,9 +49,10 @@ export function WorkspaceExperience({
   workQueue?: WorkQueue | null;
   decisionInbox?: DecisionInboxItem[];
   pendingInvitations?: PendingInvitation[];
+  portfolioPoints?: PortfolioPoint[];
+  openTriggers?: number;
   canManageCustomers?: boolean;
 }) {
-  const hub = messages.realShell.hub;
   const isActiveMember = model.kind === 'active_member';
   const tenantId =
     customerEntryTenantId ?? realEntryTenantId ?? accessEntryTenantId ?? null;
@@ -108,34 +107,30 @@ export function WorkspaceExperience({
     : null;
   const showDashboard = Boolean(customerEntryTenantId) || dashboardUnavailable;
   const showWorkQueue = persona === 'operator' && Boolean(customerEntryTenantId);
-  const title = showWorkQueue ? messages.workQueue.title : hub.title;
-  const subtitle = showWorkQueue ? messages.workQueue.subtitle : hub.subtitle;
+  const title = showWorkQueue ? messages.workQueue.title : messages.overview.title;
+  const subtitle = showWorkQueue
+    ? messages.workQueue.subtitle
+    : interpolate(messages.overview.subtitle, { company: model.selectedTenantName ?? '' });
 
   return (
     <RealWorkspaceShell
       tenantName={model.selectedTenantName}
       signedInEmail={model.signedInEmail}
       tenantId={tenantId}
-      homeContextLabel={showWorkQueue ? messages.workQueue.title : undefined}
+      homeContextLabel={showWorkQueue ? messages.workQueue.title : messages.overview.title}
     >
-      <div className="mx-auto w-full max-w-[var(--content-max-width)] space-y-7">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
-              {title}
-            </h1>
+      <div className="space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1">
+            <h1 className="text-[1.75rem] leading-tight font-semibold text-foreground sm:text-[2rem]">{title}</h1>
             <p className="text-sm text-muted-foreground">{subtitle}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {persona ? (
-              <span className="inline-flex items-center rounded-full bg-[var(--mitiga-petrol-700)] px-2.5 py-1 text-[0.7rem] font-medium text-white">
-                {messages.personas[persona]}
-              </span>
-            ) : null}
-            <span className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[0.65rem] font-medium tracking-[0.06em] text-muted-foreground uppercase">
-              {hub.demoNote}
+          {persona ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground shadow-[var(--shadow-xs)]">
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--mitiga-mineral-600)]" />
+              {messages.personas[persona]}
             </span>
-          </div>
+          ) : null}
         </header>
 
         <PendingInvitations invitations={pendingInvitations} />
@@ -149,72 +144,23 @@ export function WorkspaceExperience({
           />
         ) : null}
 
-        {!showWorkQueue && customerEntryTenantId && (persona === 'mlro' || persona === 'analyst') ? (
-          <DecisionInbox items={decisionInbox} tenantId={customerEntryTenantId} mode={persona} />
-        ) : null}
-
         {!showWorkQueue && showDashboard ? (
           <WorkspaceDashboard
             snapshot={dashboardSnapshot}
             snapshotUnavailable={dashboardUnavailable || !dashboardSnapshot}
+            points={portfolioPoints}
+            attention={{ awaitingDecision: decisionInbox.length, openTriggers }}
             recentEvents={recentEvents}
             canViewAudit={canViewAudit}
             currentUserId={currentUserId}
             customersHref={customersHref}
+            accessHref={accessEntryTenantId ? `/workspace/access?tenant=${accessEntryTenantId}` : null}
+            tenantId={customerEntryTenantId ?? null}
+            inbox={customerEntryTenantId ? (
+              <DecisionInbox items={decisionInbox} tenantId={customerEntryTenantId} mode={persona === 'mlro' ? 'mlro' : 'analyst'} />
+            ) : null}
           />
         ) : null}
-
-        <section aria-label={hub.modulesTitle} className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            {hub.modulesTitle}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {customerEntryTenantId ? (
-              <Link
-                href={`/workspace/customers?tenant=${customerEntryTenantId}`}
-                className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-mineral-600)] hover:bg-[var(--mitiga-mineral-100)]/40"
-              >
-                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-risk-low-bg)] text-[var(--mitiga-risk-low-fg)]">
-                  <UsersIcon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground">
-                    {hub.customersTitle}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {hub.customersBody}
-                  </span>
-                </span>
-                <ArrowRightIcon
-                  aria-hidden="true"
-                  className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-                />
-              </Link>
-            ) : null}
-
-
-            {accessEntryTenantId ? (
-              <Link
-                href={`/workspace/access?tenant=${accessEntryTenantId}`}
-                className="group flex min-h-16 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--shadow-xs)] transition-colors hover:border-[var(--mitiga-violet-500)] hover:bg-[var(--mitiga-violet-100)]/60"
-              >
-                <span className="inline-flex size-10 items-center justify-center rounded-lg bg-[var(--mitiga-violet-100)] text-[var(--mitiga-violet-500)]">
-                  <ShieldCheckIcon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground">{hub.accessTitle}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {hub.accessBody}
-                  </span>
-                </span>
-                <ArrowRightIcon
-                  aria-hidden="true"
-                  className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-                />
-              </Link>
-            ) : null}
-          </div>
-        </section>
       </div>
     </RealWorkspaceShell>
   );

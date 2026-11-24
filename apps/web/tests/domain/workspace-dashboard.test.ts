@@ -125,3 +125,22 @@ void test('buildCompanyDashboardSnapshot counts unassessed and reviews inside ho
   assert.equal(snap.bandMedium, 1);
   assert.equal(snap.reviewsDueCount, 1);
 });
+
+void test('portfolio points keep stored scores, flag overrides and stack close scores', async () => {
+  const { buildPortfolioPoints } = await import('../../lib/domain/workspace-dashboard.ts');
+  const make = (id: string, score: number, band: 'LOW' | 'MEDIUM' | 'HIGH', overrides: string[]) => {
+    const a = assessment({ band, outcome: 'PROCEED', nextReviewDue: '2030-01-01' });
+    return { customer: customer(id), latest: { ...a, overallScore: score, result: { ...a.result, overrides_hit: overrides } } };
+  };
+  const points = buildPortfolioPoints([
+    make('b', 4.5, 'LOW', []),
+    make('pep', 0, 'HIGH', ['OVR_PEP']),
+    make('a', 3, 'LOW', []),
+    make('m', 46, 'MEDIUM', []),
+    { customer: customer('none'), latest: null },
+  ]);
+  assert.deepEqual(points.map((p) => p.name), ['pep', 'a', 'b', 'm']);
+  assert.deepEqual(points.map((p) => p.overridden), [true, false, false, false]);
+  // 0 sits in bucket 0; 3 and 4.5 share bucket 1 and stack; 46 is alone.
+  assert.deepEqual(points.map((p) => p.stack), [0, 0, 1, 0]);
+});

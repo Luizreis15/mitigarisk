@@ -1,170 +1,94 @@
 import Link from 'next/link';
-import {
-  AlertTriangleIcon,
-  ArrowRightIcon,
-  CheckCircle2Icon,
-  Clock3Icon,
-  ShieldAlertIcon,
-  UsersIcon,
-  XCircleIcon,
-} from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ArrowRightIcon, CalendarClockIcon, ClipboardListIcon, GavelIcon, ZapIcon, type LucideIcon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { PortfolioSpectrum } from '@/components/workspace/risk-spectrum';
 import type { AuditEventRow } from '@/lib/domain/audit-event';
-import type { CompanyDashboardSnapshot } from '@/lib/domain/workspace-dashboard';
+import type { CompanyDashboardSnapshot, PortfolioPoint } from '@/lib/domain/workspace-dashboard';
 import type { UserId } from '@/lib/domain/ids';
 import { auditActionLabel, shortActorId } from '@/lib/i18n/access';
 import { interpolate, messages } from '@/lib/i18n/messages';
 import { formatDateTime } from '@/lib/i18n/presentation';
 import { cn } from '@/lib/utils';
 
-type KpiTone = 'neutral' | 'low' | 'medium' | 'high' | 'warn' | 'reject';
+const t = messages.overview;
+const legacy = messages.realShell.dashboard;
 
-const toneStyles: Record<
-  KpiTone,
-  { card: string; iconWrap: string; value: string; Icon: typeof UsersIcon }
-> = {
-  neutral: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-neutral-bg)] text-[var(--mitiga-risk-neutral-fg)]',
-    value: 'text-foreground',
-    Icon: UsersIcon,
-  },
-  low: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-low-bg)] text-[var(--mitiga-risk-low-fg)]',
-    value: 'text-foreground',
-    Icon: CheckCircle2Icon,
-  },
-  medium: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-medium-bg)] text-[var(--mitiga-risk-medium-fg)]',
-    value: 'text-foreground',
-    Icon: AlertTriangleIcon,
-  },
-  high: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-high-bg)] text-[var(--mitiga-risk-high-fg)]',
-    value: 'text-foreground',
-    Icon: ShieldAlertIcon,
-  },
-  warn: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-medium-bg)] text-[var(--mitiga-risk-medium-fg)]',
-    value: 'text-foreground',
-    Icon: Clock3Icon,
-  },
-  reject: {
-    card: 'border-border bg-card',
-    iconWrap: 'bg-[var(--mitiga-risk-high-bg)] text-[var(--mitiga-risk-high-fg)]',
-    value: 'text-foreground',
-    Icon: XCircleIcon,
-  },
-};
+export interface OverviewAttention {
+  awaitingDecision: number;
+  openTriggers: number;
+}
 
-function KpiCard({
+function AttentionTile({
   label,
+  hint,
   value,
-  tone,
+  icon: Icon,
+  href,
+  accent,
 }: {
   label: string;
+  hint: string;
   value: number;
-  tone: KpiTone;
+  icon: LucideIcon;
+  href: string | null;
+  accent: string;
 }) {
-  const style = toneStyles[tone];
-  return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-xl border px-3.5 py-3.5 shadow-[var(--shadow-xs)]',
-        style.card,
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[0.65rem] font-medium tracking-[0.08em] text-muted-foreground uppercase">
-          {label}
-        </p>
-        <span
-          className={cn(
-            'inline-flex size-8 shrink-0 items-center justify-center rounded-md',
-            style.iconWrap,
-          )}
-        >
-          <style.Icon className="size-3.5" aria-hidden="true" />
+  const active = value > 0;
+  const body = (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <span className={cn('flex size-7 items-center justify-center rounded-md', active ? 'text-white' : 'bg-muted text-muted-foreground')} style={active ? { background: accent } : undefined}>
+          <Icon className="size-3.5" aria-hidden="true" />
         </span>
       </div>
-      <p
-        className={cn(
-          'mt-2 text-2xl font-semibold tracking-tight tabular-nums',
-          style.value,
-        )}
-      >
-        {value}
-      </p>
-    </div>
+      <p className={cn('mt-3 font-mono text-[2rem] leading-none font-medium tracking-tight', !active && 'text-muted-foreground/70')}>{value}</p>
+      <p className="mt-2 text-xs leading-snug text-muted-foreground">{hint}</p>
+    </>
+  );
+  const className = cn(
+    'relative block overflow-hidden rounded-lg border bg-card p-4 shadow-[var(--shadow-xs)] transition-[border-color,box-shadow] duration-[var(--duration-fast)]',
+    active ? 'border-border' : 'border-border/70',
+    href && 'hover:border-[var(--mitiga-petrol-700)] hover:shadow-[var(--shadow-sm)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+  );
+  return href ? (
+    <Link href={href} className={className}>
+      {active ? <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5" style={{ background: accent }} /> : null}
+      {body}
+    </Link>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }
 
-function RiskMixBar({ snapshot }: { snapshot: CompanyDashboardSnapshot }) {
-  const t = messages.realShell.dashboard;
-  const total = Math.max(snapshot.customerTotal, 1);
-  const segments = [
-    {
-      key: 'low',
-      count: snapshot.bandLow,
-      label: t.bandLow,
-      className: 'bg-[var(--mitiga-success)]',
-    },
-    {
-      key: 'medium',
-      count: snapshot.bandMedium,
-      label: t.bandMedium,
-      className: 'bg-[var(--mitiga-warning)]',
-    },
-    {
-      key: 'high',
-      count: snapshot.bandHigh,
-      label: t.bandHigh,
-      className: 'bg-[var(--mitiga-danger)]',
-    },
-    {
-      key: 'unassessed',
-      count: snapshot.unassessed,
-      label: t.unassessed,
-      className: 'bg-[var(--mitiga-petrol-700)]/45',
-    },
-  ].filter((segment) => segment.count > 0);
-
+function Panel({ title, action, children, className, id }: { title: string; action?: ReactNode; children: ReactNode; className?: string; id?: string }) {
   return (
-    <div className="space-y-2.5 rounded-xl border border-border bg-card p-3.5 shadow-[var(--shadow-xs)] sm:p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-foreground">{t.mixLabel}</p>
-        <p className="text-xs text-muted-foreground tabular-nums">
-          {snapshot.customerTotal} {t.customersTotal.toLowerCase()}
-        </p>
+    <section id={id} className={cn('rounded-lg border border-border bg-card shadow-[var(--shadow-xs)]', className)}>
+      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+        <h2 className="text-[0.95rem] font-semibold">{title}</h2>
+        {action}
+      </header>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+function SplitBar({ items }: { items: Array<{ label: string; count: number; color: string }> }) {
+  const total = Math.max(1, items.reduce((sum, item) => sum + item.count, 0));
+  return (
+    <div className="space-y-2">
+      <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+        {items.filter((i) => i.count > 0).map((item) => (
+          <span key={item.label} className="h-full" style={{ width: `${(item.count / total) * 100}%`, background: item.color }} />
+        ))}
       </div>
-      <div
-        className="flex h-2.5 overflow-hidden rounded-full bg-muted"
-        aria-hidden="true"
-      >
-        {segments.length === 0 ? (
-          <span className="w-full bg-muted" />
-        ) : (
-          segments.map((segment) => (
-            <span
-              key={segment.key}
-              title={`${segment.label}: ${segment.count}`}
-              className={cn('h-full min-w-[0.35rem] transition-[width]', segment.className)}
-              style={{ width: `${(segment.count / total) * 100}%` }}
-            />
-          ))
-        )}
-      </div>
-      <ul className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
-        {segments.map((segment) => (
-          <li key={segment.key} className="inline-flex items-center gap-1.5">
-            <span className={cn('size-2.5 rounded-full', segment.className)} aria-hidden="true" />
-            <span className="font-medium text-foreground tabular-nums">{segment.count}</span>
-            {segment.label}
+      <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+        {items.map((item) => (
+          <li key={item.label} className="inline-flex items-center gap-1.5">
+            <span className="size-2 rounded-full" style={{ background: item.color }} aria-hidden="true" />
+            <span className="font-mono font-medium text-foreground">{item.count}</span>
+            {item.label}
           </li>
         ))}
       </ul>
@@ -175,120 +99,126 @@ function RiskMixBar({ snapshot }: { snapshot: CompanyDashboardSnapshot }) {
 export function WorkspaceDashboard({
   snapshot,
   snapshotUnavailable,
+  points,
+  attention,
   recentEvents,
   canViewAudit,
   currentUserId,
   customersHref,
+  accessHref,
+  tenantId,
+  inbox,
 }: {
   snapshot: CompanyDashboardSnapshot | null;
   snapshotUnavailable: boolean;
+  points: PortfolioPoint[];
+  attention: OverviewAttention;
   recentEvents: AuditEventRow[];
   canViewAudit: boolean;
   currentUserId: UserId | null;
   customersHref: string | null;
+  accessHref: string | null;
+  tenantId: string | null;
+  inbox: ReactNode;
 }) {
-  const t = messages.realShell.dashboard;
+  if (snapshotUnavailable || !snapshot) {
+    return <p className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">{legacy.kpiUnavailable}</p>;
+  }
+
+  const dd = (level: PortfolioPoint['ddLevel']) => points.filter((p) => p.ddLevel === level).length;
+  const linkAll = customersHref ? (
+    <Link href={customersHref} className="inline-flex items-center gap-1 text-sm font-medium text-[var(--mitiga-petrol-700)] hover:underline">
+      {t.allCustomers}
+      <ArrowRightIcon className="size-3.5" aria-hidden="true" />
+    </Link>
+  ) : null;
 
   return (
     <div className="space-y-6">
-      <section aria-label={t.kpiLabel} className="space-y-4">
-        {snapshotUnavailable || !snapshot ? (
-          <p className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            {t.kpiUnavailable}
-          </p>
-        ) : (
-          <>
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="min-w-0 border-l-4 border-l-[var(--mitiga-mineral-600)] pl-3.5">
-                <p className="text-[0.65rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  {t.heroEyebrow}
-                </p>
-                <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                  {interpolate(t.heroTitle, {
-                    count: String(snapshot.customerTotal),
-                  })}
-                </h2>
+      <section aria-label={t.attention} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <AttentionTile label={t.tiles.decisions} hint={t.tiles.decisionsHint} value={attention.awaitingDecision} icon={GavelIcon} href="#decision-inbox" accent="var(--risk-high)" />
+        <AttentionTile label={t.tiles.triggers} hint={t.tiles.triggersHint} value={attention.openTriggers} icon={ZapIcon} href={customersHref} accent="var(--risk-medium)" />
+        <AttentionTile label={t.tiles.unassessed} hint={t.tiles.unassessedHint} value={snapshot.unassessed} icon={ClipboardListIcon} href={customersHref} accent="var(--mitiga-violet-500)" />
+        <AttentionTile
+          label={t.tiles.reviews}
+          hint={interpolate(t.tiles.reviewsHint, { days: String(snapshot.reviewHorizonDays) })}
+          value={snapshot.reviewsDueCount}
+          icon={CalendarClockIcon}
+          href={customersHref}
+          accent="var(--mitiga-petrol-700)"
+        />
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-12">
+        <Panel title={t.spectrumTitle} action={linkAll} className="xl:col-span-7">
+          {points.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t.spectrumEmpty}</p>
+          ) : (
+            <div className="space-y-6">
+              <p className="-mt-1 text-xs text-muted-foreground">{t.spectrumIntro}</p>
+              <PortfolioSpectrum points={points} hrefFor={(id) => `/workspace/customers/${id}?tenant=${tenantId ?? ''}`} />
+              <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
+                <div className="space-y-2.5">
+                  <h3 className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">{t.bandsTitle}</h3>
+                  <SplitBar
+                    items={[
+                      { label: legacy.bandLow, count: snapshot.bandLow, color: 'var(--risk-low)' },
+                      { label: legacy.bandMedium, count: snapshot.bandMedium, color: 'var(--risk-medium)' },
+                      { label: legacy.bandHigh, count: snapshot.bandHigh, color: 'var(--risk-high)' },
+                    ]}
+                  />
+                  {snapshot.rejectCount > 0 ? (
+                    <p className="text-xs font-medium text-[var(--mitiga-risk-high-fg)]">{interpolate(t.rejected, { count: String(snapshot.rejectCount) })}</p>
+                  ) : null}
+                </div>
+                <div className="space-y-2.5">
+                  <h3 className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">{t.ddTitle}</h3>
+                  <SplitBar
+                    items={[
+                      { label: `${t.dd.SDD} (SDD)`, count: dd('SDD'), color: 'var(--mitiga-mineral-600)' },
+                      { label: `${t.dd.CDD} (CDD)`, count: dd('CDD'), color: 'var(--mitiga-petrol-700)' },
+                      { label: `${t.dd.EDD} (EDD)`, count: dd('EDD'), color: 'var(--mitiga-violet-500)' },
+                    ]}
+                  />
+                </div>
               </div>
-              {customersHref ? (
-                <Button
-                  className="h-10 min-h-10 w-full sm:w-auto"
-                  render={<Link href={customersHref} />}
-                >
-                  {t.openCustomers}
-                  <ArrowRightIcon aria-hidden="true" />
-                </Button>
-              ) : null}
             </div>
+          )}
+        </Panel>
 
-            <RiskMixBar snapshot={snapshot} />
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <KpiCard label={t.bandLow} value={snapshot.bandLow} tone="low" />
-              <KpiCard label={t.bandMedium} value={snapshot.bandMedium} tone="medium" />
-              <KpiCard label={t.bandHigh} value={snapshot.bandHigh} tone="high" />
-              <KpiCard label={t.unassessed} value={snapshot.unassessed} tone="neutral" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <KpiCard label={t.rejects} value={snapshot.rejectCount} tone="reject" />
-              <KpiCard
-                label={interpolate(t.reviewsDue, {
-                  days: String(snapshot.reviewHorizonDays),
-                })}
-                value={snapshot.reviewsDueCount}
-                tone="warn"
-              />
-            </div>
-          </>
-        )}
-      </section>
-
-      <section aria-label={t.recentLabel} className="space-y-2.5">
-        <h2 className="text-sm font-semibold text-foreground">{t.recentTitle}</h2>
-        {!canViewAudit ? (
-          <p className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            {t.recentUnavailable}
-          </p>
-        ) : recentEvents.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border bg-card/60 px-4 py-6 text-sm text-muted-foreground">
-            {t.recentEmpty}
-          </p>
-        ) : (
-          <ul className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-xs)]">
-            {recentEvents.map((event, index) => {
-              const who =
-                currentUserId && event.actorId === currentUserId
-                  ? messages.accessWorkspace.you
-                  : shortActorId(event.actorId);
-              return (
-                <li
-                  key={event.id}
-                  className={cn(
-                    'flex flex-col gap-0.5 border-l-[3px] border-l-[var(--mitiga-petrol-700)]/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4',
-                    index > 0 && 'border-t border-t-border',
-                  )}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {auditActionLabel(event.action)}
+        <div className="space-y-6 xl:col-span-5">
+          {inbox}
+          <Panel
+            title={t.activityTitle}
+            action={
+              canViewAudit && accessHref ? (
+                <Link href={accessHref} className="text-sm font-medium text-[var(--mitiga-petrol-700)] hover:underline">
+                  {t.activityAll}
+                </Link>
+              ) : undefined
+            }
+          >
+            {!canViewAudit ? (
+              <p className="text-sm text-muted-foreground">{legacy.recentUnavailable}</p>
+            ) : recentEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{legacy.recentEmpty}</p>
+            ) : (
+              <ol className="relative space-y-4 before:absolute before:top-1.5 before:bottom-1.5 before:left-[3px] before:w-px before:bg-border">
+                {recentEvents.map((event) => (
+                  <li key={event.id} className="relative pl-5">
+                    <span aria-hidden="true" className="absolute top-1.5 left-0 size-[7px] rounded-full bg-[var(--mitiga-petrol-700)] ring-2 ring-card" />
+                    <p className="text-sm leading-snug font-medium">{auditActionLabel(event.action)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {currentUserId && event.actorId === currentUserId ? messages.accessWorkspace.you : shortActorId(event.actorId)} ·{' '}
+                      <span className="font-mono">{formatDateTime(event.occurredAt)}</span>
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {who}
-                      {event.targetType
-                        ? ` · ${event.targetType}${
-                            event.targetId ? ` · ${event.targetId.slice(0, 8)}` : ''
-                          }`
-                        : ''}
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-xs font-medium text-[var(--mitiga-petrol-700)] whitespace-nowrap">
-                    {formatDateTime(event.occurredAt)}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Panel>
+        </div>
+      </div>
     </div>
   );
 }
