@@ -26,7 +26,7 @@ import type { Customer } from '@/lib/domain/customer';
 import type { CustomerAssessment } from '@/lib/domain/customer-assessment';
 import type { TenantId } from '@/lib/domain/ids';
 import { cn } from '@/lib/utils';
-import { ArrowRightIcon, PlusIcon, SearchIcon, UsersIcon } from 'lucide-react';
+import { ArrowRightIcon, PlusIcon, SearchIcon, UploadIcon, UsersIcon } from 'lucide-react';
 
 export interface CustomerListRow {
   customer: Customer;
@@ -127,13 +127,23 @@ export function CustomerList({
             />
           </div>
           {canCreate ? (
-            <Button
-              className="h-10 w-full shrink-0 sm:w-auto md:hidden"
-              render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}
-            >
-              <PlusIcon aria-hidden="true" />
-              {t.newCustomer}
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                className="h-10 w-full shrink-0 sm:w-auto md:hidden"
+                render={<Link href={`/workspace/customers/new?tenant=${tenantId}`} />}
+              >
+                <PlusIcon aria-hidden="true" />
+                {t.newCustomer}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 w-full shrink-0 bg-card sm:w-auto"
+                render={<Link href={`/workspace/customers/import?tenant=${tenantId}`} />}
+              >
+                <UploadIcon aria-hidden="true" />
+                {t.importCustomers}
+              </Button>
+            </div>
           ) : null}
         </div>
 

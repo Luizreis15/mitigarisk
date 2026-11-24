@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   createCustomer,
+  importCustomers,
+  CustomerImportWriteError,
   listCustomers,
   getCustomerById,
   DuplicateCustomerReferenceError,
@@ -125,4 +127,42 @@ void test("getCustomerById scopes the lookup to both tenant_id and id, and retur
     ["id", "missing-id"],
   ]);
   assert.equal(result, null);
+});
+
+void test("importCustomers sends every row in one import_customers call, with line numbers and no actor id", async () => {
+  const { client, calls } = fakeRpcClient({
+    data: { created: 1, unchanged: 0, conflicts: [{ line: 3, external_reference: "C-2" }], rejected: [] },
+    error: null,
+  });
+  const outcome = await importCustomers(client, TENANT_ID, [
+    { line: 2, ...VALIDATED_INPUT },
+    { line: 3, ...VALIDATED_INPUT, externalReference: "C-2" },
+  ]);
+  assert.equal(calls.name, "import_customers");
+  const params = calls.params as { p_tenant_id: string; p_rows: Record<string, unknown>[] };
+  assert.equal(params.p_tenant_id, TENANT_ID);
+  assert.deepEqual(params.p_rows[0], {
+    line: 2,
+    external_reference: "CUST-DEMO-001",
+    full_name: "Elena Marchetti",
+    date_of_birth: "1988-04-12",
+    country_of_birth: "IT",
+    nationality: "IT",
+    residence_country: "MT",
+    onboarding_channel: "face_to_face",
+  });
+  assert.equal(params.p_rows.length, 2);
+  assert.deepEqual(outcome, {
+    created: 1,
+    unchanged: 0,
+    conflicts: [{ line: 3, externalReference: "C-2" }],
+    rejected: [],
+  });
+});
+
+void test("importCustomers maps a missing capability to ForbiddenError and anything else to CustomerImportWriteError", async () => {
+  const denied = fakeRpcClient({ data: null, error: { code: "42501", message: "denied" } });
+  await assert.rejects(importCustomers(denied.client, TENANT_ID, [{ line: 2, ...VALIDATED_INPUT }]), ForbiddenError);
+  const failed = fakeRpcClient({ data: null, error: { code: "22023", message: "bad shape" } });
+  await assert.rejects(importCustomers(failed.client, TENANT_ID, [{ line: 2, ...VALIDATED_INPUT }]), CustomerImportWriteError);
 });
