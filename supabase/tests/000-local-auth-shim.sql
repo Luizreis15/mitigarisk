@@ -45,7 +45,10 @@ create table if not exists auth.users (
   raw_app_meta_data jsonb not null default '{}'::jsonb,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- Present in Supabase's own auth.users; read by the platform console RPCs.
+  last_sign_in_at timestamptz,
+  deleted_at timestamptz
 );
 
 -- Matches Supabase's shipped definition: reads the PostgREST JWT claim GUCs
