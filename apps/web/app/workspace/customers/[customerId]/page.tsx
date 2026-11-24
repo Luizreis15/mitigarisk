@@ -21,11 +21,12 @@ import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame'
 import { buildAssessmentResultView } from '@/lib/i18n/customer-assessment';
 import { buildAssessmentFormView } from '@/lib/i18n/customer-assessment-form';
 import { messages } from '@/lib/i18n/messages';
-import { ArrowDownIcon } from 'lucide-react';
 import { CustomerDecisionPanel } from '@/components/workspace/customer-decision-panel';
 import { listCustomerDecisions } from '@/lib/supabase/customer-decisions-repository';
 import { decisionStatusFor, type CustomerDecision } from '@/lib/domain/customer-decision';
-import { formatDateTime } from '@/lib/i18n/presentation';
+import { formatDate, formatDateTime } from '@/lib/i18n/presentation';
+import { DetailTabs } from '@/components/workspace/detail-tabs';
+import { RecordHero, type HeroStatusTone } from '@/components/workspace/record-hero';
 import { TransactionTriggerPanel } from '@/components/workspace/transaction-trigger-panel';
 import { listCustomerTransactionChecks } from '@/lib/supabase/transaction-checks-repository';
 import type { TransactionCheck } from '@/lib/domain/transaction-check';
@@ -182,132 +183,175 @@ export default async function CustomerDetailPage({
   // reload allows a genuinely new assessment.
   const correlationId = randomUUID();
 
+  const resultView = latest
+    ? buildAssessmentResultView({
+        ...latest,
+        policyLabel: currentPolicy && latest.policyVersionId === currentPolicy.id ? currentPolicy.label : null,
+      })
+    : null;
+  const hero = messages.recordHero;
+  const heroStatus: { label: string; tone: HeroStatusTone } = !latest
+    ? { label: hero.status.notAssessed, tone: 'neutral' }
+    : latest.outcome === 'REJECT'
+      ? { label: hero.status.policyReject, tone: 'bad' }
+      : decisionStatus.state === 'awaiting_mlro'
+        ? { label: hero.status.awaitingMlro, tone: 'wait' }
+        : decisionStatus.state === 'awaiting_board'
+          ? { label: hero.status.awaitingBoard, tone: 'wait' }
+          : decisionStatus.state === 'approved'
+            ? { label: hero.status.approved, tone: 'good' }
+            : decisionStatus.state === 'rejected'
+              ? { label: hero.status.rejected, tone: 'bad' }
+              : { label: hero.status.cleared, tone: 'good' };
+  const openActions = requiredItems.filter((item) => !item.completion).length;
+
   return (
     <WorkspaceRealFrame
       title={customer.fullName}
-      intro={t.detailIntro}
+      intro=""
       kicker={t.kicker}
       fictionalNotice={t.fictionalNotice}
       backHref={listHref}
       backLabel={t.backToCustomers}
       {...shell}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="customer-latest-assessment" className="text-sm font-semibold text-foreground">
-          {t.latestTitle}
-        </h2>
-        {canViewAudit ? (
-          <a
-            href={`/workspace/customers/${customer.id}/audit-pack?tenant=${tenantId}`}
-            className="inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground shadow-[var(--shadow-xs)] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <FileTextIcon aria-hidden="true" className="size-4" />
-            {messages.auditPack.open}
-          </a>
-        ) : null}
-        {canRunAssessment && form ? (
-          <a
-            href="#run-customer-assessment"
-            className="inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground shadow-[var(--shadow-xs)] transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {t.runAssessmentJump}
-            <ArrowDownIcon aria-hidden="true" className="size-4" />
-          </a>
-        ) : null}
-      </div>
-
-      <section aria-labelledby="customer-latest-assessment" className="space-y-4">
-        {latest ? (
-          <CustomerAssessmentResult
-            view={buildAssessmentResultView({
-              ...latest,
-              policyLabel:
-                currentPolicy && latest.policyVersionId === currentPolicy.id
-                  ? currentPolicy.label
-                  : null,
-            })}
-          />
-        ) : (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-5">
-            <p className="text-sm font-medium">{t.noAssessmentTitle}</p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t.noAssessmentBody}
-            </p>
-          </div>
-        )}
-      </section>
-
-      {latest && decisionStatus.state !== 'not_required' ? (
-        <CustomerDecisionPanel
-          state={decisionStatus.state}
-          pendingLevel={decisionStatus.pendingLevel}
-          trail={decisionTrail}
-          canDecide={canDecide}
-          tenantId={tenantId}
-          customerId={customer.id}
-          assessmentId={latest.id}
-          correlationId={randomUUID()}
-        />
-      ) : null}
-
-      <RequiredActionsPanel
-        items={requiredItems}
-        canComplete={canManageCustomer}
-        tenantId={tenantId}
-        customerId={customer.id}
-        correlationIds={completionCorrelationIds}
-      />
-
-      <TransactionTriggerPanel
-        latest={latestCheck}
-        latestWho={
-          latestCheck && latestCheck.checkedBy === identity.userId
-            ? messages.customerDecision.byYou
-            : messages.customerDecision.byMember
+      <RecordHero
+        reference={customer.externalReference}
+        meta={`${formatDate(customer.dateOfBirth)} · ${customer.nationality} / ${customer.residenceCountry}`}
+        risk={
+          latest && resultView
+            ? {
+                score: latest.overallScore,
+                band: latest.band,
+                ddLabel: resultView.ddLevelLabel,
+                overrideLabels: resultView.overrides.map((o) => o.label),
+              }
+            : null
         }
-        latestDate={latestCheck ? formatDateTime(latestCheck.checkedAt) : ''}
-        history={transactionChecks.map((check) => ({
-          id: check.id,
-          date: formatDateTime(check.checkedAt),
-          hitCount: check.hitCount,
-        }))}
-        canRun={canRunAssessment}
-        tenantId={tenantId}
-        customerId={customer.id}
-        correlationId={randomUUID()}
+        status={heroStatus}
+        actions={
+          <>
+            {canViewAudit ? (
+              <a
+                href={`/workspace/customers/${customer.id}/audit-pack?tenant=${tenantId}`}
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <FileTextIcon aria-hidden="true" className="size-4" />
+                {messages.auditPack.open}
+              </a>
+            ) : null}
+            {canRunAssessment && form ? (
+              <a
+                href="#run-customer-assessment"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t.runAssessmentJump}
+              </a>
+            ) : null}
+          </>
+        }
       />
 
-      <CustomerProfile customer={customer} />
-
-      {canRunAssessment && form ? (
-        <div id="run-customer-assessment" className="scroll-mt-28">
-          <CustomerAssessmentForm
-            view={buildAssessmentFormView(form)}
-            tenantId={tenantId}
-            customerId={customer.id}
-            correlationId={correlationId}
-          />
-        </div>
-      ) : null}
-      {canRunAssessment && formUnavailable ? (
-        <Alert variant={formUnavailable === 'no_policy' ? 'default' : 'destructive'}>
-          <AlertTitle>
-            {formUnavailable === 'no_policy'
-              ? t.assessmentForm.noPolicyTitle
-              : t.assessmentForm.unavailableTitle}
-          </AlertTitle>
-          <AlertDescription>
-            {formUnavailable === 'no_policy'
-              ? t.assessmentForm.noPolicyBody
-              : t.assessmentForm.unavailableBody}
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      <CustomerAssessmentHistory
-        assessments={assessments}
-        currentUserId={identity.userId}
-        currentPolicy={currentPolicy}
+      <DetailTabs
+        label={hero.tabs.label}
+        tabs={[
+          {
+            id: 'overview',
+            label: hero.tabs.overview,
+            count: openActions,
+            anchors: ['customer-decision', 'required-actions', 'customer-latest-assessment'],
+            content: (
+              <>
+                {latest && decisionStatus.state !== 'not_required' ? (
+                  <CustomerDecisionPanel
+                    state={decisionStatus.state}
+                    pendingLevel={decisionStatus.pendingLevel}
+                    trail={decisionTrail}
+                    canDecide={canDecide}
+                    tenantId={tenantId}
+                    customerId={customer.id}
+                    assessmentId={latest.id}
+                    correlationId={randomUUID()}
+                  />
+                ) : null}
+                <RequiredActionsPanel
+                  items={requiredItems}
+                  canComplete={canManageCustomer}
+                  tenantId={tenantId}
+                  customerId={customer.id}
+                  correlationIds={completionCorrelationIds}
+                />
+                <section id="customer-latest-assessment" aria-label={t.latestTitle} className="scroll-mt-28">
+                  {resultView ? (
+                    <CustomerAssessmentResult view={resultView} />
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border bg-card px-5 py-6">
+                      <p className="text-sm font-medium">{t.noAssessmentTitle}</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">{t.noAssessmentBody}</p>
+                    </div>
+                  )}
+                </section>
+              </>
+            ),
+          },
+          {
+            id: 'assessment',
+            label: hero.tabs.assessment,
+            anchors: ['run-customer-assessment'],
+            content: (
+              <>
+                {canRunAssessment && form ? (
+                  <div id="run-customer-assessment" className="scroll-mt-28">
+                    <CustomerAssessmentForm
+                      view={buildAssessmentFormView(form)}
+                      tenantId={tenantId}
+                      customerId={customer.id}
+                      correlationId={correlationId}
+                    />
+                  </div>
+                ) : null}
+                {canRunAssessment && formUnavailable ? (
+                  <Alert variant={formUnavailable === 'no_policy' ? 'default' : 'destructive'}>
+                    <AlertTitle>
+                      {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyTitle : t.assessmentForm.unavailableTitle}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {formUnavailable === 'no_policy' ? t.assessmentForm.noPolicyBody : t.assessmentForm.unavailableBody}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                <CustomerAssessmentHistory assessments={assessments} currentUserId={identity.userId} currentPolicy={currentPolicy} />
+              </>
+            ),
+          },
+          {
+            id: 'transactions',
+            label: hero.tabs.transactions,
+            count: latestCheck ? latestCheck.hitCount : 0,
+            anchors: ['transaction-triggers'],
+            content: (
+              <TransactionTriggerPanel
+                latest={latestCheck}
+                latestWho={
+                  latestCheck && latestCheck.checkedBy === identity.userId
+                    ? messages.customerDecision.byYou
+                    : messages.customerDecision.byMember
+                }
+                latestDate={latestCheck ? formatDateTime(latestCheck.checkedAt) : ''}
+                history={transactionChecks.map((check) => ({
+                  id: check.id,
+                  date: formatDateTime(check.checkedAt),
+                  hitCount: check.hitCount,
+                }))}
+                canRun={canRunAssessment}
+                tenantId={tenantId}
+                customerId={customer.id}
+                correlationId={randomUUID()}
+              />
+            ),
+          },
+          { id: 'profile', label: hero.tabs.profile, content: <CustomerProfile customer={customer} /> },
+        ]}
       />
     </WorkspaceRealFrame>
   );
