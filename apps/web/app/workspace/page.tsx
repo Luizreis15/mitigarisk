@@ -25,6 +25,7 @@ import { listLatestTransactionChecks } from '@/lib/supabase/transaction-checks-r
 import type { TransactionCheck } from '@/lib/domain/transaction-check';
 import { completionKey, listActionCompletions, type ActionCompletion } from '@/lib/supabase/action-completions-repository';
 import type { DecisionInboxItem } from '@/components/workspace/decision-inbox';
+import { listMyPendingInvitations, type PendingInvitation } from '@/lib/supabase/invitations-repository';
 
 // Real protected product route
 // (docs/tasks/TASK-015-claude-real-auth-route-integration.md,
@@ -70,6 +71,9 @@ export default async function WorkspacePage({
     // Platform administrators have their own console (app/platform).
     redirect('/platform');
   }
+
+  // Invitations waiting for this user (accepted from the workspace).
+  const pendingInvitations = await listMyPendingInvitations(client).catch((): PendingInvitation[] => []);
 
   const rawTenant = (await searchParams).tenant;
   // Any non-empty value is a real selection attempt, valid UUID shape or
@@ -259,6 +263,7 @@ export default async function WorkspacePage({
       persona={persona}
       workQueue={workQueue}
       decisionInbox={decisionInbox}
+      pendingInvitations={pendingInvitations}
       canManageCustomers={canManageCustomers}
     />
   );

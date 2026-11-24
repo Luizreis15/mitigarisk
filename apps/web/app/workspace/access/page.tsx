@@ -10,6 +10,9 @@ import {
 } from '@/lib/supabase/access-repository';
 import type { TenantId } from '@/lib/domain/ids';
 import { AccessMembers } from '@/components/workspace/access-members';
+import { InviteMemberForm } from '@/components/workspace/access-invitations';
+import { TeamDirectory } from '@/components/workspace/team-directory';
+import { listTenantMemberDirectory, type DirectoryMember } from '@/lib/supabase/invitations-repository';
 import { AccessAuditTrail } from '@/components/workspace/access-audit-trail';
 import { WorkspaceRealFrame } from '@/components/workspace/workspace-real-frame';
 import { messages } from '@/lib/i18n/messages';
@@ -55,9 +58,13 @@ export default async function AccessPage({
   const signedInEmail = userData.user?.email ?? null;
   const t = messages.accessWorkspace;
 
-  const canViewAudit = await hasCapability(client, tenantId, 'audit.view').catch(() => false);
-  const [members, events] = await Promise.all([
+  const [canViewAudit, canManageMembers] = await Promise.all([
+    hasCapability(client, tenantId, 'audit.view').catch(() => false),
+    hasCapability(client, tenantId, 'tenant.manage_members').catch(() => false),
+  ]);
+  const [members, directory, events] = await Promise.all([
     listTenantMemberships(client, tenantId),
+    listTenantMemberDirectory(client, tenantId).catch((): DirectoryMember[] => []),
     canViewAudit ? listTenantAuditEvents(client, tenantId) : Promise.resolve([]),
   ]);
 
@@ -73,7 +80,12 @@ export default async function AccessPage({
       tenantName={tenantName}
       signedInEmail={signedInEmail}
     >
-      <AccessMembers members={members} currentUserId={identity.userId} />
+      {canManageMembers ? <InviteMemberForm tenantId={tenantId} /> : null}
+      {directory.length > 0 ? (
+        <TeamDirectory members={directory} currentUserId={identity.userId} />
+      ) : (
+        <AccessMembers members={members} currentUserId={identity.userId} />
+      )}
       <AccessAuditTrail
         events={events}
         currentUserId={identity.userId}
