@@ -115,6 +115,11 @@ const ALLOWED_FORM_FIELDS = new Set([
   'assessmentId',
   'decision',
   'rationale',
+  // Required-action completion: which action of which source, plus the note.
+  'sourceType',
+  'sourceId',
+  'actionCode',
+  'evidenceNote',
   // Transaction checks read their amount fields only through
   // TRANSACTION_FORM_FIELDS (asserted in tests/domain/transaction-check.test.ts).
 ]);

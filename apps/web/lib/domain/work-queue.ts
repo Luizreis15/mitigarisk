@@ -35,8 +35,10 @@ export interface WorkQueueRow {
   latest: CustomerAssessment | null;
   /** Human decision on the latest assessment, when it required one. */
   decisionState?: DecisionState;
-  /** Required actions from the latest transaction check's hits (empty when none). */
+  /** Required actions from the latest transaction check's hits still open (empty when none). */
   triggerActions?: string[];
+  /** Codes of the latest assessment's required actions already recorded as done. */
+  completedActions?: string[];
 }
 
 export interface WorkQueueItem extends WorkQueueRow {
@@ -120,7 +122,11 @@ export function buildWorkQueue(rows: WorkQueueRow[], now: Date = new Date(), lea
       ...row,
       stage,
       reviewDueInDays: row.latest ? daysUntil(row.latest.nextReviewDue, now) : null,
-      requiredActions: row.latest ? prioritizeRequiredActions(row.latest.result.required_actions) : [],
+      requiredActions: row.latest
+        ? prioritizeRequiredActions(
+            row.latest.result.required_actions.filter((code) => !(row.completedActions ?? []).includes(code)),
+          )
+        : [],
     };
   });
 

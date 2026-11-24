@@ -28,6 +28,7 @@ import {
   buildTransactionInputs,
 } from '@/lib/domain/transaction-check';
 import { runTransactionCheck } from '@/lib/supabase/transaction-checks-repository';
+import { recordActionCompletion } from '@/lib/supabase/action-completions-repository';
 
 // Server Actions for the customer CRA experience
 // (docs/tasks/TASK-035-cursor-customer-assessment-experience.md). Same
@@ -290,4 +291,62 @@ export async function runTransactionCheckAction(
   if (denied) redirect('/denied');
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#transaction-triggers`);
+}
+
+/**
+ * Records that a required action (from the latest assessment or a
+ * transaction check) was done, with an evidence note. The database checks
+ * that the source really requires that action.
+ */
+export async function recordActionCompletionAction(
+  _previousState: CustomerActionResult | null,
+  formData: FormData,
+): Promise<CustomerActionResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) return PLATFORM_ADMIN_FORBIDDEN;
+  const client = await createServerSupabaseClient();
+
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const customerId = readFormValue(formData, 'customerId');
+  const correlationId = readFormValue(formData, 'correlationId');
+  const sourceType = readFormValue(formData, 'sourceType');
+  const sourceId = readFormValue(formData, 'sourceId');
+  const actionCode = readFormValue(formData, 'actionCode');
+  const evidenceNote = readFormValue(formData, 'evidenceNote');
+
+  let tenantId: TenantId;
+  try {
+    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.manage');
+    tenantId = context.tenantId;
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') redirect('/denied');
+    return { status: 'error', code: errorCode(error) };
+  }
+
+  if (
+    !isUuid(customerId) ||
+    !isUuid(sourceId) ||
+    !isUuid(correlationId) ||
+    (sourceType !== 'assessment' && sourceType !== 'transaction_check') ||
+    !/^[A-Z0-9_]{3,64}$/.test(actionCode)
+  ) {
+    return { status: 'error', code: 'InvalidActionCompletionRequestError' };
+  }
+  if (evidenceNote.trim().length < 5) {
+    return { status: 'error', code: 'ActionCompletionRejectedError', attempt: randomUUID(), correlationId, values: { evidenceNote } };
+  }
+
+  let denied = false;
+  try {
+    await recordActionCompletion(client, { tenantId, customerId, sourceType, sourceId, actionCode, evidenceNote, correlationId });
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') {
+      denied = true;
+    } else {
+      return { status: 'error', code: errorCode(error), attempt: randomUUID(), correlationId, values: { evidenceNote } };
+    }
+  }
+  if (denied) redirect('/denied');
+
+  redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#required-actions`);
 }
