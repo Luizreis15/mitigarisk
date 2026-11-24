@@ -1,0 +1,3 @@
+external_reference,full_name,date_of_birth,country_of_birth,nationality,residence_country,onboarding_channel
+CUST-IMPORT-001,Ada Fictional,1990-01-15,PT,PT,MT,non_face_to_face
+CUST-IMPORT-002,Bo Fictional,30/06/1985,DE,DE,DE,face_to_face

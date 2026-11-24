@@ -5,7 +5,13 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/session';
 import { requireAuthenticatedIdentity } from '@/lib/supabase/protected-route';
 import { resolveAuthorizedTenantContext } from '@/lib/supabase/tenant-context';
-import { createCustomer } from '@/lib/supabase/customers-repository';
+import { createCustomer, importCustomers } from '@/lib/supabase/customers-repository';
+import {
+  parseCustomerImport,
+  type ImportFileProblem,
+  type ImportOutcome,
+  type ImportRowProblem,
+} from '@/lib/domain/customer-import';
 import {
   getCustomerAssessmentForm,
   runCustomerAssessment,
@@ -349,4 +355,71 @@ export async function recordActionCompletionAction(
   if (denied) redirect('/denied');
 
   redirect(`/workspace/customers/${customerId}?tenant=${tenantId}#required-actions`);
+}
+
+// Shown back to the form after a bulk import attempt. `attempt` re-mounts
+// the form; `text` echoes the submitted file so it can be corrected in place.
+export type CustomerImportResult =
+  | { status: 'imported'; outcome: ImportOutcome }
+  | { status: 'file_problem'; attempt: string; problem: ImportFileProblem; text: string }
+  | { status: 'row_problems'; attempt: string; problems: ImportRowProblem[]; totalRows: number; text: string }
+  | { status: 'error'; attempt: string; code: string; text: string };
+
+/** Upper bound on the echoed file text, so a forged oversized field is never reflected back in full. */
+const IMPORT_ECHO_MAX_LENGTH = 300_000;
+
+/**
+ * Registers many customers from CSV text. The whole file is validated
+ * first (lib/domain/customer-import.ts); if any line is invalid nothing is
+ * sent. Valid files go to public.import_customers() in one call, which
+ * applies the single-customer rules to every row.
+ */
+export async function importCustomersAction(
+  _previousState: CustomerImportResult | null,
+  formData: FormData,
+): Promise<CustomerImportResult> {
+  const identity = await requireAuthenticatedIdentity();
+  if (identity.isPlatformAdmin) redirect('/workspace');
+  const client = await createServerSupabaseClient();
+
+  const requestedTenantId = readFormValue(formData, 'tenantId') as TenantId;
+  const submitted = readFormValue(formData, 'csvText');
+  const text = submitted.slice(0, IMPORT_ECHO_MAX_LENGTH);
+
+  let tenantId: TenantId;
+  try {
+    const context = await resolveAuthorizedTenantContext(client, identity, requestedTenantId, 'customer.manage');
+    tenantId = context.tenantId;
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') redirect('/denied');
+    return { status: 'error', attempt: randomUUID(), code: errorCode(error), text };
+  }
+
+  const parsed = parseCustomerImport(submitted);
+  if (parsed.status === 'file_problem') {
+    return { status: 'file_problem', attempt: randomUUID(), problem: parsed.problem, text };
+  }
+  if (parsed.status === 'row_problems') {
+    return {
+      status: 'row_problems',
+      attempt: randomUUID(),
+      problems: parsed.problems,
+      totalRows: parsed.totalRows,
+      text,
+    };
+  }
+
+  let denied = false;
+  try {
+    const outcome = await importCustomers(client, tenantId, parsed.rows);
+    return { status: 'imported', outcome };
+  } catch (error) {
+    if (errorCode(error) === 'ForbiddenError') {
+      denied = true;
+    } else {
+      return { status: 'error', attempt: randomUUID(), code: errorCode(error), text };
+    }
+  }
+  if (denied) redirect('/denied');
+  return { status: 'error', attempt: randomUUID(), code: 'UnknownError', text };
 }

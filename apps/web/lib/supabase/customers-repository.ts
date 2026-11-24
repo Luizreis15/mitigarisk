@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CustomerId, TenantId, UserId } from "../domain/ids";
 import type { Customer, ValidatedCreateCustomerInput } from "../domain/customer";
+import type { ImportOutcome, ImportRow } from "../domain/customer-import";
 import { ForbiddenError } from "./authorization.ts";
 
 // Request-scoped customer repository (docs/tasks/TASK-033-claude-customer-assessment.md).
@@ -137,4 +138,66 @@ export async function getCustomerById(
   }
 
   return data ? mapRow(data as CustomerRow) : null;
+}
+
+/** The bulk import failed as a whole (nothing stored): transport error or a refused batch shape. */
+export class CustomerImportWriteError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CustomerImportWriteError";
+  }
+}
+
+interface ImportRpcLine {
+  line: number | null;
+  external_reference: string;
+}
+
+interface ImportRpcResult {
+  created: number;
+  unchanged: number;
+  conflicts: ImportRpcLine[];
+  rejected: ImportRpcLine[];
+}
+
+/**
+ * Registers a validated file in one call to public.import_customers()
+ * (supabase/migrations/20261129100000_customer_bulk_import.sql), which loops
+ * public.create_customer(): same capability check, provenance, per-customer
+ * audit event and idempotency as createCustomer above.
+ */
+export async function importCustomers(
+  client: SupabaseClient,
+  tenantId: TenantId,
+  rows: ImportRow[],
+): Promise<ImportOutcome> {
+  const { data, error } = await client.rpc("import_customers", {
+    p_tenant_id: tenantId,
+    p_rows: rows.map((row) => ({
+      line: row.line,
+      external_reference: row.externalReference,
+      full_name: row.fullName,
+      date_of_birth: row.dateOfBirth,
+      country_of_birth: row.countryOfBirth,
+      nationality: row.nationality,
+      residence_country: row.residenceCountry,
+      onboarding_channel: row.onboardingChannel,
+    })),
+  });
+
+  if (error) {
+    if (error.code === "42501") {
+      throw new ForbiddenError("customer.manage", tenantId);
+    }
+    throw new CustomerImportWriteError(`Failed to import customers: ${error.message}`);
+  }
+
+  const result = data as ImportRpcResult;
+  const mapLine = (item: ImportRpcLine) => ({ line: item.line, externalReference: item.external_reference });
+  return {
+    created: result.created,
+    unchanged: result.unchanged,
+    conflicts: (result.conflicts ?? []).map(mapLine),
+    rejected: (result.rejected ?? []).map(mapLine),
+  };
 }

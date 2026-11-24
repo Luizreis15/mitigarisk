@@ -120,6 +120,9 @@ const ALLOWED_FORM_FIELDS = new Set([
   'sourceId',
   'actionCode',
   'evidenceNote',
+  // Bulk import: the CSV text. Parsed and validated line by line in
+  // lib/domain/customer-import.ts with the single-customer validator.
+  'csvText',
   // Transaction checks read their amount fields only through
   // TRANSACTION_FORM_FIELDS (asserted in tests/domain/transaction-check.test.ts).
 ]);
