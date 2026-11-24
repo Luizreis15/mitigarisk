@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { WorkspaceExperience } from '@/components/workspace/workspace-experience';
 import { buildWorkspaceViewModel } from '@/lib/domain/workspace-access';
 import { classifyTenantSelectionError } from '@/lib/domain/tenant-selection';
@@ -63,22 +64,8 @@ export default async function WorkspacePage({
   const email = userData.user?.email ?? null;
 
   if (identity.isPlatformAdmin) {
-    // Ratified policy (docs/adr/0011-tenant-authorization-boundary.md,
-    // "Ratification"): the workspace shell requires only verified identity
-    // plus active membership — platform status is handled explicitly and
-    // never falls through to tenant-membership resolution, so it cannot
-    // silently grant entry to a tenant operational workspace.
-    return (
-      <WorkspaceExperience
-        model={buildWorkspaceViewModel({
-          publicConfigAvailable: true,
-          membershipReadFailed: false,
-          isPlatformAdmin: true,
-          activeMembershipCount: 0,
-          signedInEmail: email,
-        })}
-      />
-    );
+    // Platform administrators have their own console (app/platform).
+    redirect('/platform');
   }
 
   const rawTenant = (await searchParams).tenant;
