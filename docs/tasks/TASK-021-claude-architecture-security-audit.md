@@ -1,5 +1,7 @@
 # TASK-021 — Claude architecture and security audit
 
+Status: **Merged — `773f78d` (2026-09-14), "docs(audit): record architecture security findings"**
+
 ## Objective
 
 Perform an independent, broad architecture and security audit of MITIGA at the

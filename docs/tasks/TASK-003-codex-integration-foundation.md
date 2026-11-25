@@ -1,5 +1,7 @@
 # TASK-003 — Codex integration foundation
 
+Status: **Merged — `1a42069` (2026-09-12), "merge: add Codex orchestration gates"**
+
 ## Objective
 
 Create provider-neutral quality gates and an integration contract so the Cursor frontend and Claude platform branches can be reviewed and merged without hidden coupling or committed secrets.

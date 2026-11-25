@@ -1,5 +1,7 @@
 # TASK-010 — Cursor risk policy workbench
 
+Status: **Merged — `50772fc` (2026-09-13), "merge: add risk policy workbench"**
+
 ## Objective
 
 Build the English-first frontend prototype for browsing and inspecting

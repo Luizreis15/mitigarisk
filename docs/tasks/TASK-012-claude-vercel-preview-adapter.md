@@ -1,5 +1,7 @@
 # TASK-012 — Claude Vercel preview adapter
 
+Status: **Merged — `1d01a96` (2026-09-13), "merge: add Vercel preview adapter"** Outcome recorded in ADR 0008.
+
 ## Objective
 
 Make the existing Vinext application deployable as a functional Vercel preview

@@ -1,5 +1,7 @@
 # TASK-004 — Cursor English-first product refactor
 
+Status: **Merged — `a98e554` (2026-09-12), "merge: integrate and harden platform foundation"**
+
 ## Objective
 
 Convert the approved visual prototype into an English-first, market-neutral product foundation without changing its accepted design language.

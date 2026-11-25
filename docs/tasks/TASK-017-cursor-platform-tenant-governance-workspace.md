@@ -1,5 +1,7 @@
 # TASK-017 — Cursor platform tenant governance workspace
 
+Status: **Merged — `db1b8aa` (2026-09-13), "merge: add platform tenant governance workspace"**
+
 ## Objective
 
 Build the English-first Platform Super Admin workspace for governing MITIGA

@@ -1,5 +1,7 @@
 # TASK-020 — Cursor product and experience audit
 
+Status: **Merged — `3c91650` (2026-09-14), "merge: add Cursor product experience audit"**
+
 ## Objective
 
 Perform an independent, evidence-based audit of MITIGA's current product and

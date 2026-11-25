@@ -1,5 +1,7 @@
 # TASK-013 — Claude Supabase authentication and session foundation
 
+Status: **Merged — `a5b4cc9` (2026-09-13), "merge: add Supabase auth session foundation"** Outcome recorded in ADR 0009.
+
 ## Objective
 
 Implement the application-side foundation for real Supabase email/password

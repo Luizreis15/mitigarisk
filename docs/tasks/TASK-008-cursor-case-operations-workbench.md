@@ -1,5 +1,7 @@
 # TASK-008 — Cursor case operations workbench
 
+Status: **Merged — `eb0008b` (2026-09-13), "merge: add case operations workbench"**
+
 ## Objective
 
 Extend the English-first frontend prototype with a focused operational workbench

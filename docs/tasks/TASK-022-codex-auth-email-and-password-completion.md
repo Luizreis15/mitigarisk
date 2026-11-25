@@ -1,5 +1,7 @@
 # TASK-022 — Auth email and password completion
 
+Status: **Merged — `5dd3179` (2026-09-14), "merge: complete transactional auth email flows"**
+
 ## Objective
 
 Complete MITIGA's hosted email/password lifecycle for confirmation, invitation,
