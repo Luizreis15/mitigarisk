@@ -1,5 +1,7 @@
 # TASK-006 — Claude authentication and tenant bootstrap foundation
 
+Status: **Merged — `b3b2c46` (2026-09-13), "merge: add auth and tenant bootstrap foundation"** Outcome recorded in ADR 0006.
+
 ## Objective
 
 Implement server-side contracts for secure Supabase authentication, request-scoped

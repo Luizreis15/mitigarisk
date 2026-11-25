@@ -1,5 +1,7 @@
 # TASK-002 — Claude platform and Supabase foundation
 
+Status: **Merged — `a98e554` (2026-09-12), "merge: integrate and harden platform foundation"** Review: `docs/reviews/TASK-002-integration-review.md`.
+
 ## Objective
 
 Design a reviewable backend/domain foundation for MITIGA using Supabase, with enforceable multi-tenancy, immutable risk evidence, and a migration path that does not depend on privileged credentials.

@@ -1,5 +1,7 @@
 # TASK-016 — Cursor entity intake and evaluation-start workflow
 
+Status: **Merged — `624de17` (2026-09-13), "merge: add entity intake evaluation workflow"**
+
 ## Objective
 
 Build the English-first Company workflow that lets an authorized reviewer

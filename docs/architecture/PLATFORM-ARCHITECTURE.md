@@ -1,5 +1,7 @@
 # MITIGA platform architecture — baseline
 
+Start with [`TRD.md`](TRD.md) for the invariants, the ADR index and the runtime shape; the current state of each capability is in [`../STATUS.md`](../STATUS.md). This document is the baseline those build on.
+
 ## Architecture decision
 
 The MVP is an API-first modular monolith. It provides clear domain boundaries and one deployable application while product rules are still changing. Components may be extracted into services only after measured scaling, isolation, ownership, or regulatory needs justify the cost through an ADR.

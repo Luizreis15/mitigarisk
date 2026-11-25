@@ -1,5 +1,7 @@
 # TASK-009 — Claude deterministic evaluation engine
 
+Status: **Merged — `0dc9b05` (2026-09-13), "merge: add deterministic evaluation engine"** Outcome recorded in ADR 0007.
+
 ## Objective
 
 Implement the server-side, deterministic evaluation domain engine that turns a

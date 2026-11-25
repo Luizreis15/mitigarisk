@@ -1,5 +1,7 @@
 # TASK-023 — Claude real supplier evaluation slice
 
+Status: **Merged — `b5a1dde` (2026-09-15), "merge: add real supplier evaluation slice"**
+
 ## Objective
 
 Deliver the first real, authenticated, tenant-scoped operational workflow in

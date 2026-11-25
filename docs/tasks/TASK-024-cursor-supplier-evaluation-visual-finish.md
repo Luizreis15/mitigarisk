@@ -1,5 +1,7 @@
 # TASK-024 — Cursor supplier evaluation visual finish
 
+Status: **Merged — `83abe92` (2026-09-15), "merge: polish supplier evaluation journey"**
+
 ## Objective
 
 Turn the real authenticated supplier-evaluation slice delivered by TASK-023

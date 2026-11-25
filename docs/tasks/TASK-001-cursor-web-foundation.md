@@ -1,5 +1,7 @@
 # TASK-001 — Cursor web foundation
 
+Status: **Merged — `5f6cc80` (2026-09-12), "merge: stage Cursor web foundation"**
+
 ## Objective
 
 Transform the approved MITIGA design system into a polished, responsive, navigable frontend prototype covering Login, Empresa, Super Admin, and Operador.

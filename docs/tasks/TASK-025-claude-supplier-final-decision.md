@@ -1,5 +1,7 @@
 # TASK-025 — Claude supplier final decision
 
+Status: **Merged — `4c79eac` (2026-09-23), "Merge pull request #1 from Luizreis15/release/supplier-slice-v1"**
+
 ## Objective
 
 Complete the first real supplier-risk workflow by allowing an authenticated

@@ -26,6 +26,8 @@ Use squash merge. Claude (Cowork) performs the independent review and records it
 
 A change is done only when it is scoped, reviewed, tested, documented where necessary, free of committed secrets, and safely reversible or accompanied by a rollback plan.
 
+A change that moves a capability between states (`built`, `partial`, `prototype`, `not started`, `unknown`) must update `docs/STATUS.md` in the same pull request, citing the migration, route or test that proves the new state.
+
 Before handoff, run the repository gates that apply:
 
 ```text

@@ -1,5 +1,7 @@
 # TASK-011 — Cursor apply approved MITIGA brand mark
 
+Status: **Merged — `31d8ef7` (2026-09-13), "merge: apply approved MITIGA brand mark"**
+
 ## Objective
 
 Replace the temporary, code-drawn MITIGA mark in the product interface with the

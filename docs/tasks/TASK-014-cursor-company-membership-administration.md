@@ -1,5 +1,7 @@
 # TASK-014 — Cursor company and membership administration workspace
 
+Status: **Merged — `9c154d9` (2026-09-13), "merge: add company membership administration prototype"**
+
 ## Objective
 
 Build the English-first Company Admin workspace for the Northstar test-company

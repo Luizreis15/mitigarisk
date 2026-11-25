@@ -1,5 +1,7 @@
 # TASK-015 — Claude real authentication route integration
 
+Status: **Merged — `3a9b05b` (2026-09-13), "merge: add real auth route integration"** Outcome recorded in ADR 0010.
+
 ## Objective
 
 Connect MITIGA's existing English-first sign-in, password-reset, sign-out, and

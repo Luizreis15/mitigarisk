@@ -1,5 +1,7 @@
 # TASK-019 — Claude tenant authorization boundary
 
+Status: **Merged — `974155b` (2026-09-14), "merge: add tenant authorization boundary"** Outcome recorded in ADR 0011.
+
 ## Objective
 
 Add the reusable server-side boundary that resolves an authenticated user's

@@ -1,5 +1,7 @@
 # TASK-007 — Cursor evaluation-to-case decision flow
 
+Status: **Merged — `9e249a7` (2026-09-13), "merge: add evaluation-to-case prototype flow"**
+
 ## Objective
 
 Build the English-first frontend prototype flow from a new risk evaluation to

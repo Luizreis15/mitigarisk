@@ -1,5 +1,7 @@
 # TASK-005 — Cursor authenticated product shell and tenant onboarding
 
+Status: **Merged — `f035f5d` (2026-09-13), "merge: add authenticated workspace prototype"**
+
 ## Objective
 
 Build the English-first frontend experience that follows authentication:

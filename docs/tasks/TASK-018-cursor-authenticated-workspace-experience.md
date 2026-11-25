@@ -1,5 +1,7 @@
 # TASK-018 — Cursor authenticated workspace experience
 
+Status: **Merged — `bdc04b4` (2026-09-13), "merge: add authenticated workspace experience"**
+
 ## Objective
 
 Turn the minimal real `/workspace` landing page from TASK-015 into a clear,
