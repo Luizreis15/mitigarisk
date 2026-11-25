@@ -18,7 +18,8 @@ Every contract carries a `Status:` line. The lines added on 24 Nov 2026 (TASK-00
 | TASK-031 | Same as TASK-027. |
 | TASK-005 | Two files share the number: `TASK-005-cursor-authenticated-product-shell.md` (the contract, added in `21e123d`) and `TASK-005-cursor-authenticated-shell.md` (added with the handoff in `17c4ed1`). Both titles are identical. Neither was renamed. |
 | TASK-036 | Committed on 24 Nov 2026 from the copy on the human owner's machine, which matches the Google Drive copy in size (6,978 bytes) and timestamp (16 Oct 2026). Unchanged except for its `Status:` line. It is not implemented. Its "Inputs" section lists files under `docs/produto/cra/` and `docs/insumos-lucimara/` that are not in this repository. |
-| TASK-037 and later | TASK-037 (the documentation alignment that added this file) has no contract file here. TASK-036 refers to TASK-039 and TASK-040; neither has a file here. |
+| TASK-037 | The contract arrived as pasted text with its markup flattened; no file existed on disk or in Google Drive. The wording is committed as received, with heading, list and code markup restored and a pointer to pull request #46 added to its `Status:` line. |
+| TASK-038 and later | TASK-036 refers to TASK-039 and TASK-040. Neither has a file here. |
 
 ## Files in this folder that are not contracts
 

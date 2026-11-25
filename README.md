@@ -42,7 +42,7 @@ The technical entry point is [`docs/architecture/TRD.md`](docs/architecture/TRD.
 
 Claude (Cowork) is the orchestrator and independent reviewer: it writes task contracts, sequences work and performs the independent review. Edu, the human owner, is the merge owner and approver. Claude Code implements backend/domain work and Cursor implements the frontend, each from a bounded task contract on a short-lived branch. Humans remain accountable for business, legal, production, billing, and data-protection decisions.
 
-The contracts in `docs/tasks/` end at TASK-036. The pull requests merged after #10, up to #45, have no contract there; `docs/tasks/README.md` records what is known about each contract.
+The contracts in `docs/tasks/` end at TASK-037. The pull requests merged after #10, up to #45, have no contract there (#46 is TASK-037); `docs/tasks/README.md` records what is known about each contract.
 
 Start with:
 
